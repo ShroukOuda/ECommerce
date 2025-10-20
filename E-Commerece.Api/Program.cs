@@ -1,3 +1,5 @@
+using E_Commerece.Infrastructure;
+
 namespace E_Commerece.Api;
 
 public class Program
@@ -15,6 +17,7 @@ public class Program
         //add swagger
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
+        builder.Services.InfrastructureConfiguratoin(builder.Configuration);
 
         var app = builder.Build();
 

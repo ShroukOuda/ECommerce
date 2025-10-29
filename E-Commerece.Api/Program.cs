@@ -18,6 +18,7 @@ public class Program
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
         builder.Services.InfrastructureConfiguratoin(builder.Configuration);
+        builder.Services.AddAutoMapper(cfg => {}, typeof(Program).Assembly);
 
         var app = builder.Build();
 

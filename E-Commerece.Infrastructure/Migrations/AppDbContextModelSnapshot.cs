@@ -86,7 +86,8 @@ namespace E_Commerece.Infrastructure.Migrations
 
                     b.Property<string>("ImageName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<int>("ProductId")
                         .HasColumnType("int");
@@ -96,6 +97,32 @@ namespace E_Commerece.Infrastructure.Migrations
                     b.HasIndex("ProductId");
 
                     b.ToTable("Photos");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            ImageName = "Iphone1.jpg",
+                            ProductId = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            ImageName = "Iphone2.jpg",
+                            ProductId = 1
+                        },
+                        new
+                        {
+                            Id = 3,
+                            ImageName = "Iphone3.jpg",
+                            ProductId = 1
+                        },
+                        new
+                        {
+                            Id = 4,
+                            ImageName = "Iphone4.jpg",
+                            ProductId = 1
+                        });
                 });
 
             modelBuilder.Entity("E_Commerece.Core.Entites.Product.Product", b =>
@@ -173,29 +200,22 @@ namespace E_Commerece.Infrastructure.Migrations
 
             modelBuilder.Entity("E_Commerece.Core.Entites.Product.Photo", b =>
                 {
-                    b.HasOne("E_Commerece.Core.Entites.Product.Product", "Product")
+                    b.HasOne("E_Commerece.Core.Entites.Product.Product", null)
                         .WithMany("Photos")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("E_Commerece.Core.Entites.Product.Product", b =>
                 {
                     b.HasOne("E_Commerece.Core.Entites.Product.Category", "Category")
-                        .WithMany("Products")
+                        .WithMany()
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Category");
-                });
-
-            modelBuilder.Entity("E_Commerece.Core.Entites.Product.Category", b =>
-                {
-                    b.Navigation("Products");
                 });
 
             modelBuilder.Entity("E_Commerece.Core.Entites.Product.Product", b =>

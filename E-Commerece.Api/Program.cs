@@ -1,4 +1,6 @@
+using E_Commerece.Application;
 using E_Commerece.Infrastructure;
+
 
 namespace E_Commerece.Api;
 
@@ -18,7 +20,7 @@ public class Program
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
         builder.Services.InfrastructureConfiguratoin(builder.Configuration);
-        builder.Services.AddAutoMapper(cfg => {}, typeof(Program).Assembly);
+        builder.Services.AddApplicationServices(); 
 
         var app = builder.Build();
 

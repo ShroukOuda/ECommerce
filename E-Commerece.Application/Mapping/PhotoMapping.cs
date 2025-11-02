@@ -2,7 +2,7 @@ using AutoMapper;
 using E_Commerece.Core.DTO;
 using E_Commerece.Core.Entites.Product;
 
-namespace E_Commerece.Api.Mapping;
+namespace E_Commerece.Application.Mapping;
 
 public class PhotoMapping : Profile
 {
@@ -10,4 +10,5 @@ public class PhotoMapping : Profile
     {
         CreateMap<Photo, PhotoDTO>().ReverseMap();
     }
+   
 }

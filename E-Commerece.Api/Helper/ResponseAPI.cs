@@ -2,10 +2,14 @@ namespace E_Commerece.Api.Helper;
 
 public class ResponseAPI
 {
-    public ResponseAPI(int statusCode, string message = null)
+    public int StatusCode { get; set; }
+    public string? Message { get; set; }
+    public object? Data { get; set; }
+    public ResponseAPI(int statusCode, string message = null, object? data = null)
     {
         StatusCode = statusCode;
         Message = message ?? GetMessageFromStatusCode(StatusCode);
+        Data = data;
     }
 
     private string GetMessageFromStatusCode(int statusCode)
@@ -20,20 +24,6 @@ public class ResponseAPI
             _ => "UnKnown Error"
             
         };
-        // switch (statusCode)
-        // {
-        //     case 200:
-        //         return "Success";
-        //     case 400: 
-        //         return "Bad Request";
-        //     case 401:
-        //         return "Unauthorized";
-        //     case 500:
-        //         return "Internal Server Error";
-        // }
-        //
-        // return "Unknown Error";
     }
-    public int StatusCode { get; set; }
-    public string? Message { get; set; }
+  
 }

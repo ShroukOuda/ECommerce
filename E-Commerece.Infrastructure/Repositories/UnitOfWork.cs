@@ -19,4 +19,9 @@ public class UnitOfWork : IUnitOfWork
         ProductRepository = new ProductRepository(_context);
         PhotoRepository = new PhotoRepository(_context);
     }
+
+    public async Task<int> SaveChangesAsync()
+    {
+        return await _context.SaveChangesAsync();
+    }
 }

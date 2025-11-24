@@ -41,10 +41,34 @@ public class ImageManagementService : IImageManagementService
         return SaveImageSrc;
     }
 
-    public  void DeleteImage(string src)
+    public void DeleteImageFile(string src)
     {
-        var info = _fileProvider.GetFileInfo(src);
-        string root = info.PhysicalPath;
-        File.Delete(root);
+        src = src.TrimStart('/');
+
+        string fullPath = Path.Combine(
+            Directory.GetCurrentDirectory(),
+            "wwwroot",
+            src
+        );
+
+        if (File.Exists(fullPath))
+            File.Delete(fullPath);
     }
+
+
+    public void DeleteImagesFolder(string folderName)
+    {
+        folderName = folderName.TrimStart('/');
+
+        string folderPath = Path.Combine(
+            Directory.GetCurrentDirectory(),
+            "wwwroot",
+            "Images",
+            folderName
+        );
+        
+        if (Directory.Exists(folderPath))
+            Directory.Delete(folderPath, true);   
+    }
+
 }

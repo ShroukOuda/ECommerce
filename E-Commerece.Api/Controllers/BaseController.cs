@@ -19,4 +19,24 @@ public class BaseController : ControllerBase
    {
       return ApiResponse(400, null);
    }
+
+   protected IActionResult InternalServerErrorResponse()
+   {
+      return ApiResponse(500, null);
+   }
+
+   protected IActionResult SuccessResponse(string data)
+   {
+      return ApiResponse(200, null, data);
+   }
+
+   protected IActionResult NotFoundResponse()
+   {
+      return ApiResponse(404, null);
+   }
+   
+   protected IActionResult UnAuthorizedResponse()
+   {
+      return ApiResponse(401, null);
+   }
 }

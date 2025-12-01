@@ -27,6 +27,13 @@ public class ProductService : IProductService
             throw new KeyNotFoundException("Products not found");
         return _mapper.Map<IEnumerable<GetProductDTO>>(products);
     }
+    
+    public async Task<IEnumerable<GetProductDTO>> GetAllProductsAsync(string? sortBy)
+    {
+        var products = await _unitOfWork.ProductRepository.GetAllProductsAsync(sortBy);
+        
+        return  _mapper.Map<IEnumerable<GetProductDTO>>(products);
+    }
 
     public async Task<GetProductDTO> GetProductByIdAsync(int id)
     {

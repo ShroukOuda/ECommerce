@@ -26,6 +26,14 @@ public class ProductsController : BaseController
         return Ok(products);
     }
 
+    [HttpGet("get-sorted")]
+    public async Task<IActionResult> GetAll(string? sortBy)
+    {
+        var products = await _productService.GetAllProductsAsync(sortBy);
+
+        return Ok(products);
+    }
+
     [HttpGet("get-by-id/{id}")]
     public async Task<IActionResult> GetById(int id)
     {

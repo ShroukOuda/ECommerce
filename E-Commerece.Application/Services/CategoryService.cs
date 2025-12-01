@@ -31,16 +31,19 @@ public class CategoryService : ICategoryService
     {
         var category = _mapper.Map<Category>(categoryDTO);
         await _unitOfWork.CategoryRepository.AddAsync(category);
+        await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task UpdateCategoryAsync(UpdateCategoryDTO categoryDTO)
     {
         var category = _mapper.Map<Category>(categoryDTO);
         await _unitOfWork.CategoryRepository.UpdateAsync(category);
+        await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task DeleteCategoryAsync(int id)
     {
         await _unitOfWork.CategoryRepository.DeleteAsync(id);
+        await _unitOfWork.SaveChangesAsync();
     }
 }

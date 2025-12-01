@@ -1,3 +1,4 @@
+using E_Commerece.Api.Middleware;
 using E_Commerece.Application;
 using E_Commerece.Infrastructure;
 
@@ -11,7 +12,8 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         // Add services to the container.
-
+        
+        builder.Services.AddMemoryCache();
         builder.Services.AddControllers();
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
@@ -32,6 +34,8 @@ public class Program
             app.UseSwaggerUI();
         }
 
+        app.UseMiddleware<ExceptionsMiddleware>();
+        
         app.UseHttpsRedirection();
 
         app.UseAuthorization();

@@ -9,9 +9,9 @@ namespace E_Commerece.Api.Controllers;
 [ApiController]
 public class BaseController : ControllerBase
 {
-   protected IActionResult ApiResponse(int statusCode = 200, string? message = null, string? data = null)
+   protected IActionResult ApiResponse(int statusCode = 200, string? message = null)
    {
-      var response = new ResponseAPI(statusCode, message, data);
+      var response = new ResponseAPI(statusCode, message);
       return StatusCode(statusCode, response);
    }
 
@@ -25,9 +25,9 @@ public class BaseController : ControllerBase
       return ApiResponse(500, null);
    }
 
-   protected IActionResult SuccessResponse(string data)
+   protected IActionResult SuccessResponse()
    {
-      return ApiResponse(200, null, data);
+      return ApiResponse(200, null);
    }
 
    protected IActionResult NotFoundResponse()

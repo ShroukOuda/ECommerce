@@ -40,15 +40,16 @@ public class ProductService : IProductService
     public async Task AddProductAsync(AddProductDTO productDTO)
     {
         ValidateProductDTO(productDTO);
+        Product? product = null; 
         try
         {
-            var product = _mapper.Map<Product>(productDTO);
+            product = _mapper.Map<Product>(productDTO);
             await _unitOfWork.ProductRepository.AddAsync(product);
             await _unitOfWork.SaveChangesAsync();
 
             if (productDTO.Photos != null && productDTO.Photos.Any())
             {
-                var imagePaths = await _imageManagementService.AddImageAsync(productDTO.Photos, productDTO.Name);
+                var imagePaths = await _imageManagementService.AddImageAsync(productDTO.Photos, product.Id.ToString());
                 var photos = imagePaths.Select(path => new Photo
                 {
                     ImageName = path,
@@ -61,8 +62,11 @@ public class ProductService : IProductService
             
         }
         catch (Exception e)
-        {
-            _imageManagementService.DeleteImagesFolder(productDTO.Name);
+        { 
+            if (product != null && product.Id > 0)
+            {
+                _imageManagementService.DeleteImagesFolder(product.Id.ToString());
+            }
             throw new Exception($"Error Adding Product: {e.Message}", e);
         }
        
@@ -101,7 +105,7 @@ public class ProductService : IProductService
 
             if (productDTO.NewPhotos != null && productDTO.NewPhotos.Any())
             {
-                var folder = existingProduct.Name; //FLAG!!!!!!!!!!!!!!!  (switch to id)
+                var folder = existingProduct.Id.ToString(); 
                 var newImagePaths = await _imageManagementService.AddImageAsync(productDTO.NewPhotos, folder);
                 var newPhotos = newImagePaths.Select(path => new Photo
                 {
@@ -126,7 +130,7 @@ public class ProductService : IProductService
         if (product == null)
             throw new KeyNotFoundException($"Product with ID {id} not found");
         
-        _imageManagementService.DeleteImagesFolder(product.Name);
+        _imageManagementService.DeleteImagesFolder(product.Id.ToString());
         await _unitOfWork.ProductRepository.DeleteAsync(id);
         await _unitOfWork.SaveChangesAsync();
     }

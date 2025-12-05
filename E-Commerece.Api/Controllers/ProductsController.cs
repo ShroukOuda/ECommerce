@@ -4,6 +4,7 @@ using E_Commerece.Application.Interfaces;
 using E_Commerece.Core.DTO;
 using E_Commerece.Core.Entites.Product;
 using E_Commerece.Core.Interfaces;
+using E_Commerece.Core.Models;
 using E_Commerece.Core.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,16 +21,9 @@ public class ProductsController : BaseController
     }
 
     [HttpGet("get-all")]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] ProductParams productParams)
     {
-        var products = await _productService.GetAllProductsAsync();
-        return Ok(products);
-    }
-
-    [HttpGet("get-sorted")]
-    public async Task<IActionResult> GetAll(string? sortBy)
-    {
-        var products = await _productService.GetAllProductsAsync(sortBy);
+        var products = await _productService.GetAllProductsAsync(productParams);
 
         return Ok(products);
     }

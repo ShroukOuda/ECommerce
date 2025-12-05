@@ -3,6 +3,7 @@ using E_Commerece.Application.Interfaces;
 using E_Commerece.Core.DTO;
 using E_Commerece.Core.Entites.Product;
 using E_Commerece.Core.Interfaces;
+using E_Commerece.Core.Models;
 using E_Commerece.Core.Services;
 
 namespace E_Commerece.Application.Services;
@@ -19,18 +20,13 @@ public class ProductService : IProductService
         _mapper = mapper;
         _imageManagementService = imageManagementService;
     }
-
-    public async Task<IEnumerable<GetProductDTO>> GetAllProductsAsync()
+    
+    
+    public async Task<IEnumerable<GetProductDTO>> GetAllProductsAsync(ProductParams productParams)
     {
-        var products = await _unitOfWork.ProductRepository.GetAllAsync(p=>p.Category, p=>p.Photos);
+        var products = await _unitOfWork.ProductRepository.GetAllProductsAsync(productParams);
         if (products is null)
             throw new KeyNotFoundException("Products not found");
-        return _mapper.Map<IEnumerable<GetProductDTO>>(products);
-    }
-    
-    public async Task<IEnumerable<GetProductDTO>> GetAllProductsAsync(string? sortBy)
-    {
-        var products = await _unitOfWork.ProductRepository.GetAllProductsAsync(sortBy);
         
         return  _mapper.Map<IEnumerable<GetProductDTO>>(products);
     }

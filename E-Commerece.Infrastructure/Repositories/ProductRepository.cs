@@ -1,6 +1,7 @@
 using E_Commerece.Core.DTO;
 using E_Commerece.Core.Entites.Product;
 using E_Commerece.Core.Interfaces;
+using E_Commerece.Core.Models;
 using E_Commerece.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,30 +16,46 @@ public class ProductRepository : GenericRepository<Product>, IProductRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<Product>> GetAllProductsAsync(string? sortBy)
+    public async Task<IEnumerable<Product>> GetAllProductsAsync(ProductParams productParams)
     {
-       var query = _context.Products
+        productParams.ValidatePrices();
+       
+        var pageNumber = productParams.PageNumber < 1 ? 1 : productParams.PageNumber;
+        var pageSize = productParams.PageSize < 1 ? 6 : productParams.PageSize;
+        var query = _context.Products
            .Include(p => p.Category)
            .Include(p => p.Photos)
-           .AsNoTracking();
+           .AsNoTracking()
+           .AsQueryable();
+       
+        if (!string.IsNullOrEmpty(productParams.Search)) 
+           query = query.Where(p => p.Name.ToLower().Contains(productParams.Search.ToLower()));
+       
+        if (productParams.CategoryId.HasValue)
+           query = query.Where(p => p.CategoryId == productParams.CategoryId);
+       
+        if (productParams.MinPrice.HasValue)
+           query = query.Where(p => p.Price >=  productParams.MinPrice.Value);
+       
+        if (productParams.MaxPrice.HasValue)
+           query = query.Where(p => p.Price <= productParams.MaxPrice.Value);
 
-     
-        switch (sortBy)
-           {
-               case "PriceAsc":
-                   query = query.OrderBy(p => p.Price);
-                   break;
-               case "PriceDesc":
-                   query = query.OrderByDescending(p => p.Price);
-                   break;
-               default:
-                   query = query.OrderBy(p => p.Name);
-                   break;
-           }
-       
-       
-       return await query.ToListAsync();
-       
+        query = productParams.SortBy switch
+        {
+           ProductSortBy.NameAsc => query.OrderBy(p => p.Name),
+           ProductSortBy.NameDesc => query.OrderByDescending(p => p.Name),
+           ProductSortBy.PriceAsc => query.OrderBy(p => p.Price),
+           ProductSortBy.PriceDesc => query.OrderByDescending(p => p.Price),
+           ProductSortBy.Oldest => query.OrderBy(p => p.CreatedAt),
+           ProductSortBy.Newest => query.OrderByDescending(p => p.CreatedAt),
+           _ => query.OrderBy(p => p.Name)
+        };
+
+        return await query
+           .Skip((pageNumber - 1) * pageSize)
+           .Take(pageSize)
+           .ToListAsync();
+
     }
     
 }

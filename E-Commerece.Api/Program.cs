@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using E_Commerece.Api.Middleware;
 using E_Commerece.Application;
 using E_Commerece.Infrastructure;
@@ -14,7 +15,11 @@ public class Program
         // Add services to the container.
         
         builder.Services.AddMemoryCache();
-        builder.Services.AddControllers();
+        builder.Services.AddControllers()
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            });
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
         

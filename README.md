@@ -1,138 +1,229 @@
-# E-Commerce API
+# ASP.NET Core 9 E-Commerce API 🛒
 
-[![Status](https://img.shields.io/badge/Status-In%20Active%20Development-yellow)](https://github.com/yourusername/e-commerce-api)
-[![.NET](https://img.shields.io/badge/.NET-9.0-purple)](https://dotnet.microsoft.com/)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Status](https://img.shields.io/badge/Status-In%20Active%20Development-yellow)](https://github.com/ShroukOuda/E-Commerece)
+[![.NET](https://img.shields.io/badge/.NET-9.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker)](https://www.docker.com/)
 
-> **⚠️ Project Status**: 🚧 This project is **actively being developed**. I'm currently working on improving core features, adding comprehensive testing, and preparing for Docker deployment. APIs and features are subject to change as development progresses.
 
-A robust RESTful E-Commerce API built with ASP.NET Core 9, following Clean Architecture principles. The API provides comprehensive product and category management with advanced features like filtering, sorting, pagination, and image handling.
+
+A production-ready e-commerce REST API built with ASP.NET Core 9, featuring clean architecture, advanced filtering, Docker support, and comprehensive product management.
+
+---
 
 ## 📋 Table of Contents
 
-- [Features](#features)
-- [Technologies Used](#technologies-used)
-- [Project Structure](#project-structure)
-- [Getting Started](#getting-started)
-- [API Endpoints](#api-endpoints)
-- [Usage Examples](#usage-examples)
-- [Roadmap](#roadmap)
-- [Screenshots](#screenshots)
-- [Contributing](#contributing)
-- [License](#license)
+- [Features](#-features)
+- [Technologies](#-technologies)
+- [Architecture](#-architecture)
+- [Getting Started](#-getting-started)
+    - [Prerequisites](#prerequisites)
+    - [Docker Deployment](#option-1-docker-deployment-recommended)
+    - [Local Development](#option-2-local-development)
+- [API Documentation](#-api-documentation)
+- [Usage Examples](#-usage-examples)
+- [Configuration](#-configuration)
+- [Docker Details](#-docker-details)
+- [Database](#-database)
+- [Testing](#-testing)
+- [Roadmap](#-roadmap)
+- [Contributing](#-contributing)
+
+
+---
 
 ## ✨ Features
 
-- **Product Management**
-  - Full CRUD operations for products
-  - Multiple image upload and management per product
-  - Advanced filtering (search, price range, category)
-  - Sorting (by name, price ascending/descending)
-  - Pagination support
-  - Category association
+### Current Features
 
-- **Category Management**
-  - Create, read, update, and delete categories
-  - Product count per category
-  - Category-based product filtering
+- ✅ **Full CRUD Operations** for Products and Categories
+- ✅ **Advanced Product Filtering** – Search by name, filter by category, price range
+- ✅ **Sorting & Pagination** – Sort by price, name, date; paginated results
+- ✅ **Image Management** – Upload, update, and delete product images
+- ✅ **Clean Architecture** – Separation into API, Application, Core, Infrastructure layers
+- ✅ **Repository + Unit of Work Pattern** – Consistent data access abstraction
+- ✅ **DTO Pattern** – Secure data transfer between layers
+- ✅ **Global Exception Handling** – Consistent error responses
+- ✅ **Swagger/OpenAPI Documentation** – Interactive API testing
+- ✅ **Entity Framework Core** – Code-first migrations, SQL Server support
+- ✅ **Docker Support** – Containerized deployment with Docker Compose
 
-- **Image Management**
-  - Multiple image upload per product
-  - Image deletion and update
-  - Organized folder structure per product
-  - Automatic cleanup on product deletion
+### Planned Features
 
-- **Architecture**
-  - Clean Architecture implementation
-  - Repository and Unit of Work patterns
-  - AutoMapper for DTO mapping
-  - Dependency Injection
-  - Generic repository with specialized implementations
+- 🔄 Authentication & Authorization (JWT, Roles)
+- 🔄 Shopping Cart & Order Management
+- 🔄 User Profiles & Addresses
+- 🔄 Payment Integration (Stripe/PayPal)
+- 🔄 Email Notifications
+- 🔄 Redis Caching
+- 🔄 Unit & Integration Tests
+- 🔄 CI/CD Pipeline
+- 🔄 Kubernetes Deployment
 
-## 🛠 Technologies Used
+---
 
-- **Framework**: ASP.NET Core 9.0
-- **Database**: SQL Server / Entity Framework Core
-- **ORM**: Entity Framework Core
-- **API Documentation**: Swagger/OpenAPI
-- **Mapping**: AutoMapper
-- **Architecture**: Clean Architecture
-- **Patterns**: Repository Pattern, Unit of Work, Dependency Injection
+## 🛠️ Technologies
 
-## 📁 Project Structure
+### Core Stack
+- **ASP.NET Core 9** – Web API framework
+- **Entity Framework Core 9** – ORM for database operations
+- **SQL Server 2022** – Primary database (SQLite for development)
+- **C# 12** – Programming language
+
+### Libraries & Tools
+- **AutoMapper** – Object-to-object mapping
+- **FluentValidation** – Request validation
+- **Swashbuckle (Swagger)** – API documentation
+- **Serilog** *(planned)* – Structured logging
+- **xUnit** *(planned)* – Unit testing framework
+- **Moq** *(planned)* – Mocking framework
+
+### Infrastructure
+- **Docker** – Containerization
+- **Docker Compose** – Multi-container orchestration
+
+---
+
+## 🏗️ Architecture
+
+### Project Structure
 
 ```
-E-Commerce/
-├── E-Commerece.Api/
-│   ├── Controllers/
-│   │   ├── ProductsController.cs
-│   │   └── CategoriesController.cs
-│   ├── Middleware/
-│   ├── Program.cs
-│   └── appsettings.json
+ECommerceAPI/
+├── src/
+│   ├── ECommerce.API/              # 🌐 Presentation Layer
+│   │   ├── Controllers/            # API endpoints
+│   │   ├── Middleware/             # Custom middleware
+│   │   ├── Program.cs              # Application entry point
+│   │   └── appsettings.json        # Configuration
+│   │
+│   ├── ECommerce.Application/      # 💼 Application Layer
+│   │   ├── DTOs/                   # Data Transfer Objects
+│   │   ├── Services/               # Business logic
+│   │   ├── Validators/             # Input validation
+│   │   └── Mappings/               # AutoMapper profiles
+│   │
+│   ├── ECommerce.Core/             # 🎯 Domain Layer
+│   │   ├── Entities/               # Domain models
+│   │   ├── Interfaces/             # Repository interfaces
+│   │   └── Specifications/         # Query specifications
+│   │
+│   └── ECommerce.Infrastructure/   # 🔧 Infrastructure Layer
+│       ├── Data/                   # DbContext, configurations
+│       ├── Repositories/           # Repository implementations
+│       └── Migrations/             # EF Core migrations
 │
-├── E-Commerece.Application/
-│   ├── Services/
-│   │   ├── ProductService.cs
-│   │   ├── CategoryService.cs
-│   │   └── ImageManagementService.cs
-│   ├── Interfaces/
-│   │   ├── IProductService.cs
-│   │   ├── ICategoryService.cs
-│   │   └── IImageManagementService.cs
-│   └── Mappings/
-│       └── MappingProfile.cs
+├── tests/                          # 🧪 Test Projects
+│   ├── ECommerce.UnitTests/
+│   └── ECommerce.IntegrationTests/
 │
-├── E-Commerece.Core/
-│   ├── Entities/
-│   │   ├── Product/
-│   │   │   ├── Product.cs
-│   │   │   └── Photo.cs
-│   │   └── Category/
-│   │       └── Category.cs
-│   ├── DTO/
-│   │   ├── AddProductDTO.cs
-│   │   ├── UpdateProductDTO.cs
-│   │   ├── GetProductDTO.cs
-│   │   └── CategoryDTO.cs
-│   ├── Interfaces/
-│   │   ├── IGenericRepository.cs
-│   │   ├── IProductRepository.cs
-│   │   ├── ICategoryRepository.cs
-│   │   └── IUnitOfWork.cs
-│   └── Enums/
+├── docker/                         # 🐳 Docker Configuration
+│   ├── Dockerfile
+│   └── docker-compose.yml
 │
-└── E-Commerece.Infrastructure/
-    ├── Data/
-    │   └── AppDbContext.cs
-    ├── Repositories/
-    │   ├── GenericRepository.cs
-    │   ├── ProductRepository.cs
-    │   ├── CategoryRepository.cs
-    │   ├── PhotoRepository.cs
-    │   └── UnitOfWork.cs
-    └── Migrations/
+├── .dockerignore
+├── .gitignore
+├── ECommerce.sln
+└── README.md
 ```
+
+### Design Patterns
+
+- **Clean Architecture** – Dependency inversion, separation of concerns
+- **Repository Pattern** – Data access abstraction
+- **Unit of Work Pattern** – Transaction management
+- **DTO Pattern** – Data transfer and validation
+- **Dependency Injection** – Loose coupling
+- **CQRS-lite** – Command/Query separation in services
+
+---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
-- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
-- SQL Server (LocalDB, Express, or Full)
-- Visual Studio 2022 / VS Code / Rider
+#### For Docker Deployment
+- [Docker Desktop](https://www.docker.com/products/docker-desktop) (Windows/Mac)
+- OR Docker Engine + Docker Compose (Linux)
 
-### Installation
+#### For Local Development
+- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
+- [SQL Server](https://www.microsoft.com/sql-server/sql-server-downloads) or SQL Server LocalDB
+- IDE: [Visual Studio 2022](https://visualstudio.microsoft.com/), [VS Code](https://code.visualstudio.com/), or [JetBrains Rider](https://www.jetbrains.com/rider/)
+
+---
+
+## Option 1: Docker Deployment (Recommended)
+
+### Quick Start
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/e-commerce-api.git
-   cd e-commerce-api
+   git clone https://github.com/ShroukOuda/E-Commerece.git
+   cd E-Commerece
    ```
 
-2. **Configure the database connection**
-   
-   Update the connection string in `E-Commerece.Api/appsettings.json`:
+2. **Start all services**
+   ```bash
+   docker compose -f docker/docker-compose.yml up -d
+   ```
+
+   This command will:
+    - Pull SQL Server 2022 image
+    - Build the API container
+    - Create and configure the database
+    - Apply EF Core migrations
+    - Start both containers
+
+3. **Verify services are running**
+   ```bash
+   docker compose -f docker/docker-compose.yml ps
+   ```
+
+4. **Access the application**
+    - **Swagger UI**: http://localhost:8080/swagger
+    - **API Base URL**: http://localhost:8080
+    - **SQL Server**: `localhost:1433` (Username: `sa`, Password: `YourStrong!Passw0rd`)
+
+### Docker Management Commands
+
+```bash
+# Stop containers
+docker compose -f docker/docker-compose.yml down
+
+# Stop and remove volumes (clean slate)
+docker compose -f docker/docker-compose.yml down -v
+
+# View logs
+docker compose -f docker/docker-compose.yml logs -f
+
+# View API logs only
+docker compose -f docker/docker-compose.yml logs -f ecommerce-api
+
+# Restart services
+docker compose -f docker/docker-compose.yml restart
+
+# Rebuild and start (after code changes)
+docker compose -f docker/docker-compose.yml up -d --build
+```
+
+---
+
+## Option 2: Local Development
+
+### Step-by-Step Setup
+
+1. **Clone and restore packages**
+   ```bash
+   git clone https://github.com/ShroukOuda/E-Commerece.git
+   cd E-Commerece
+   dotnet restore
+   ```
+
+2. **Configure the database**
+
+   Update `src/ECommerce.API/appsettings.json`:
+
+   **For SQL Server LocalDB:**
    ```json
    {
      "ConnectionStrings": {
@@ -141,289 +232,493 @@ E-Commerce/
    }
    ```
 
-3. **Apply database migrations**
-   ```bash
-   cd E-Commerece.Infrastructure
-   dotnet ef database update --startup-project ../E-Commerece.Api
+   **For SQL Server:**
+   ```json
+   {
+     "ConnectionStrings": {
+       "DefaultConnection": "Server=localhost;Database=ECommerceDb;User Id=sa;Password=YourPassword;TrustServerCertificate=true"
+     }
+   }
    ```
 
-   Or from the solution root:
+   
+
+3. **Apply database migrations**
    ```bash
-   dotnet ef database update --project E-Commerece.Infrastructure --startup-project E-Commerece.Api
+   cd src/E-Commerece.Api
+   dotnet ef database update --project ../E-Commerece.Infrastructure
    ```
 
 4. **Run the application**
    ```bash
-   cd E-Commerece.Api
    dotnet run
    ```
 
-5. **Access Swagger UI**
-   
-   Navigate to: `https://localhost:5001/swagger` or `http://localhost:5000/swagger`
+   Or with hot reload:
+   ```bash
+   dotnet watch run
+   ```
 
-## 📡 API Endpoints
+5. **Access the application**
+    - **HTTPS**: https://localhost:5001/swagger
+    - **HTTP**: http://localhost:5000/swagger
 
-### Products
+### Development Tools
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/Products/get-all` | Get all products with filtering, sorting, and pagination |
-| GET | `/api/Products/get-by-id/{id}` | Get a specific product by ID |
-| POST | `/api/Products/add` | Create a new product with images |
-| PUT | `/api/Products/update` | Update an existing product |
-| DELETE | `/api/Products/delete/{id}` | Delete a product and its images |
+```bash
+# Create a new migration
+dotnet ef migrations add MigrationName --project src/E-Commerece.Infrastructure --startup-project src/E-Commerece.Api
+
+# Remove last migration
+dotnet ef migrations remove --project src/E-Commerece.Infrastructure --startup-project src/E-Commerece.Api
+
+# Update database to specific migration
+dotnet ef database update MigrationName --project src/E-Commerece.Infrastructure --startup-project src/E-Commerece.Api
+
+# Generate SQL script
+dotnet ef migrations script --project src/E-Commerece.Infrastructure --startup-project src/E-Commerece.Api
+```
+
+---
+
+## 📚 API Documentation
+
+### Base URL
+- **Docker**: `http://localhost:8080`
+- **Local**: `https://localhost:5001` or `http://localhost:5000`
+
+### Swagger UI
+Interactive API documentation available at `/swagger`
+
+---
+
+## 🔗 Endpoints
 
 ### Categories
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/Categories/get-all` | Get all categories |
-| GET | `/api/Categories/get-by-id/{id}` | Get a specific category by ID |
-| POST | `/api/Categories/add` | Create a new category |
-| PUT | `/api/Categories/update` | Update an existing category |
-| DELETE | `/api/Categories/delete/{id}` | Delete a category |
+| Method | Endpoint | Description | Parameters |
+|--------|----------|-------------|------------|
+| GET | `/api/Categories/get-all` | List all categories | `pageNumber`, `pageSize` |
+| GET | `/api/Categories/get/{id}` | Get category by ID | `id` (int) |
+| POST | `/api/Categories/add` | Create new category | Request body (JSON) |
+| PUT | `/api/Categories/update` | Update category | Request body (JSON) |
+| DELETE | `/api/Categories/delete/{id}` | Delete category | `id` (int) |
 
-## 📝 Usage Examples
-
-### Get All Products with Filtering and Pagination
-
-```bash
-curl -X GET "https://localhost:5001/api/Products/get-all?page=1&pageSize=10&sortBy=PriceAsc&search=laptop&minPrice=500&maxPrice=2000&categoryId=1" \
-  -H "accept: application/json"
+#### Category Request Model
+```json
+{
+  "name": "Electronics",
+  "description": "Electronic devices and accessories"
+}
 ```
 
-**Query Parameters:**
-- `page` (int, default: 1): Page number
-- `pageSize` (int, default: 10): Items per page
-- `sortBy` (string): Sort order (`Name`, `PriceAsc`, `PriceDesc`)
-- `search` (string): Search in product name or description
-- `minPrice` (decimal): Minimum price filter
-- `maxPrice` (decimal): Maximum price filter
-- `categoryId` (int): Filter by category
+---
 
-**Response:**
+### Products
+
+| Method | Endpoint | Description | Parameters |
+|--------|----------|-------------|------------|
+| GET | `/api/Products/get-all` | Get products (filtered) | See query parameters below |
+| GET | `/api/Products/get/{id}` | Get product by ID | `id` (int) |
+| POST | `/api/Products/add` | Create new product | Multipart form data |
+| PUT | `/api/Products/update` | Update product | Request body (JSON) |
+| DELETE | `/api/Products/delete/{id}` | Delete product | `id` (int) |
+| POST | `/api/Products/{id}/upload-image` | Upload/replace image | `id` (int), form file |
+| DELETE | `/api/Products/{id}/delete-image` | Delete product image | `id` (int) |
+
+#### Query Parameters for GET /api/Products/get-all
+
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|---------|
+| `search` | string | Search in product name | `laptop` |
+| `categoryId` | int | Filter by category | `1` |
+| `minPrice` | decimal | Minimum price | `100.00` |
+| `maxPrice` | decimal | Maximum price | `1000.00` |
+| `sortBy` | string | Sort order | `price`, `priceDesc`, `name`, `date` |
+| `pageNumber` | int | Page number (default: 1) | `1` |
+| `pageSize` | int | Items per page (default: 10) | `20` |
+
+#### Product Request Model
+```json
+{
+  "name": "Gaming Laptop",
+  "description": "High-performance gaming laptop with RTX 4070",
+  "price": 1599.99,
+  "categoryId": 1,
+  "stockQuantity": 25,
+  "sku": "LAPTOP-001"
+}
+```
+
+---
+
+## 💡 Usage Examples
+
+### Using cURL
+
+#### 1. Get All Products (with filters)
+```bash
+curl -X GET "http://localhost:8080/api/Products/get-all?search=laptop&categoryId=1&minPrice=500&maxPrice=2000&sortBy=priceDesc&pageNumber=1&pageSize=10"
+```
+
+#### 2. Get Single Product
+```bash
+curl -X GET "http://localhost:8080/api/Products/get/1"
+```
+
+#### 3. Create Category
+```bash
+curl -X POST "http://localhost:8080/api/Categories/add" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Electronics",
+    "description": "Electronic devices and gadgets"
+  }'
+```
+
+#### 4. Create Product (with image)
+```bash
+curl -X POST "http://localhost:8080/api/Products/add" \
+  -F "Name=Gaming Laptop" \
+  -F "Description=High performance gaming laptop" \
+  -F "Price=1299.99" \
+  -F "CategoryId=1" \
+  -F "StockQuantity=50" \
+  -F "Sku=LAPTOP-001" \
+  -F "ImageFile=@/path/to/laptop.jpg"
+```
+
+#### 5. Update Product
+```bash
+curl -X PUT "http://localhost:8080/api/Products/update" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": 1,
+    "name": "Updated Gaming Laptop",
+    "description": "Updated description",
+    "price": 1199.99,
+    "categoryId": 1,
+    "stockQuantity": 45,
+    "sku": "LAPTOP-001"
+  }'
+```
+
+#### 6. Upload Product Image
+```bash
+curl -X POST "http://localhost:8080/api/Products/1/upload-image" \
+  -F "imageFile=@/path/to/image.jpg"
+```
+
+#### 7. Delete Product
+```bash
+curl -X DELETE "http://localhost:8080/api/Products/delete/1"
+```
+
+---
+
+### Using PowerShell
+
+#### Get Products
+```powershell
+Invoke-RestMethod -Uri "http://localhost:8080/api/Products/get-all?pageSize=5" -Method Get
+```
+
+#### Create Category
+```powershell
+$body = @{
+    name = "Electronics"
+    description = "Electronic devices"
+} | ConvertTo-Json
+
+Invoke-RestMethod -Uri "http://localhost:8080/api/Categories/add" `
+    -Method Post `
+    -ContentType "application/json" `
+    -Body $body
+```
+
+---
+
+### Response Format
+
+#### Success Response (List)
 ```json
 {
   "data": [
     {
       "id": 1,
       "name": "Gaming Laptop",
-      "description": "High-performance gaming laptop",
+      "description": "High-performance laptop",
       "price": 1299.99,
-      "stockQuantity": 15,
       "categoryId": 1,
       "categoryName": "Electronics",
-      "photos": [
-        {
-          "id": 1,
-          "imageName": "images/1/laptop-front.jpg"
-        }
-      ]
+      "stockQuantity": 50,
+      "sku": "LAPTOP-001",
+      "imageUrl": "/images/products/laptop-001.jpg",
+      "createdAt": "2024-01-15T10:30:00Z"
     }
   ],
   "pageNumber": 1,
   "pageSize": 10,
   "totalPages": 5,
-  "totalRecords": 47
+  "totalRecords": 48,
+  "hasPreviousPage": false,
+  "hasNextPage": true
 }
 ```
 
-### Get Product by ID
-
-```bash
-curl -X GET "https://localhost:5001/api/Products/get-by-id/1" \
-  -H "accept: application/json"
-```
-
-**Response:**
+#### Success Response (Single)
 ```json
 {
   "id": 1,
   "name": "Gaming Laptop",
-  "description": "High-performance gaming laptop with RTX 4070",
+  "description": "High-performance laptop",
   "price": 1299.99,
-  "stockQuantity": 15,
   "categoryId": 1,
   "categoryName": "Electronics",
-  "photos": [
-    {
-      "id": 1,
-      "imageName": "images/1/laptop-front.jpg"
-    },
-    {
-      "id": 2,
-      "imageName": "images/1/laptop-side.jpg"
-    }
+  "stockQuantity": 50,
+  "sku": "LAPTOP-001",
+  "imageUrl": "/images/products/laptop-001.jpg",
+  "createdAt": "2024-01-15T10:30:00Z"
+}
+```
+
+#### Error Response
+```json
+{
+  "statusCode": 400,
+  "message": "Validation failed",
+  "errors": [
+    "Product name is required",
+    "Price must be greater than 0"
   ]
 }
 ```
 
-### Add New Product
+---
 
-```bash
-curl -X POST "https://localhost:5001/api/Products/add" \
-  -H "accept: application/json" \
-  -H "Content-Type: multipart/form-data" \
-  -F "Name=Wireless Mouse" \
-  -F "Description=Ergonomic wireless mouse with RGB lighting" \
-  -F "Price=29.99" \
-  -F "StockQuantity=100" \
-  -F "CategoryId=1" \
-  -F "Photos=@/path/to/image1.jpg" \
-  -F "Photos=@/path/to/image2.jpg"
-```
+## ⚙️ Configuration
 
-**Request Body (form-data):**
-- `Name` (string, required): Product name
-- `Description` (string): Product description
-- `Price` (decimal, required): Product price (must be > 0)
-- `StockQuantity` (int): Available stock
-- `CategoryId` (int, required): Category ID
-- `Photos` (file[], optional): Multiple image files
+### Application Settings
 
-**Response:**
+#### appsettings.json
 ```json
 {
-  "message": "Product added successfully",
-  "productId": 42
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=ECommerceDb;Trusted_Connection=True;"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*",
+  "FileUpload": {
+    "MaxFileSizeMB": 5,
+    "AllowedExtensions": [".jpg", ".jpeg", ".png", ".gif"],
+    "ImagePath": "wwwroot/images/products"
+  }
 }
 ```
 
-### Update Product
-
-```bash
-curl -X PUT "https://localhost:5001/api/Products/update" \
-  -H "accept: application/json" \
-  -H "Content-Type: multipart/form-data" \
-  -F "Id=1" \
-  -F "Name=Gaming Laptop Pro" \
-  -F "Description=Updated description" \
-  -F "Price=1399.99" \
-  -F "StockQuantity=20" \
-  -F "CategoryId=1" \
-  -F "PhotosToDelete=5" \
-  -F "PhotosToDelete=6" \
-  -F "NewPhotos=@/path/to/new-image.jpg"
-```
-
-**Request Body (form-data):**
-- `Id` (int, required): Product ID
-- `Name` (string, required): Updated name
-- `Description` (string): Updated description
-- `Price` (decimal, required): Updated price
-- `StockQuantity` (int): Updated stock
-- `CategoryId` (int, required): Category ID
-- `PhotosToDelete` (int[]): Array of photo IDs to delete
-- `NewPhotos` (file[]): New images to add
-
-### Delete Product
-
-```bash
-curl -X DELETE "https://localhost:5001/api/Products/delete/1" \
-  -H "accept: application/json"
-```
-
-### Get All Categories
-
-```bash
-curl -X GET "https://localhost:5001/api/Categories/get-all" \
-  -H "accept: application/json"
-```
-
-**Response:**
+#### appsettings.Development.json
 ```json
-[
-  {
-    "id": 1,
-    "name": "Electronics",
-    "description": "Electronic devices and accessories",
-    "productCount": 25
-  },
-  {
-    "id": 2,
-    "name": "Clothing",
-    "description": "Fashion and apparel",
-    "productCount": 50
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Debug",
+      "Microsoft.AspNetCore": "Information"
+    }
   }
-]
+}
 ```
 
-### Add New Category
+#### Environment Variables (Docker)
+```bash
+ASPNETCORE_ENVIRONMENT=Development
+ConnectionStrings__DefaultConnection=Server=sqlserver;Database=ECommerceDb;...
+```
+
+---
+
+## 🐳 Docker Details
+
+
+### Docker Commands
 
 ```bash
-curl -X POST "https://localhost:5001/api/Categories/add" \
-  -H "accept: application/json" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Home & Garden",
-    "description": "Home improvement and gardening products"
-  }'
+# Build image manually
+docker build -f docker/Dockerfile -t ecommerce-api:latest .
+
+# Run container manually
+docker run -d -p 8080:8080 \
+  -e ASPNETCORE_ENVIRONMENT=Development \
+  -e ConnectionStrings__DefaultConnection="Server=sqlserver;..." \
+  --name ecommerce-api \
+  ecommerce-api:latest
+
+# View container logs
+docker logs -f ecommerce-api
+
+# Execute command in container
+docker exec -it ecommerce-api bash
+
+# Inspect container
+docker inspect ecommerce-api
+
+# Remove container
+docker rm -f ecommerce-api
 ```
 
-## 🗺 Roadmap
+---
 
-### Phase 1 (Current - In Active Development)
-- [x] Basic CRUD for Products
-- [x] Basic CRUD for Categories
-- [x] Image management system
-- [x] Filtering and sorting
-- [x] Pagination
-- [ ] Unit testing implementation
-- [ ] Input validation improvements
-- [ ] Error handling middleware
-- [ ] Logging system (Serilog)
+## 🗄️ Database
 
-### Phase 2 (In Progress)
-- [ ] User authentication and authorization (JWT)
-- [ ] User roles (Admin, Customer)
-- [ ] Shopping cart functionality
-- [ ] Order management
-- [ ] Payment integration
-- [ ] API versioning
-- [ ] Rate limiting
+### Schema Overview
 
-### Phase 3 (Planned)
-- [ ] Product reviews and ratings
-- [ ] Wishlist functionality
-- [ ] Inventory management
-- [ ] Email notifications
-- [ ] Advanced search with Elasticsearch
-- [ ] Redis caching
-- [ ] Product recommendations
-- [ ] Analytics dashboard
-- [ ] **Docker containerization**
-- [ ] Docker Compose for multi-container setup
-- [ ] CI/CD pipeline (GitHub Actions)
+#### Categories Table
+```sql
+CREATE TABLE Categories (
+    Id INT PRIMARY KEY IDENTITY(1,1),
+    Name NVARCHAR(100) NOT NULL,
+    Description NVARCHAR(500),
+    CreatedAt DATETIME2 NOT NULL,
+    UpdatedAt DATETIME2
+);
+```
 
-### Phase 4 (Future)
-- [ ] Multi-language support
-- [ ] Multi-currency support
-- [ ] Discount and coupon system
-- [ ] Shipping integration
-- [ ] Mobile app API support
-- [ ] GraphQL endpoint
-- [ ] Real-time notifications (SignalR)
-- [ ] Kubernetes deployment
-- [ ] Microservices architecture migration
-- [ ] Cloud deployment (Azure/AWS)
+#### Products Table
+```sql
+CREATE TABLE Products (
+    Id INT PRIMARY KEY IDENTITY(1,1),
+    Name NVARCHAR(200) NOT NULL,
+    Description NVARCHAR(MAX),
+    Price DECIMAL(18,2) NOT NULL,
+    CategoryId INT NOT NULL,
+    StockQuantity INT NOT NULL,
+    Sku NVARCHAR(50),
+    ImageUrl NVARCHAR(500),
+    CreatedAt DATETIME2 NOT NULL,
+    UpdatedAt DATETIME2,
+    FOREIGN KEY (CategoryId) REFERENCES Categories(Id)
+);
+```
 
-## 📸 Screenshots
+### Seed Data
 
-> Screenshots will be added as the project progresses.
+Add sample data in `ECommerce.Infrastructure/Data/DbInitializer.cs`:
 
-### Swagger UI
-![Swagger Documentation](docs/screenshots/swagger-ui.png)
+```csharp
+public static void Seed(ApplicationDbContext context)
+{
+    if (!context.Categories.Any())
+    {
+        context.Categories.AddRange(
+            new Category { Name = "Electronics", Description = "Electronic devices" },
+            new Category { Name = "Clothing", Description = "Apparel and accessories" },
+            new Category { Name = "Books", Description = "Books and magazines" }
+        );
+        context.SaveChanges();
+    }
+}
+```
 
-### Product List
-![Product List](docs/screenshots/product-list.png)
+---
 
-### Product Details
-![Product Details](docs/screenshots/product-details.png)
+## 🧪 Testing
+
+### Running Tests (Planned)
+
+```bash
+# Run all tests
+dotnet test
+
+# Run with coverage
+dotnet test /p:CollectCoverage=true
+
+# Run specific test project
+dotnet test tests/ECommerce.UnitTests
+
+# Run tests with filter
+dotnet test --filter "Category=Unit"
+```
+
+### Test Structure (Planned)
+
+```
+tests/
+├── ECommerce.UnitTests/
+│   ├── Services/
+│   ├── Validators/
+│   └── Repositories/
+└── ECommerce.IntegrationTests/
+    ├── Controllers/
+    └── Database/
+```
+
+---
+
+## 🗺️ Roadmap
+
+### Phase 1: Core Features ✅
+- [x] Clean Architecture Setup
+- [x] Product CRUD Operations
+- [x] Category Management
+- [x] Filtering, Sorting, Pagination
+- [x] Image Upload/Management
+- [x] Docker Support
+- [x] Swagger Documentation
+
+### Phase 2: Security & User Management 🔄
+- [ ] JWT Authentication
+- [ ] User Registration & Login
+- [ ] Role-Based Authorization (Admin, Customer)
+- [ ] Password Reset & Email Verification
+- [ ] API Rate Limiting
+
+### Phase 3: E-Commerce Core 🔄
+- [ ] Shopping Cart
+- [ ] Order Management
+- [ ] Order History
+- [ ] Inventory Management
+- [ ] Product Reviews & Ratings
+
+### Phase 4: Payments & Notifications 📋
+- [ ] Stripe Integration
+- [ ] PayPal Integration
+- [ ] Email Notifications (Order Confirmation, Shipping)
+- [ ] Invoice Generation
+
+### Phase 5: Performance & Caching 📋
+- [ ] Redis Caching
+- [ ] Response Compression
+- [ ] CDN Integration for Images
+- [ ] Database Query Optimization
+
+### Phase 6: Quality & DevOps 📋
+- [ ] Unit Tests (xUnit)
+- [ ] Integration Tests
+- [ ] Serilog Logging
+- [ ] Application Insights
+- [ ] CI/CD Pipeline (GitHub Actions)
+- [ ] Kubernetes Deployment
+- [ ] Health Checks & Monitoring
+
+### Phase 7: Advanced Features 📋
+- [ ] Multi-language Support (i18n)
+- [ ] Product Recommendations
+- [ ] Wishlist
+- [ ] Discount Codes & Promotions
+- [ ] Analytics Dashboard
+- [ ] GraphQL API (Optional)
+
+---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please follow these steps:
+We welcome contributions! Please follow these guidelines:
+
+### How to Contribute
 
 1. **Fork the repository**
 2. **Create a feature branch**
@@ -440,105 +735,26 @@ Contributions are welcome! Please follow these steps:
    ```
 5. **Open a Pull Request**
 
-### Coding Standards
-- Follow C# naming conventions
-- Write XML documentation comments for public APIs
-- Include unit tests for new features
-- Update README.md if adding new features
-- Ensure all tests pass before submitting PR
+### Code Standards
 
-## 🐳 Docker Deployment (Coming Soon)
+- Follow C# coding conventions
+- Write unit tests for new features
+- Update documentation
+- Ensure all tests pass
+- Keep commits clean and descriptive
 
-Docker support is planned for Phase 3. The deployment will include:
+### Reporting Issues
 
-- **Dockerfile** for the API application
-- **Docker Compose** configuration for multi-container setup:
-  - ASP.NET Core API
-  - SQL Server database
-  - Redis cache (future)
-- **Environment variable** configuration
-- **Volume mapping** for persistent data and images
-- **Health checks** and monitoring
-
-### Planned Docker Setup
-
-```yaml
-# docker-compose.yml (Preview)
-version: '3.8'
-
-services:
-  api:
-    build: .
-    ports:
-      - "8080:80"
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Server=db;Database=ECommerceDb;User=sa;Password=YourPassword123
-    depends_on:
-      - db
-    volumes:
-      - ./images:/app/wwwroot/images
-
-  db:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    environment:
-      - ACCEPT_EULA=Y
-      - SA_PASSWORD=YourPassword123
-    volumes:
-      - sqldata:/var/opt/mssql
-
-volumes:
-  sqldata:
-```
-
-### Future Deployment Commands
-
-```bash
-# Build and run with Docker Compose
-docker-compose up -d
-
-# View logs
-docker-compose logs -f api
-
-# Stop containers
-docker-compose down
-```
-
-Stay tuned for updates! ⭐
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 👤 Author
-
-**Your Name**
-- GitHub: [@yourusername](https://github.com/yourusername)
-- LinkedIn: [Your Name](https://linkedin.com/in/yourprofile)
+Please use GitHub Issues to report bugs or request features. Include:
+- Clear description of the issue
+- Steps to reproduce
+- Expected vs actual behavior
+- Environment details (OS, .NET version, etc.)
 
 ---
 
-## 📢 Development Updates
 
-This project is being actively developed. Follow the repository for updates on:
-- New features and improvements
-- Docker deployment configuration
-- Testing implementation
-- Performance optimizations
-- Bug fixes and enhancements
 
-**Current Focus**: Building robust core features and preparing infrastructure for containerization.
 
-## 🙏 Acknowledgments
 
-- ASP.NET Core Documentation
-- Clean Architecture by Robert C. Martin
-- Entity Framework Core Team
-- Docker Documentation
-
----
-
-⭐ **If you find this project helpful or interesting, please consider giving it a star!** Your support motivates continued development.
-
-**Project Status**: Actively maintained and under development  
-**Last Updated**: December 2025
+**Made with ❤️ using ASP.NET Core 9**

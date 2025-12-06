@@ -1,0 +1,21 @@
+# Ignore build outputs
+bin/
+obj/
+
+# Ignore Docker folder itself
+docker/
+
+# Ignore IDE settings
+*.user
+*.suo
+*.DotSettings.user
+*.vscode/
+*.idea/
+
+# Ignore logs
+*.log
+
+# Ignore other system files
+*.DS_Store
+*.Thumbs.db
+

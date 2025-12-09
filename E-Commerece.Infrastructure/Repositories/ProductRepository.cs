@@ -4,6 +4,7 @@ using E_Commerece.Core.Interfaces;
 using E_Commerece.Core.Models;
 using E_Commerece.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query.Internal;
 
 namespace E_Commerece.Infrastructure.Repositories;
 
@@ -27,9 +28,16 @@ public class ProductRepository : GenericRepository<Product>, IProductRepository
            .Include(p => p.Photos)
            .AsNoTracking()
            .AsQueryable();
-       
-        if (!string.IsNullOrEmpty(productParams.Search)) 
-           query = query.Where(p => p.Name.ToLower().Contains(productParams.Search.ToLower()));
+
+        if (!string.IsNullOrEmpty(productParams.Search))
+        {
+           string[] searchTerms = productParams.Search.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+           query = query.Where(p => searchTerms.All(
+              term => p.Name.ToLower().Contains(term.ToLower()) || 
+                      p.Description.ToLower().Contains(term.ToLower())
+                      ));
+        }
+          
        
         if (productParams.CategoryId.HasValue)
            query = query.Where(p => p.CategoryId == productParams.CategoryId);

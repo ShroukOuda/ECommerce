@@ -24,8 +24,9 @@ public class ProductsController : BaseController
     public async Task<IActionResult> GetAll([FromQuery] ProductParams productParams)
     {
         var products = await _productService.GetAllProductsAsync(productParams);
-
-        return Ok(products);
+        int totalCount = await _productService.GetTotalCountAsync();
+        var pagination = new Pagination<GetProductDTO>(productParams.PageNumber, productParams.PageSize, totalCount, products);
+        return Ok(pagination);
     }
 
     [HttpGet("get-by-id/{id}")]

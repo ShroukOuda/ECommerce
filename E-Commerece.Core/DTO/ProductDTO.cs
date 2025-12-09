@@ -19,8 +19,7 @@ namespace E_Commerece.Core.DTO;
         public float Price { get; set; }
         public string Description { get; set; }
         public int CategoryId { get; set; }
-        
-        public IFormFileCollection NewPhotos { get; set; }
+        public IFormFileCollection? NewPhotos { get; set; }
         public List<int>? PhotosToDelete { get; set; }
         
         

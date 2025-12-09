@@ -52,7 +52,8 @@ public class ProductService : IProductService
 
             if (productDTO.Photos != null && productDTO.Photos.Any())
             {
-                var imagePaths = await _imageManagementService.AddImageAsync(productDTO.Photos, product.Id.ToString());
+                var folder = $"Products/{product.Id}";
+                var imagePaths = await _imageManagementService.AddImageAsync(productDTO.Photos, folder);
                 var photos = imagePaths.Select(path => new Photo
                 {
                     ImageName = path,
@@ -108,7 +109,7 @@ public class ProductService : IProductService
 
             if (productDTO.NewPhotos != null && productDTO.NewPhotos.Any())
             {
-                var folder = existingProduct.Id.ToString(); 
+                var folder = $"Products/{existingProduct.Id}";
                 var newImagePaths = await _imageManagementService.AddImageAsync(productDTO.NewPhotos, folder);
                 var newPhotos = newImagePaths.Select(path => new Photo
                 {
@@ -133,7 +134,8 @@ public class ProductService : IProductService
         if (product == null)
             throw new KeyNotFoundException($"Product with ID {id} not found");
         
-        _imageManagementService.DeleteImagesFolder(product.Id.ToString());
+        var folder = $"Products/{product.Id}";
+        _imageManagementService.DeleteImagesFolder(folder);
         await _unitOfWork.ProductRepository.DeleteAsync(id);
         await _unitOfWork.SaveChangesAsync();
     }

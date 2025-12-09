@@ -2,6 +2,7 @@ using E_Commerece.Core.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.FileProviders;
 using E_Commerece.Infrastructure.Settings;
+using Microsoft.Extensions.Options;
 
 namespace E_Commerece.Infrastructure.Repositories.Service;
 
@@ -9,16 +10,18 @@ namespace E_Commerece.Infrastructure.Repositories.Service;
 public class ImageManagementService : IImageManagementService
 {
     private readonly IFileProvider _fileProvider;
+    private readonly FileSettings _fileSettings;
 
-    public ImageManagementService(IFileProvider fileProvider)
+    public ImageManagementService(IFileProvider fileProvider, IOptions<FileSettings> fileSettings)
     {
         _fileProvider = fileProvider;
+        _fileSettings = fileSettings.Value;
     }
     public async Task<List<string>> AddImageAsync(IFormFileCollection files, string productFolder)
     {
         List<string> SaveImageSrc =  new List<string>();
         string root = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-        string imagesPath = Path.Combine(root, FileSettings.ImagesPath, productFolder);
+        string imagesPath = Path.Combine(root, _fileSettings.ImagesPath, productFolder);
         
 
         if (!Directory.Exists(imagesPath))
@@ -31,14 +34,15 @@ public class ImageManagementService : IImageManagementService
             if (file.Length > 0)
             {
                 var extension = Path.GetExtension(file.FileName).ToLower();
-                if (!FileSettings.AllowedExtensions.Contains(extension))
+                if (!_fileSettings.AllowedExtensions.Contains(extension))
                 {
-                    throw new Exception("Invalid file format. Allowed: " + FileSettings.AllowedExtensions);
+                    throw new Exception("Invalid file format. Allowed: " +
+                                        string.Join(", ", _fileSettings.AllowedExtensions));
                 }
 
-                if (file.Length > FileSettings.MaxFileSizeInBytes)
+                if (file.Length > _fileSettings.MaxFileSizeInBytes)
                 {
-                    throw new Exception($"Filer too large. Max Size: {FileSettings.MaxFileSizeInMB}MB");
+                    throw new Exception($"Filer too large. Max Size: {_fileSettings.MaxFileSizeInMB}MB");
                 }
                 var newName = $"{Guid.NewGuid()}{extension}";
                 var fullPath = Path.Combine(imagesPath, newName);
@@ -48,7 +52,7 @@ public class ImageManagementService : IImageManagementService
                     await file.CopyToAsync(fs);
                 }
 
-                string ImageSrc = $"{FileSettings.ImagesPath}/{productFolder}/{newName}";
+                string ImageSrc = $"{_fileSettings.ImagesPath}/{productFolder}/{newName}";
                 SaveImageSrc.Add(ImageSrc);
             }
         }
@@ -56,7 +60,7 @@ public class ImageManagementService : IImageManagementService
         return SaveImageSrc;
     }
 
-    public void DeleteImageFile(string src)
+    public async Task DeleteImageFile(string src)
     {
         src = src.TrimStart('/');
 
@@ -67,23 +71,23 @@ public class ImageManagementService : IImageManagementService
         );
 
         if (File.Exists(fullPath))
-            File.Delete(fullPath);
+            await Task.Run(() => File.Delete(fullPath));
     }
 
 
-    public void DeleteImagesFolder(string folderName)
+    public async Task DeleteImagesFolder(string folderName)
     {
         folderName = folderName.TrimStart('/');
 
         string folderPath = Path.Combine(
             Directory.GetCurrentDirectory(),
             "wwwroot",
-            FileSettings.ImagesPath,
+            _fileSettings.ImagesPath,
             folderName
         );
         
         if (Directory.Exists(folderPath))
-            Directory.Delete(folderPath, true);   
+            await Task.Run(() => Directory.Delete(folderPath, true));
     }
 
 }

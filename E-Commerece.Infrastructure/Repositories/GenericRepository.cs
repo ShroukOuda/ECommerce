@@ -73,4 +73,13 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         _context.Set<T>().RemoveRange(entities);
       
     }
+    
+    public async Task<int> CountAsync(Expression<Func<T, bool>>? predicate = null)
+    {
+        if (predicate != null)
+        {
+            return await _context.Set<T>().CountAsync(predicate);
+        }
+        return await _context.Set<T>().CountAsync();
+    }
 }

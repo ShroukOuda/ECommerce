@@ -17,11 +17,11 @@ public class ImageManagementService : IImageManagementService
         _fileProvider = fileProvider;
         _fileSettings = fileSettings.Value;
     }
-    public async Task<List<string>> AddImageAsync(IFormFileCollection files, string productFolder)
+    public async Task<List<string>> AddImageAsync(IFormFileCollection files, string folderName)
     {
         List<string> SaveImageSrc =  new List<string>();
         string root = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-        string imagesPath = Path.Combine(root, _fileSettings.ImagesPath, productFolder);
+        string imagesPath = Path.Combine(root, _fileSettings.ImagesPath, folderName);
         
 
         if (!Directory.Exists(imagesPath))
@@ -52,7 +52,7 @@ public class ImageManagementService : IImageManagementService
                     await file.CopyToAsync(fs);
                 }
 
-                string ImageSrc = $"{_fileSettings.ImagesPath}/{productFolder}/{newName}";
+                string ImageSrc = $"{_fileSettings.ImagesPath}/{folderName}/{newName}";
                 SaveImageSrc.Add(ImageSrc);
             }
         }

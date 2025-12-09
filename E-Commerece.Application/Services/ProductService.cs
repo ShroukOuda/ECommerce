@@ -137,7 +137,13 @@ public class ProductService : IProductService
         await _unitOfWork.ProductRepository.DeleteAsync(id);
         await _unitOfWork.SaveChangesAsync();
     }
-    
+
+    public async Task<int> GetTotalCountAsync()
+    {
+        int totalCount = await _unitOfWork.ProductRepository.CountAsync();
+        return totalCount;
+    }
+
     private void ValidateId(int id)
     {
         if (id <= 0)

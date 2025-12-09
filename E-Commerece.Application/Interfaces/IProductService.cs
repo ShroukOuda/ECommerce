@@ -11,4 +11,6 @@ public interface IProductService
     Task AddProductAsync(AddProductDTO productDto);
     Task UpdateProductAsync(UpdateProductDTO productDTO);
     Task DeleteProductAsync(int id);
+
+    Task<int> GetTotalCountAsync();
 }

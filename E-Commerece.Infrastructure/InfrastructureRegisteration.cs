@@ -25,7 +25,17 @@ public static class InfrastructureRegisteration
         //db context
         services.AddDbContext<AppDbContext>(option =>
         {
-            option.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
+            option.UseSqlServer(
+                configuration.GetConnectionString("DefaultConnection"),
+                sqlServerOptionsAction: sqlOptions =>
+                {
+                    sqlOptions.EnableRetryOnFailure(
+                        maxRetryCount: 5,
+                        maxRetryDelay: TimeSpan.FromSeconds(30),
+                        errorNumbersToAdd: null);
+                    sqlOptions.CommandTimeout(60);
+                }
+            );
         });
         return services;
     }

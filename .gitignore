@@ -4,4 +4,13 @@ obj/
 riderModule.iml
 /_ReSharper.Caches/
 .idea/
+# Rider / JetBrains user settings
+*.DotSettings.user
+*.sln.DotSettings.user
+.vs/
+# User-specific files
+*.user
+*.userosscache
+*.suo
+*.sln.docstates
 

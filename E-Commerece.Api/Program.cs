@@ -28,8 +28,25 @@ public class Program
         builder.Services.AddSwaggerGen();
         builder.Services.InfrastructureConfiguratoin(builder.Configuration);
         builder.Services.AddApplicationServices(); 
+        
+        // Configure CORS
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("AllowFrontendApps", policy =>
+            {
+                policy.WithOrigins(
+                        "http://localhost:4200", // Angular dev server
+                        "http://localhost:3000" // React dev server
+                                                
+                        )
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
+            });
+        });
 
         var app = builder.Build();
+        
+       
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
@@ -38,7 +55,9 @@ public class Program
             app.UseSwagger();
             app.UseSwaggerUI();
         }
-
+        
+        app.UseCors("AllowFrontendApps");
+        
         app.UseMiddleware<ExceptionsMiddleware>();
         
         app.UseHttpsRedirection();

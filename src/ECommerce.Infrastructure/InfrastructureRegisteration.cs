@@ -38,6 +38,7 @@ public static class InfrastructureRegisteration
                         maxRetryDelay: TimeSpan.FromSeconds(30),
                         errorNumbersToAdd: null);
                     sqlOptions.CommandTimeout(60);
+                    sqlOptions.MigrationsAssembly("ECommerce.Infrastructure");
                 }
             );
         });

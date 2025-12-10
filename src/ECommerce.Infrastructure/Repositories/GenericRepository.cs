@@ -1,0 +1,83 @@
+using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
+
+namespace ECommerce.Infrastructure.Repositories;
+
+public class GenericRepository<T> : IGenericRepository<T> where T : class
+{
+    private readonly AppDbContext _context;
+
+    public GenericRepository(AppDbContext context)
+    {
+        _context = context;
+    }
+    public async Task<IReadOnlyList<T>> GetAllAsync()
+    {
+        return await _context.Set<T>().AsNoTracking().ToListAsync();
+    }
+
+    public async Task<IReadOnlyList<T>> GetAllAsync(params Expression<Func<T, object>>[] includes)
+    {
+        var query = _context.Set<T>().AsQueryable();
+        foreach (var include in includes)
+        {
+            query = query.Include(include);
+        }
+        return await query.ToListAsync();
+    }
+
+    public async Task<T> GetByIdAsync(int id)
+    {
+        var entity = await _context.Set<T>().FindAsync(id);
+        return entity;
+    }
+
+    public async Task<T> GetByIdAsync(int id, params Expression<Func<T, object>>[] includes)
+    {
+        IQueryable<T> query = _context.Set<T>();
+        foreach (var include in includes)
+        {
+            query = query.Include(include);
+        }
+        var entity = await query.FirstOrDefaultAsync(x => EF.Property<int>(x, "Id") == id);
+        return entity;
+    }
+
+    public async Task AddAsync(T entity)
+    {
+        await _context.Set<T>().AddAsync(entity);
+    }
+
+    public async Task AddRangeAsync(IEnumerable<T> entities)
+    {
+        await _context.Set<T>().AddRangeAsync(entities);
+
+    }
+    public async Task UpdateAsync(T entity)
+    {
+        _context.Entry(entity).State = EntityState.Modified;
+     
+    }
+
+    public async Task DeleteAsync(int id)
+    {
+        var entity = await _context.Set<T>().FindAsync(id);
+        _context.Set<T>().Remove(entity);
+    
+    }
+
+    public async Task DeleteRangeAsync(IEnumerable<T> entities)
+    {
+        _context.Set<T>().RemoveRange(entities);
+      
+    }
+    
+    public async Task<int> CountAsync(Expression<Func<T, bool>>? predicate = null)
+    {
+        if (predicate != null)
+        {
+            return await _context.Set<T>().CountAsync(predicate);
+        }
+        return await _context.Set<T>().CountAsync();
+    }
+}

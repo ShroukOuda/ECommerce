@@ -1,6 +1,6 @@
-namespace ECommerce.Application.DTO;
+namespace ECommerce.Application.DTO.Photo;
 
-public record PhotoDTO
+public class PhotoDTO
 {
     public int ProductId { get; set; }
     public string ImageName { get; set; }

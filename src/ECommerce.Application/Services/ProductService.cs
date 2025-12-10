@@ -5,6 +5,8 @@ public class ProductService : IProductService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly IImageManagementService _imageManagementService;
+    private readonly AddProductDtoValidator _addProductDtoValidator = new AddProductDtoValidator();
+    private readonly UpdateProductDtoValidator _updateProductDtoValidator = new UpdateProductDtoValidator();
 
     public ProductService(IUnitOfWork unitOfWork,IMapper mapper, IImageManagementService imageManagementService)
     {
@@ -25,7 +27,8 @@ public class ProductService : IProductService
 
     public async Task<GetProductDTO> GetProductByIdAsync(int id)
     {
-        ValidateId(id);
+        if (id <= 0)
+            throw new ArgumentException("Product ID must be greater than zero.", nameof(id));
         var product = await _unitOfWork.ProductRepository.GetByIdAsync(id, p=>p.Category, p=>p.Photos);
         if (product is null)
             throw new KeyNotFoundException($"Product with ID {id} not found");
@@ -34,7 +37,9 @@ public class ProductService : IProductService
 
     public async Task AddProductAsync(AddProductDTO productDTO)
     {
-        ValidateAddProductDTO(productDTO);
+        var validationResult = await _addProductDtoValidator.ValidateAsync(productDTO);
+        if (!validationResult.IsValid)
+            throw new ValidationException(validationResult.Errors);
         Product? product = null; 
         try
         {
@@ -70,8 +75,10 @@ public class ProductService : IProductService
 
     public async Task UpdateProductAsync(UpdateProductDTO productDTO)
     {
-        ValidateUpdateProductDTO(productDTO);
-
+        var validationResult = await _updateProductDtoValidator.ValidateAsync(productDTO);
+        if (!validationResult.IsValid)
+            throw new ValidationException(validationResult.Errors);
+        
         try
         {
             var existingProduct = await _unitOfWork.ProductRepository.GetByIdAsync(productDTO.Id, p => p.Photos);
@@ -121,7 +128,8 @@ public class ProductService : IProductService
     }
     public async Task DeleteProductAsync(int id)
     {
-        ValidateId(id);
+        if (id <= 0)
+            throw new ArgumentException("Product ID must be greater than zero.", nameof(id));
         var product = await _unitOfWork.ProductRepository.GetByIdAsync(id);
         if (product == null)
             throw new KeyNotFoundException($"Product with ID {id} not found");
@@ -137,44 +145,5 @@ public class ProductService : IProductService
         int totalCount = await _unitOfWork.ProductRepository.CountAsync();
         return totalCount;
     }
-
-    private void ValidateId(int id)
-    {
-        if (id <= 0)
-            throw new ArgumentException("Product ID must be greater than zero.", nameof(id));
-    }
-
-    private void ValidateAddProductDTO(AddProductDTO productDTO)
-    {
-        if (productDTO == null)
-            throw new ArgumentNullException(nameof(productDTO), "Product data cannot be null.");
-
-        if (string.IsNullOrWhiteSpace(productDTO.Name))
-            throw new ArgumentException("Product name is required.", nameof(productDTO.Name));
-
-        if (productDTO.Price <= 0)
-            throw new ArgumentException("Product price must be greater than zero.", nameof(productDTO.Price));
-
-        if (productDTO.CategoryId <= 0)
-            throw new ArgumentException("Valid category ID is required.", nameof(productDTO.CategoryId));
-    }
-
-    private void ValidateUpdateProductDTO(UpdateProductDTO productDTO)
-    {
-        if (productDTO == null)
-            throw new ArgumentNullException(nameof(productDTO), "Product data cannot be null.");
-
-        if (productDTO.Id <= 0)
-            throw new ArgumentException("Product ID must be greater than zero.", nameof(productDTO.Id));
-
-        if (string.IsNullOrWhiteSpace(productDTO.Name))
-            throw new ArgumentException("Product name is required.", nameof(productDTO.Name));
-
-        if (productDTO.Price <= 0)
-            throw new ArgumentException("Product price must be greater than zero.", nameof(productDTO.Price));
-        
-
-        if (productDTO.CategoryId <= 0)
-            throw new ArgumentException("Valid category ID is required.", nameof(productDTO.CategoryId));
-    }
+    
 }

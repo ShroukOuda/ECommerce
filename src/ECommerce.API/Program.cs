@@ -1,7 +1,9 @@
 using System.Text.Json.Serialization;
 using ECommerce.API.Middleware;
 using ECommerce.Application;
+using ECommerce.Application.Validators;
 using ECommerce.Infrastructure;
+using FluentValidation;
 
 namespace ECommerce.API;
 
@@ -19,6 +21,11 @@ public class Program
             {
                 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             });
+        
+        //validator
+        builder.Services.AddValidatorsFromAssemblyContaining<AddProductDtoValidator>();
+        builder.Services.AddValidatorsFromAssemblyContaining<UpdateProductDtoValidator>();
+        
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
         

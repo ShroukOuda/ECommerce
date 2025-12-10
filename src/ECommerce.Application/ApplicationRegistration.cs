@@ -1,5 +1,4 @@
 using System.Reflection;
-using ECommerce.Application.Interfaces;
 using ECommerce.Application.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -13,6 +12,8 @@ public static class ApplicationRegistration
         services.AddScoped<ICategoryService, CategoryService>();
         
         services.AddAutoMapper(cfg => { }, Assembly.GetExecutingAssembly());
+      
+
         return services;
     }
 }

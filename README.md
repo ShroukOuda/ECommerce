@@ -1,12 +1,10 @@
 # ASP.NET Core 9 E-Commerce API 🛒
 
-[![Status](https://img.shields.io/badge/Status-In%20Active%20Development-yellow)](https://github.com/ShroukOuda/E-Commerece)
+[![Status](https://img.shields.io/badge/Status-In%20Active%20Development-yellow)](https://github.com/ShroukOuda/ECommerce)
 [![.NET](https://img.shields.io/badge/.NET-9.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker)](https://www.docker.com/)
 
-
-
-A production-ready e-commerce REST API built with ASP.NET Core 9, featuring clean architecture, advanced filtering, Docker support, and comprehensive product management.
+A production-ready e-commerce REST API built with ASP.NET Core 9, featuring clean architecture, advanced filtering, input validation, and Docker support.
 
 ---
 
@@ -16,18 +14,12 @@ A production-ready e-commerce REST API built with ASP.NET Core 9, featuring clea
 - [Technologies](#-technologies)
 - [Architecture](#-architecture)
 - [Getting Started](#-getting-started)
-    - [Prerequisites](#prerequisites)
-    - [Docker Deployment](#option-1-docker-deployment-recommended)
-    - [Local Development](#option-2-local-development)
 - [API Documentation](#-api-documentation)
 - [Usage Examples](#-usage-examples)
 - [Configuration](#-configuration)
 - [Docker Details](#-docker-details)
-- [Database](#-database)
-- [Testing](#-testing)
 - [Roadmap](#-roadmap)
 - [Contributing](#-contributing)
-
 
 ---
 
@@ -39,6 +31,7 @@ A production-ready e-commerce REST API built with ASP.NET Core 9, featuring clea
 - ✅ **Advanced Product Filtering** – Search by name, filter by category, price range
 - ✅ **Sorting & Pagination** – Sort by price, name, date; paginated results
 - ✅ **Image Management** – Upload, update, and delete product images
+- ✅ **Input Validation** – FluentValidation for request validation
 - ✅ **Clean Architecture** – Separation into API, Application, Core, Infrastructure layers
 - ✅ **Repository + Unit of Work Pattern** – Consistent data access abstraction
 - ✅ **DTO Pattern** – Secure data transfer between layers
@@ -46,6 +39,7 @@ A production-ready e-commerce REST API built with ASP.NET Core 9, featuring clea
 - ✅ **Swagger/OpenAPI Documentation** – Interactive API testing
 - ✅ **Entity Framework Core** – Code-first migrations, SQL Server support
 - ✅ **Docker Support** – Containerized deployment with Docker Compose
+- ✅ **Seed Data** – Organized seed data for development and testing
 
 ### Planned Features
 
@@ -54,10 +48,7 @@ A production-ready e-commerce REST API built with ASP.NET Core 9, featuring clea
 - 🔄 User Profiles & Addresses
 - 🔄 Payment Integration (Stripe/PayPal)
 - 🔄 Email Notifications
-- 🔄 Redis Caching
 - 🔄 Unit & Integration Tests
-- 🔄 CI/CD Pipeline
-- 🔄 Kubernetes Deployment
 
 ---
 
@@ -66,16 +57,13 @@ A production-ready e-commerce REST API built with ASP.NET Core 9, featuring clea
 ### Core Stack
 - **ASP.NET Core 9** – Web API framework
 - **Entity Framework Core 9** – ORM for database operations
-- **SQL Server 2022** – Primary database (SQLite for development)
+- **SQL Server 2022** – Primary database
 - **C# 12** – Programming language
 
 ### Libraries & Tools
 - **AutoMapper** – Object-to-object mapping
 - **FluentValidation** – Request validation
 - **Swashbuckle (Swagger)** – API documentation
-- **Serilog** *(planned)* – Structured logging
-- **xUnit** *(planned)* – Unit testing framework
-- **Moq** *(planned)* – Mocking framework
 
 ### Infrastructure
 - **Docker** – Containerization
@@ -88,33 +76,42 @@ A production-ready e-commerce REST API built with ASP.NET Core 9, featuring clea
 ### Project Structure
 
 ```
-ECommerceAPI/
+ECommerce/
 ├── src/
 │   ├── ECommerce.API/              # 🌐 Presentation Layer
 │   │   ├── Controllers/            # API endpoints
-│   │   ├── Middleware/             # Custom middleware
+│   │   ├── Middleware/             # Custom middleware (exception handling)
+│   │   ├── Helper/                 # Response models, pagination
 │   │   ├── Program.cs              # Application entry point
 │   │   └── appsettings.json        # Configuration
 │   │
 │   ├── ECommerce.Application/      # 💼 Application Layer
-│   │   ├── DTOs/                   # Data Transfer Objects
-│   │   ├── Services/               # Business logic
-│   │   ├── Validators/             # Input validation
-│   │   └── Mappings/               # AutoMapper profiles
+│   │   ├── DTO/
+│   │   │   ├── Category/           # Category DTOs
+│   │   │   ├── Product/            # Product DTOs
+│   │   │   └── Photo/              # Photo DTOs
+│   │   ├── Services/               # Business logic implementation
+│   │   ├── Interfaces/             # Service contracts
+│   │   ├── Validators/             # FluentValidation rules
+│   │   └── Mapping/                # AutoMapper profiles
 │   │
 │   ├── ECommerce.Core/             # 🎯 Domain Layer
-│   │   ├── Entities/               # Domain models
-│   │   ├── Interfaces/             # Repository interfaces
-│   │   └── Specifications/         # Query specifications
+│   │   ├── Entities/               # Domain models (Product, Category, Photo)
+│   │   ├── Common/                 # Base entities
+│   │   ├── Interfaces/
+│   │   │   ├── Repositories/       # Repository contracts
+│   │   │   └── Services/           # Domain service contracts
+│   │   └── Specifications/         # Query specifications, parameters
 │   │
 │   └── ECommerce.Infrastructure/   # 🔧 Infrastructure Layer
-│       ├── Data/                   # DbContext, configurations
+│       ├── Persistence/
+│       │   ├── Context/            # DbContext
+│       │   ├── Configurations/     # Entity configurations
+│       │   ├── Migrations/         # EF Core migrations
+│       │   └── Seed/               # Database seed data
 │       ├── Repositories/           # Repository implementations
-│       └── Migrations/             # EF Core migrations
-│
-├── tests/                          # 🧪 Test Projects
-│   ├── ECommerce.UnitTests/
-│   └── ECommerce.IntegrationTests/
+│       ├── Services/               # Infrastructure services
+│       └── Settings/               # Configuration models
 │
 ├── docker/                         # 🐳 Docker Configuration
 │   ├── Dockerfile
@@ -133,7 +130,7 @@ ECommerceAPI/
 - **Unit of Work Pattern** – Transaction management
 - **DTO Pattern** – Data transfer and validation
 - **Dependency Injection** – Loose coupling
-- **CQRS-lite** – Command/Query separation in services
+- **Specification Pattern** – Query filtering and sorting
 
 ---
 
@@ -172,6 +169,7 @@ ECommerceAPI/
     - Build the API container
     - Create and configure the database
     - Apply EF Core migrations
+    - Seed initial data
     - Start both containers
 
 3. **Verify services are running**
@@ -221,7 +219,7 @@ docker compose -f docker/docker-compose.yml up -d --build
 
 2. **Configure the database**
 
-   Update `ECommerce.API/appsettings.json`:
+   Update `src/ECommerce.API/appsettings.json`:
 
    **For SQL Server LocalDB:**
    ```json
@@ -240,8 +238,6 @@ docker compose -f docker/docker-compose.yml up -d --build
      }
    }
    ```
-
-   
 
 3. **Apply database migrations**
    ```bash
@@ -267,16 +263,25 @@ docker compose -f docker/docker-compose.yml up -d --build
 
 ```bash
 # Create a new migration
-dotnet ef migrations add MigrationName --project src/ECommerce.Infrastructure --startup-project src/ECommerce.API
+dotnet ef migrations add MigrationName \
+  --project src/ECommerce.Infrastructure \
+  --startup-project src/ECommerce.API \
+  --output-dir Persistence/Migrations
 
 # Remove last migration
-dotnet ef migrations remove --project src/ECommerce.Infrastructure --startup-project src/ECommerce.API
+dotnet ef migrations remove \
+  --project src/ECommerce.Infrastructure \
+  --startup-project src/ECommerce.API
 
 # Update database to specific migration
-dotnet ef database update MigrationName --project src/ECommerce.Infrastructure --startup-project src/ECommerce.API
+dotnet ef database update MigrationName \
+  --project src/ECommerce.Infrastructure \
+  --startup-project src/ECommerce.API
 
 # Generate SQL script
-dotnet ef migrations script --project src/ECommerce.Infrastructure --startup-project src/ECommerce.API
+dotnet ef migrations script \
+  --project src/ECommerce.Infrastructure \
+  --startup-project src/ECommerce.API
 ```
 
 ---
@@ -285,7 +290,8 @@ dotnet ef migrations script --project src/ECommerce.Infrastructure --startup-pro
 
 ### Base URL
 - **Docker**: `http://localhost:8080`
-- **Local**: `https://localhost:5224` 
+- **Local HTTPS**: `https://localhost:5001`
+- **Local HTTP**: `http://localhost:5000`
 
 ### Swagger UI
 Interactive API documentation available at `/swagger`
@@ -453,8 +459,9 @@ Invoke-RestMethod -Uri "http://localhost:8080/api/Categories/add" `
       "categoryName": "Electronics",
       "stockQuantity": 50,
       "sku": "LAPTOP-001",
-      "imageUrl": "/images/products/laptop-001.jpg",
-      "createdAt": "2024-01-15T10:30:00Z"
+      "imageUrl": "/images/products/1/laptop-001.jpg",
+      "createdAt": "2024-12-10T10:30:00Z",
+      "updatedAt": "2024-12-10T10:30:00Z"
     }
   ],
   "pageNumber": 1,
@@ -477,8 +484,15 @@ Invoke-RestMethod -Uri "http://localhost:8080/api/Categories/add" `
   "categoryName": "Electronics",
   "stockQuantity": 50,
   "sku": "LAPTOP-001",
-  "imageUrl": "/images/products/laptop-001.jpg",
-  "createdAt": "2024-01-15T10:30:00Z"
+  "photos": [
+    {
+      "id": 1,
+      "url": "/images/products/1/laptop-001.jpg",
+      "isMain": true
+    }
+  ],
+  "createdAt": "2024-12-10T10:30:00Z",
+  "updatedAt": "2024-12-10T10:30:00Z"
 }
 ```
 
@@ -509,14 +523,15 @@ Invoke-RestMethod -Uri "http://localhost:8080/api/Categories/add" `
   "Logging": {
     "LogLevel": {
       "Default": "Information",
-      "Microsoft.AspNetCore": "Warning"
+      "Microsoft.AspNetCore": "Warning",
+      "Microsoft.EntityFrameworkCore": "Warning"
     }
   },
   "AllowedHosts": "*",
-  "FileUpload": {
+  "FileSettings": {
     "MaxFileSizeMB": 5,
     "AllowedExtensions": [".jpg", ".jpeg", ".png", ".gif"],
-    "ImagePath": "wwwroot/images/products"
+    "ImagePath": "wwwroot/Images/Products"
   }
 }
 ```
@@ -527,7 +542,8 @@ Invoke-RestMethod -Uri "http://localhost:8080/api/Categories/add" `
   "Logging": {
     "LogLevel": {
       "Default": "Debug",
-      "Microsoft.AspNetCore": "Information"
+      "Microsoft.AspNetCore": "Information",
+      "Microsoft.EntityFrameworkCore": "Information"
     }
   }
 }
@@ -536,13 +552,19 @@ Invoke-RestMethod -Uri "http://localhost:8080/api/Categories/add" `
 #### Environment Variables (Docker)
 ```bash
 ASPNETCORE_ENVIRONMENT=Development
-ConnectionStrings__DefaultConnection=Server=sqlserver;Database=ECommerceDb;...
+ConnectionStrings__DefaultConnection=Server=sqlserver;Database=ECommerceDb;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=true
 ```
 
 ---
 
 ## 🐳 Docker Details
 
+### Docker Compose Configuration
+
+The `docker/docker-compose.yml` file defines two services:
+
+1. **sqlserver** - SQL Server 2022 database
+2. **ecommerce-api** - ASP.NET Core API
 
 ### Docker Commands
 
@@ -572,43 +594,6 @@ docker rm -f ecommerce-api
 
 ---
 
-## 🗄️ Database
-
----
-
-## 🧪 Testing
-
-### Running Tests (Planned)
-
-```bash
-# Run all tests
-dotnet test
-
-# Run with coverage
-dotnet test /p:CollectCoverage=true
-
-# Run specific test project
-dotnet test tests/ECommerce.UnitTests
-
-# Run tests with filter
-dotnet test --filter "Category=Unit"
-```
-
-### Test Structure (Planned)
-
-```
-tests/
-├── ECommerce.UnitTests/
-│   ├── Services/
-│   ├── Validators/
-│   └── Repositories/
-└── ECommerce.IntegrationTests/
-    ├── Controllers/
-    └── Database/
-```
-
----
-
 ## 🗺️ Roadmap
 
 ### Phase 1: Core Features ✅
@@ -617,17 +602,18 @@ tests/
 - [x] Category Management
 - [x] Filtering, Sorting, Pagination
 - [x] Image Upload/Management
+- [x] FluentValidation Integration
 - [x] Docker Support
 - [x] Swagger Documentation
+- [x] Organized Seed Data
 
 ### Phase 2: Security & User Management 🔄
 - [ ] JWT Authentication
 - [ ] User Registration & Login
 - [ ] Role-Based Authorization (Admin, Customer)
 - [ ] Password Reset & Email Verification
-- [ ] API Rate Limiting
 
-### Phase 3: E-Commerce Core 🔄
+### Phase 3: E-Commerce Core 📋
 - [ ] Shopping Cart
 - [ ] Order Management
 - [ ] Order History
@@ -640,28 +626,17 @@ tests/
 - [ ] Email Notifications (Order Confirmation, Shipping)
 - [ ] Invoice Generation
 
-### Phase 5: Performance & Caching 📋
-- [ ] Redis Caching
-- [ ] Response Compression
-- [ ] CDN Integration for Images
-- [ ] Database Query Optimization
-
-### Phase 6: Quality & DevOps 📋
+### Phase 5: Testing & Quality 📋
 - [ ] Unit Tests (xUnit)
 - [ ] Integration Tests
-- [ ] Serilog Logging
-- [ ] Application Insights
-- [ ] CI/CD Pipeline (GitHub Actions)
-- [ ] Kubernetes Deployment
-- [ ] Health Checks & Monitoring
+- [ ] Architecture Tests
+- [ ] API Testing (Postman Collection)
 
-### Phase 7: Advanced Features 📋
-- [ ] Multi-language Support (i18n)
-- [ ] Product Recommendations
-- [ ] Wishlist
-- [ ] Discount Codes & Promotions
-- [ ] Analytics Dashboard
-- [ ] GraphQL API (Optional)
+### Phase 6: Performance Enhancements 📋
+- [ ] Redis Caching
+- [ ] Response Compression
+- [ ] Database Query Optimization
+- [ ] Image Optimization
 
 ---
 
@@ -689,10 +664,11 @@ We welcome contributions! Please follow these guidelines:
 ### Code Standards
 
 - Follow C# coding conventions
-- Write unit tests for new features
-- Update documentation
-- Ensure all tests pass
-- Keep commits clean and descriptive
+- Use meaningful variable and method names
+- Write XML documentation for public APIs
+- Keep methods small and focused
+- Update documentation for new features
+- Ensure all builds pass
 
 ### Reporting Issues
 
@@ -700,12 +676,30 @@ Please use GitHub Issues to report bugs or request features. Include:
 - Clear description of the issue
 - Steps to reproduce
 - Expected vs actual behavior
-- Environment details (OS, .NET version, etc.)
+- Environment details (OS, .NET version, Docker version)
+- Screenshots if applicable
 
 ---
 
+## 📝 License
 
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+---
 
+## 👤 Author
+
+**Shrouq Ouda**
+- GitHub: [@ShroukOuda](https://github.com/ShroukOuda)
+
+---
+
+## 🙏 Acknowledgments
+
+- ASP.NET Core Team for the excellent framework
+- Clean Architecture principles by Robert C. Martin
+- The open-source community for amazing libraries
+
+---
 
 **Made with ❤️ using ASP.NET Core 9**

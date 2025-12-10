@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace E_Commerece.Core.Models;
+namespace E_Commerece.Core.Specifications;
 
 public class ProductParams : PaginationParams
 {

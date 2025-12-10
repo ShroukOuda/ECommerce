@@ -1,11 +1,3 @@
-using AutoMapper;
-using E_Commerece.Api.Helper;
-using E_Commerece.Application.Interfaces;
-using E_Commerece.Core.DTO;
-using E_Commerece.Core.Entites.Product;
-using E_Commerece.Core.Interfaces;
-using Microsoft.AspNetCore.Mvc;
-
 namespace E_Commerece.Api.Controllers;
 
 public class CategoriesController : BaseController

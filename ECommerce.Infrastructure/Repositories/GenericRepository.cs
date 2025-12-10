@@ -1,6 +1,4 @@
 using System.Linq.Expressions;
-using E_Commerece.Core.Interfaces;
-using E_Commerece.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace E_Commerece.Infrastructure.Repositories;

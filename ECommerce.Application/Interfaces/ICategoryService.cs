@@ -1,6 +1,3 @@
-using E_Commerece.Core.DTO;
-using E_Commerece.Core.Entites.Product;
-
 namespace E_Commerece.Application.Interfaces;
 
 public interface ICategoryService

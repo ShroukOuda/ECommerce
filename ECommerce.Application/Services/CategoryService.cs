@@ -1,9 +1,3 @@
-using AutoMapper;
-using E_Commerece.Application.Interfaces;
-using E_Commerece.Core.DTO;
-using E_Commerece.Core.Entites.Product;
-using E_Commerece.Core.Interfaces;
-
 namespace E_Commerece.Application.Services;
 
 public class CategoryService : ICategoryService

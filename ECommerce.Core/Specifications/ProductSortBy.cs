@@ -1,4 +1,4 @@
-namespace E_Commerece.Core.Models;
+namespace E_Commerece.Core.Specifications;
 
 public enum ProductSortBy
 {

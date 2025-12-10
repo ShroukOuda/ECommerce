@@ -1,8 +1,7 @@
-using E_Commerece.Core.Entites.Product;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace E_Commerece.Infrastructure.Data.Config;
+namespace E_Commerece.Infrastructure.Persistence.Configurations;
 
 public class ProductConfiguration : IEntityTypeConfiguration<Product>
 {

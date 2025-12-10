@@ -1,9 +1,5 @@
-
-using E_Commerece.Core.Interfaces;
-using E_Commerece.Core.Services;
-using E_Commerece.Infrastructure.Data;
 using E_Commerece.Infrastructure.Repositories;
-using E_Commerece.Infrastructure.Repositories.Service;
+using E_Commerece.Infrastructure.Services;
 using E_Commerece.Infrastructure.Settings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;

@@ -1,4 +1,4 @@
-namespace E_Commerece.Core.DTO;
+namespace E_Commerece.Application.DTO;
 
 public record PhotoDTO
 {

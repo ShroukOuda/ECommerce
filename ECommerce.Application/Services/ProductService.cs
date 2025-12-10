@@ -1,11 +1,3 @@
-using AutoMapper;
-using E_Commerece.Application.Interfaces;
-using E_Commerece.Core.DTO;
-using E_Commerece.Core.Entites.Product;
-using E_Commerece.Core.Interfaces;
-using E_Commerece.Core.Models;
-using E_Commerece.Core.Services;
-
 namespace E_Commerece.Application.Services;
 
 public class ProductService : IProductService
@@ -42,7 +34,7 @@ public class ProductService : IProductService
 
     public async Task AddProductAsync(AddProductDTO productDTO)
     {
-        ValidateProductDTO(productDTO);
+        ValidateAddProductDTO(productDTO);
         Product? product = null; 
         try
         {
@@ -152,7 +144,7 @@ public class ProductService : IProductService
             throw new ArgumentException("Product ID must be greater than zero.", nameof(id));
     }
 
-    private void ValidateProductDTO(AddProductDTO productDTO)
+    private void ValidateAddProductDTO(AddProductDTO productDTO)
     {
         if (productDTO == null)
             throw new ArgumentNullException(nameof(productDTO), "Product data cannot be null.");

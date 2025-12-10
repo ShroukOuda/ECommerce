@@ -1,9 +1,4 @@
-using E_Commerece.Core.Entites.Product;
-using E_Commerece.Core.Interfaces;
-using E_Commerece.Core.Models;
-using E_Commerece.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query.Internal;
 
 namespace E_Commerece.Infrastructure.Repositories;
 

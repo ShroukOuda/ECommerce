@@ -1,7 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using E_Commerece.Core.Interfaces;
-using E_Commerece.Infrastructure.Data;
-
 namespace E_Commerece.Infrastructure.Repositories;
 
 public class UnitOfWork : IUnitOfWork

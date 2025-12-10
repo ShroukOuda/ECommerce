@@ -1,4 +1,4 @@
-namespace E_Commerece.Core.Entites;
+namespace E_Commerece.Core.Entities;
 
 public class BaseEntity<T>
 {

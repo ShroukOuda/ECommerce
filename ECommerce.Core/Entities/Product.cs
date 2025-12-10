@@ -1,4 +1,4 @@
-namespace E_Commerece.Core.Entites.Product;
+namespace E_Commerece.Core.Entities;
 
 public class Product:BaseEntity<int>
 {

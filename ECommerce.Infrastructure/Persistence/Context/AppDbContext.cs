@@ -1,8 +1,8 @@
 using System.Reflection;
-using E_Commerece.Core.Entites.Product;
+
 using Microsoft.EntityFrameworkCore;
 
-namespace E_Commerece.Infrastructure.Data;
+namespace E_Commerece.Infrastructure.Persistence.Context;
 
 public class AppDbContext:DbContext
 {

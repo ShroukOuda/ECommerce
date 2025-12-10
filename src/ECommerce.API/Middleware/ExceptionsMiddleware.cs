@@ -11,7 +11,10 @@ public class ExceptionsMiddleware
     private readonly IMemoryCache _memoryCache;
     private readonly TimeSpan _rateLimitWindow = TimeSpan.FromSeconds(30);
     private const int _maxRequests = 8;
-    public ExceptionsMiddleware(RequestDelegate next, IHostEnvironment environment, IMemoryCache memoryCache)
+    public ExceptionsMiddleware(
+        RequestDelegate next, 
+        IHostEnvironment environment, 
+        IMemoryCache memoryCache)
     {
         _next = next;
         _environment = environment;

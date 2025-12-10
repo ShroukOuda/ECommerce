@@ -158,8 +158,8 @@ ECommerceAPI/
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/ShroukOuda/E-Commerece.git
-   cd E-Commerece
+   git clone https://github.com/ShroukOuda/ECommerce.git
+   cd ECommerce
    ```
 
 2. **Start all services**
@@ -214,7 +214,7 @@ docker compose -f docker/docker-compose.yml up -d --build
 
 1. **Clone and restore packages**
    ```bash
-   git clone https://github.com/ShroukOuda/E-Commerece.git
+   git clone https://github.com/ShroukOuda/ECommerce.git
    cd ECommerce
    dotnet restore
    ```
@@ -245,7 +245,7 @@ docker compose -f docker/docker-compose.yml up -d --build
 
 3. **Apply database migrations**
    ```bash
-   cd ECommerce.API
+   cd src/ECommerce.API
    dotnet ef database update --project ../ECommerce.Infrastructure
    ```
 
@@ -267,16 +267,16 @@ docker compose -f docker/docker-compose.yml up -d --build
 
 ```bash
 # Create a new migration
-dotnet ef migrations add MigrationName --project src/E-Commerece.Infrastructure --startup-project src/E-Commerece.Api
+dotnet ef migrations add MigrationName --project src/ECommerce.Infrastructure --startup-project src/ECommerce.API
 
 # Remove last migration
-dotnet ef migrations remove --project src/E-Commerece.Infrastructure --startup-project src/E-Commerece.Api
+dotnet ef migrations remove --project src/ECommerce.Infrastructure --startup-project src/ECommerce.API
 
 # Update database to specific migration
-dotnet ef database update MigrationName --project src/E-Commerece.Infrastructure --startup-project src/E-Commerece.Api
+dotnet ef database update MigrationName --project src/ECommerce.Infrastructure --startup-project src/ECommerce.API
 
 # Generate SQL script
-dotnet ef migrations script --project src/E-Commerece.Infrastructure --startup-project src/E-Commerece.Api
+dotnet ef migrations script --project src/ECommerce.Infrastructure --startup-project src/ECommerce.API
 ```
 
 ---
@@ -285,7 +285,7 @@ dotnet ef migrations script --project src/E-Commerece.Infrastructure --startup-p
 
 ### Base URL
 - **Docker**: `http://localhost:8080`
-- **Local**: `https://localhost:5001` or `http://localhost:5000`
+- **Local**: `https://localhost:5224` 
 
 ### Swagger UI
 Interactive API documentation available at `/swagger`
@@ -573,55 +573,6 @@ docker rm -f ecommerce-api
 ---
 
 ## 🗄️ Database
-
-### Schema Overview
-
-#### Categories Table
-```sql
-CREATE TABLE Categories (
-    Id INT PRIMARY KEY IDENTITY(1,1),
-    Name NVARCHAR(100) NOT NULL,
-    Description NVARCHAR(500),
-    CreatedAt DATETIME2 NOT NULL,
-    UpdatedAt DATETIME2
-);
-```
-
-#### Products Table
-```sql
-CREATE TABLE Products (
-    Id INT PRIMARY KEY IDENTITY(1,1),
-    Name NVARCHAR(200) NOT NULL,
-    Description NVARCHAR(MAX),
-    Price DECIMAL(18,2) NOT NULL,
-    CategoryId INT NOT NULL,
-    StockQuantity INT NOT NULL,
-    Sku NVARCHAR(50),
-    ImageUrl NVARCHAR(500),
-    CreatedAt DATETIME2 NOT NULL,
-    UpdatedAt DATETIME2,
-    FOREIGN KEY (CategoryId) REFERENCES Categories(Id)
-);
-```
-
-### Seed Data
-
-Add sample data in `ECommerce.Infrastructure/Data/DbInitializer.cs`:
-
-```csharp
-public static void Seed(ApplicationDbContext context)
-{
-    if (!context.Categories.Any())
-    {
-        context.Categories.AddRange(
-            new Category { Name = "Electronics", Description = "Electronic devices" },
-            new Category { Name = "Clothing", Description = "Apparel and accessories" },
-            new Category { Name = "Books", Description = "Books and magazines" }
-        );
-        context.SaveChanges();
-    }
-}
-```
 
 ---
 

@@ -215,13 +215,13 @@ docker compose -f docker/docker-compose.yml up -d --build
 1. **Clone and restore packages**
    ```bash
    git clone https://github.com/ShroukOuda/E-Commerece.git
-   cd E-Commerece
+   cd ECommerce
    dotnet restore
    ```
 
 2. **Configure the database**
 
-   Update `src/ECommerce.API/appsettings.json`:
+   Update `ECommerce.API/appsettings.json`:
 
    **For SQL Server LocalDB:**
    ```json
@@ -245,8 +245,8 @@ docker compose -f docker/docker-compose.yml up -d --build
 
 3. **Apply database migrations**
    ```bash
-   cd src/E-Commerece.Api
-   dotnet ef database update --project ../E-Commerece.Infrastructure
+   cd ECommerce.API
+   dotnet ef database update --project ../ECommerce.Infrastructure
    ```
 
 4. **Run the application**

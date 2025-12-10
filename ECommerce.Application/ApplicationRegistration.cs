@@ -1,10 +1,9 @@
 using System.Reflection;
-using AutoMapper;
-using E_Commerece.Application.Interfaces;
-using E_Commerece.Application.Services;
+using ECommerce.Application.Interfaces;
+using ECommerce.Application.Services;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace E_Commerece.Application;
+namespace ECommerce.Application;
 
 public static class ApplicationRegistration 
 {

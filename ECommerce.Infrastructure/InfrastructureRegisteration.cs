@@ -1,12 +1,12 @@
-using E_Commerece.Infrastructure.Repositories;
-using E_Commerece.Infrastructure.Services;
-using E_Commerece.Infrastructure.Settings;
+using ECommerce.Infrastructure.Repositories;
+using ECommerce.Infrastructure.Services;
+using ECommerce.Infrastructure.Settings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 
-namespace E_Commerece.Infrastructure;
+namespace ECommerce.Infrastructure;
 
 public static class InfrastructureRegisteration
 {

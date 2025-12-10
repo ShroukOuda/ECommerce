@@ -1,4 +1,4 @@
-namespace E_Commerece.Application.DTO;
+namespace ECommerce.Application.DTO;
 
 public record AddCategoryDTO
 {

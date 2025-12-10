@@ -1,4 +1,4 @@
-namespace E_Commerece.Infrastructure.Repositories;
+namespace ECommerce.Infrastructure.Repositories;
 
 public class PhotoRepository : GenericRepository<Photo>, IPhotoRepository
 {

@@ -1,4 +1,4 @@
-namespace E_Commerece.Core.Entities;
+namespace ECommerce.Core.Entities;
 
 public class Category:BaseEntity<int>
 {
@@ -6,5 +6,5 @@ public class Category:BaseEntity<int>
     public string Description { get; set; }
     
     //Navigation Properties
-    // public virtual ICollection<Product> Products { get; set; }
+    public virtual ICollection<Product> Products { get; set; }
 }

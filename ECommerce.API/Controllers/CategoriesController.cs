@@ -1,4 +1,4 @@
-namespace E_Commerece.Api.Controllers;
+namespace ECommerce.API.Controllers;
 
 public class CategoriesController : BaseController
 {

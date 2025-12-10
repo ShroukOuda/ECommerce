@@ -1,5 +1,5 @@
-global using E_Commerece.Api.Helper;
-global using E_Commerece.Application.Interfaces;
-global using E_Commerece.Application.DTO;
+global using ECommerce.API.Helper;
+global using ECommerce.Application.Interfaces;
+global using ECommerce.Application.DTO;
 global using Microsoft.AspNetCore.Mvc;
-global using E_Commerece.Core.Specifications;
+global using ECommerce.Core.Specifications;

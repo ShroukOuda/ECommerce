@@ -1,6 +1,6 @@
 
 
-namespace E_Commerece.Core.Interfaces;
+namespace ECommerce.Core.Interfaces;
 
 public interface IPhotoRepository : IGenericRepository<Photo>
 {

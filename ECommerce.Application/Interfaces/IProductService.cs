@@ -1,4 +1,4 @@
-namespace E_Commerece.Application.Interfaces;
+namespace ECommerce.Application.Interfaces;
 
 public interface IProductService
 {

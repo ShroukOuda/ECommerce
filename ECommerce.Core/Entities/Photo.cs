@@ -1,4 +1,4 @@
-namespace E_Commerece.Core.Entities;
+namespace ECommerce.Core.Entities;
 
 public class Photo:BaseEntity<int>
 {
@@ -6,5 +6,5 @@ public class Photo:BaseEntity<int>
     public int ProductId { get; set; }
     
     //Navigation Properties
-    // public virtual Product Product { get; set; }
+    public virtual Product Product { get; set; }
 }

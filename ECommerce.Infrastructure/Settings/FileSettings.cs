@@ -1,4 +1,4 @@
-namespace E_Commerece.Infrastructure.Settings;
+namespace ECommerce.Infrastructure.Settings;
 
 public class FileSettings
 {

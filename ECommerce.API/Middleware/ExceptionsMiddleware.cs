@@ -1,9 +1,8 @@
 using System.Net;
 using System.Text.Json;
-using E_Commerece.Api.Helper;
 using Microsoft.Extensions.Caching.Memory;
 
-namespace E_Commerece.Api.Middleware;
+namespace ECommerce.API.Middleware;
 
 public class ExceptionsMiddleware
 {

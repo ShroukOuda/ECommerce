@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.FileProviders;
-using E_Commerece.Infrastructure.Settings;
+using ECommerce.Infrastructure.Settings;
 using Microsoft.Extensions.Options;
 
-namespace E_Commerece.Infrastructure.Services;
+namespace ECommerce.Infrastructure.Services;
 
 
 public class ImageManagementService : IImageManagementService

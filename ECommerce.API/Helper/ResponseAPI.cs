@@ -1,4 +1,4 @@
-namespace E_Commerece.Api.Helper;
+namespace ECommerce.API.Helper;
 
 public class ResponseAPI
 {

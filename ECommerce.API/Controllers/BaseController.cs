@@ -1,9 +1,4 @@
-using AutoMapper;
-using E_Commerece.Api.Helper;
-using E_Commerece.Core.Interfaces;
-using Microsoft.AspNetCore.Mvc;
-
-namespace E_Commerece.Api.Controllers;
+namespace ECommerce.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]

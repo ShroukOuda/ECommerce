@@ -1,2 +1,3 @@
-global using E_Commerece.Core.Entities;
-global using E_Commerece.Core.Specifications;
+global using ECommerce.Core.Entities;
+global using ECommerce.Core.Specifications;
+global using ECommerce.Core.Common;

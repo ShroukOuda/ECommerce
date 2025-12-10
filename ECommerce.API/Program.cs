@@ -1,10 +1,9 @@
 using System.Text.Json.Serialization;
-using E_Commerece.Api.Middleware;
-using E_Commerece.Application;
-using E_Commerece.Infrastructure;
+using ECommerce.API.Middleware;
+using ECommerce.Application;
+using ECommerce.Infrastructure;
 
-
-namespace E_Commerece.Api;
+namespace ECommerce.API;
 
 public class Program
 {

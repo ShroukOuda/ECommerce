@@ -1,4 +1,4 @@
-namespace E_Commerece.Application.Services;
+namespace ECommerce.Application.Services;
 
 public class CategoryService : ICategoryService
 {

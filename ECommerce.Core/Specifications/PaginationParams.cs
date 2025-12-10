@@ -1,4 +1,4 @@
-namespace E_Commerece.Core.Specifications;
+namespace ECommerce.Core.Specifications;
 
 public class PaginationParams
 {

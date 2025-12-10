@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 
-namespace E_Commerece.Infrastructure.Repositories;
+namespace ECommerce.Infrastructure.Repositories;
 
 public class ProductRepository : GenericRepository<Product>, IProductRepository
 {

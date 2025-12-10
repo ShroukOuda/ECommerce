@@ -1,5 +1,6 @@
-global using E_Commerece.Core.Entities;
-global using E_Commerece.Core.Interfaces;
-global using E_Commerece.Core.Specifications;
-global using E_Commerece.Infrastructure.Persistence.Context;
-global using E_Commerece.Core.Interfaces.Services;
+global using ECommerce.Core.Entities;
+global using ECommerce.Core.Interfaces;
+global using ECommerce.Core.Specifications;
+global using ECommerce.Infrastructure.Persistence.Context;
+global using ECommerce.Core.Interfaces.Services;
+global using Microsoft.EntityFrameworkCore;

@@ -1,8 +1,6 @@
 using System.Reflection;
-
-using Microsoft.EntityFrameworkCore;
-
-namespace E_Commerece.Infrastructure.Persistence.Context;
+using ECommerce.Infrastructure.Persistence.Seed;
+namespace ECommerce.Infrastructure.Persistence.Context;
 
 public class AppDbContext:DbContext
 {
@@ -18,5 +16,6 @@ public class AppDbContext:DbContext
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+        modelBuilder.Seed();
     }
 }

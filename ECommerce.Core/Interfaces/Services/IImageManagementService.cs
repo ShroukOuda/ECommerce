@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Http;
-namespace E_Commerece.Core.Interfaces.Services;
+namespace ECommerce.Core.Interfaces.Services;
 
 public interface IImageManagementService
 {

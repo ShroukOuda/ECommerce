@@ -1,4 +1,4 @@
-namespace E_Commerece.Application.Mapping;
+namespace ECommerce.Application.Mapping;
 
 public class ProductMapping : Profile
 {

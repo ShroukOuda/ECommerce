@@ -1,7 +1,7 @@
 global using AutoMapper;
-global using E_Commerece.Application.Interfaces;
-global using E_Commerece.Application.DTO;
-global using E_Commerece.Core.Entities;
-global using E_Commerece.Core.Interfaces;
-global using E_Commerece.Core.Interfaces.Services;
-global using E_Commerece.Core.Specifications;
+global using ECommerce.Application.Interfaces;
+global using ECommerce.Application.DTO;
+global using ECommerce.Core.Entities;
+global using ECommerce.Core.Interfaces;
+global using ECommerce.Core.Interfaces.Services;
+global using ECommerce.Core.Specifications;

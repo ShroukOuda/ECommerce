@@ -1,6 +1,0 @@
-@E_Commerece.Api_HostAddress = http://localhost:5224
-
-GET {{E_Commerece.Api_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

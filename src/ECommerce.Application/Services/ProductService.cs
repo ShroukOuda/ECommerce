@@ -5,14 +5,21 @@ public class ProductService : IProductService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly IImageManagementService _imageManagementService;
-    private readonly AddProductDtoValidator _addProductDtoValidator = new AddProductDtoValidator();
-    private readonly UpdateProductDtoValidator _updateProductDtoValidator = new UpdateProductDtoValidator();
+    private readonly IValidator<AddProductDTO> _addProductDtoValidator;
+    private readonly IValidator<UpdateProductDTO> _updateProductDtoValidator;
 
-    public ProductService(IUnitOfWork unitOfWork,IMapper mapper, IImageManagementService imageManagementService)
+    public ProductService(
+        IUnitOfWork unitOfWork,
+        IMapper mapper, 
+        IImageManagementService imageManagementService,
+        IValidator<AddProductDTO> addProductDtoValidator,
+        IValidator<UpdateProductDTO> updateProductDtoValidator)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _imageManagementService = imageManagementService;
+        _addProductDtoValidator = addProductDtoValidator;
+        _updateProductDtoValidator = updateProductDtoValidator;
     }
     
     

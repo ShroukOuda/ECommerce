@@ -7,19 +7,22 @@ public class ProductService : IProductService
     private readonly IImageManagementService _imageManagementService;
     private readonly IValidator<AddProductDTO> _addProductDtoValidator;
     private readonly IValidator<UpdateProductDTO> _updateProductDtoValidator;
+    private readonly IValidator<UploadProductPhotoDto> _uploadProductPhotoDtoValidator;
 
     public ProductService(
         IUnitOfWork unitOfWork,
         IMapper mapper, 
         IImageManagementService imageManagementService,
         IValidator<AddProductDTO> addProductDtoValidator,
-        IValidator<UpdateProductDTO> updateProductDtoValidator)
+        IValidator<UpdateProductDTO> updateProductDtoValidator,
+        IValidator<UploadProductPhotoDto> uploadProductPhotoDtoValidator)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _imageManagementService = imageManagementService;
         _addProductDtoValidator = addProductDtoValidator;
         _updateProductDtoValidator = updateProductDtoValidator;
+        _uploadProductPhotoDtoValidator = uploadProductPhotoDtoValidator;
     }
     
     
@@ -53,31 +56,41 @@ public class ProductService : IProductService
             product = _mapper.Map<Product>(productDTO);
             await _unitOfWork.ProductRepository.AddAsync(product);
             await _unitOfWork.SaveChangesAsync();
-
-            if (productDTO.Photos != null && productDTO.Photos.Any())
-            {
-                var folder = $"Products/{product.Id}";
-                var imagePaths = await _imageManagementService.AddImageAsync(productDTO.Photos, folder);
-                var photos = imagePaths.Select(path => new Photo
-                {
-                    ImageName = path,
-                    ProductId = product.Id,
-                }).ToList();
-                await _unitOfWork.PhotoRepository.AddRangeAsync(photos);
-                await _unitOfWork.SaveChangesAsync();
-            }
-
             
         }
         catch (Exception e)
         { 
-            if (product != null && product.Id > 0)
-            {
-                _imageManagementService.DeleteImagesFolder(product.Id.ToString());
-            }
             throw new Exception($"Error Adding Product: {e.Message}", e);
         }
        
+    }
+
+    public async Task AddPhotoAsync(int ProductId, UploadProductPhotoDto productPhotoDTO)
+    {
+        var validationResult = await _uploadProductPhotoDtoValidator.ValidateAsync(productPhotoDTO);
+        if (!validationResult.IsValid)
+            throw new ValidationException(validationResult.Errors);
+        
+        var product = await _unitOfWork.ProductRepository.GetByIdAsync(ProductId);
+        if (product == null)
+            throw new KeyNotFoundException($"Product with ID {ProductId} not found.");
+
+        try
+        {
+            var folder = $"Products/{ProductId}";
+            var imagePaths = await _imageManagementService.AddImageAsync(productPhotoDTO.Photos, folder);
+            var photos = imagePaths.Select(path => new Photo
+            {
+                ImageName = path,
+                ProductId = ProductId,
+            }).ToList();
+            await _unitOfWork.PhotoRepository.AddRangeAsync(photos);
+            await _unitOfWork.SaveChangesAsync();
+        }
+        catch (Exception e)
+        {
+            throw new Exception($"Error adding photos to product: {e.Message}", e);
+        }
     }
 
     public async Task UpdateProductAsync(UpdateProductDTO productDTO)
@@ -97,35 +110,6 @@ public class ProductService : IProductService
             await _unitOfWork.ProductRepository.UpdateAsync(existingProduct);
             await _unitOfWork.SaveChangesAsync();
             
-            if (productDTO.PhotosToDelete != null && productDTO.PhotosToDelete.Any())
-            {
-
-                var photosToDelete = existingProduct.Photos
-                    .Where(p => productDTO.PhotosToDelete.Contains(p.Id))
-                    .ToList();
-
-                foreach (var photo in photosToDelete)
-                {
-                    _imageManagementService.DeleteImageFile(photo.ImageName);
-                }
-
-                await _unitOfWork.PhotoRepository.DeleteRangeAsync(photosToDelete);
-                
-            }
-
-            if (productDTO.NewPhotos != null && productDTO.NewPhotos.Any())
-            {
-                var folder = $"Products/{existingProduct.Id}";
-                var newImagePaths = await _imageManagementService.AddImageAsync(productDTO.NewPhotos, folder);
-                var newPhotos = newImagePaths.Select(path => new Photo
-                {
-                    ImageName = path,
-                    ProductId = existingProduct.Id,
-                }).ToList();
-
-                await _unitOfWork.PhotoRepository.AddRangeAsync(newPhotos);
-            }
-            await _unitOfWork.SaveChangesAsync();
         }
         catch (Exception e)
         {
@@ -146,7 +130,18 @@ public class ProductService : IProductService
         await _unitOfWork.ProductRepository.DeleteAsync(id);
         await _unitOfWork.SaveChangesAsync();
     }
+    
+    public async Task DeletePhotoAsync(int photoId)
+    {
+        var photo = await _unitOfWork.PhotoRepository.GetByIdAsync(photoId);
+        if (photo == null)
+            throw new KeyNotFoundException($"Photo with ID {photoId} not found");
 
+        _imageManagementService.DeleteImageFile(photo.ImageName);
+        await _unitOfWork.PhotoRepository.DeleteAsync(photoId);
+        await _unitOfWork.SaveChangesAsync();
+    }
+    
     public async Task<int> GetTotalCountAsync()
     {
         int totalCount = await _unitOfWork.ProductRepository.CountAsync();

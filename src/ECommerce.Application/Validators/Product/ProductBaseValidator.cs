@@ -1,6 +1,6 @@
 
 
-namespace ECommerce.Application.Validators;
+namespace ECommerce.Application.Validators.Product;
 
 public class ProductBaseValidator<T> : AbstractValidator<T> where T : ProductBaseDTO
 {

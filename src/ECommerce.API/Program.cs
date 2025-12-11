@@ -1,8 +1,8 @@
-using System.Reflection;
 using System.Text.Json.Serialization;
 using ECommerce.API.Middleware;
 using ECommerce.Application;
-using ECommerce.Application.Validators;
+using ECommerce.Application.Validators.Photo;
+using ECommerce.Application.Validators.Product;
 using ECommerce.Infrastructure;
 using FluentValidation;
 
@@ -23,8 +23,13 @@ public class Program
                 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             });
         
-     
+        
+        //Product Validator
         builder.Services.AddValidatorsFromAssembly(typeof(AddProductDtoValidator).Assembly);
+        builder.Services.AddValidatorsFromAssembly(typeof(UpdateProductDtoValidator).Assembly);
+        
+        //Photo Validator
+        builder.Services.AddValidatorsFromAssembly(typeof(UploadProductPhotoDtoValidator).Assembly);
         
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();

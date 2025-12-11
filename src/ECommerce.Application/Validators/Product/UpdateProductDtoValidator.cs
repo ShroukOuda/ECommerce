@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace ECommerce.Application.Validators;
+namespace ECommerce.Application.Validators.Product;
 
 public class UpdateProductDtoValidator : ProductBaseValidator<UpdateProductDTO>
 {

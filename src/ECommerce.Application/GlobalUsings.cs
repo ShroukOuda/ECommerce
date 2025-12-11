@@ -8,4 +8,4 @@ global using ECommerce.Core.Interfaces;
 global using ECommerce.Core.Interfaces.Services;
 global using ECommerce.Core.Specifications;
 global using FluentValidation;
-global using ECommerce.Application.Validators;
+

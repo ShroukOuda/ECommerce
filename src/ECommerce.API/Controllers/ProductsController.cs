@@ -1,3 +1,5 @@
+using ECommerce.Application.DTO.Photo;
+
 namespace ECommerce.API.Controllers;
 
 
@@ -32,6 +34,14 @@ public class ProductsController : BaseController
         await _productService.AddProductAsync(productDTO);
         return Ok("Added Successfully");
     }
+    
+    [HttpPost("/upload-photo(s)")]
+    public async Task<IActionResult> AddPhoto(int productId, [FromForm] UploadProductPhotoDto productPhotoDTO)
+    {
+        await _productService.AddPhotoAsync(productId, productPhotoDTO);
+        return Ok("Photo(s) Added Successfully");
+    }
+    
 
     [HttpPut("update")]
     public async Task<IActionResult> Update(UpdateProductDTO productDTO)
@@ -45,5 +55,12 @@ public class ProductsController : BaseController
     {
         await _productService.DeleteProductAsync(id);
         return Ok("Deleted Successfully");
+    }
+    
+    [HttpDelete("delete-photo/{photoId}")]
+    public async Task<IActionResult> DeletePhoto(int photoId)
+    {
+        await _productService.DeletePhotoAsync(photoId);
+        return Ok("Photo Deleted Successfully");
     }
 }

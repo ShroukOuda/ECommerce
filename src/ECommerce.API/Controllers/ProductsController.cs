@@ -1,4 +1,5 @@
 using ECommerce.Application.DTO.Photo;
+using ECommerce.Core.Enums.Media;
 
 namespace ECommerce.API.Controllers;
 
@@ -6,10 +7,12 @@ namespace ECommerce.API.Controllers;
 public class ProductsController : BaseController
 {
     private readonly IProductService _productService;
+    private readonly IPhotoService _photoService;
     
-    public ProductsController(IProductService productService)
+    public ProductsController(IProductService productService, IPhotoService photoService)
     {
         _productService =  productService;
+        _photoService = photoService;
     }
 
     [HttpGet("get-all")]
@@ -29,19 +32,25 @@ public class ProductsController : BaseController
     }
 
     [HttpPost("add")]
-    public async Task<IActionResult> Add(AddProductDTO productDTO)
+    public async Task<IActionResult> Add(AddProductDTO productDto)
     {
-        await _productService.AddProductAsync(productDTO);
+        await _productService.AddProductAsync(productDto);
         return Ok("Added Successfully");
     }
     
-    [HttpPost("/upload-photo(s)")]
-    public async Task<IActionResult> AddPhoto(int productId, [FromForm] UploadProductPhotoDto productPhotoDTO)
+    [HttpPost("upload-photos")]
+    public async Task<IActionResult> AddPhotos([FromForm] UploadPhotosDTO uploadPhotosDto, CancellationToken ct = default)
     {
-        await _productService.AddPhotoAsync(productId, productPhotoDTO);
-        return Ok("Photo(s) Added Successfully");
+        await _photoService.UploadPhotosAsync(uploadPhotosDto, ct);
+        return Ok("Photos Uploaded Successfully");
     }
-    
+
+    [HttpPost("upload-photo")]
+    public async Task<IActionResult> AddPhoto([FromForm] UploadPhotoDTO uploadPhotoDto, CancellationToken ct = default)
+    {
+        await _photoService.UploadPhotoAsync(uploadPhotoDto, ct);
+        return Ok("Photo Uploaded Successfully");
+    }
 
     [HttpPut("update")]
     public async Task<IActionResult> Update(UpdateProductDTO productDTO)
@@ -58,9 +67,17 @@ public class ProductsController : BaseController
     }
     
     [HttpDelete("delete-photo/{photoId}")]
-    public async Task<IActionResult> DeletePhoto(int photoId)
+    public async Task<IActionResult> DeletePhoto(int photoId, CancellationToken ct = default)
     {
-        await _productService.DeletePhotoAsync(photoId);
+        await _photoService.DeletePhotoAsync(photoId, ct);
         return Ok("Photo Deleted Successfully");
     }
+
+    [HttpDelete("delete-photos/{productId}")]
+    public async Task<IActionResult> DeletePhotos(int productId, CancellationToken ct = default)
+    {
+        await _photoService.DeleteEntityPhotosAsync(PhotoType.ProductImage, productId, ct);
+        return Ok("Photos Deleted Successfully");
+    }
+
 }

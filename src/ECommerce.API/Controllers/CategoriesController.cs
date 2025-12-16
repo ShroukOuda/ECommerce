@@ -1,11 +1,15 @@
+using ECommerce.Core.Enums.Media;
+
 namespace ECommerce.API.Controllers;
 
 public class CategoriesController : BaseController
 {
     private readonly ICategoryService _categoryService;
-    public CategoriesController(ICategoryService categoryService) 
+    private readonly IPhotoService _photoService;
+    public CategoriesController(ICategoryService categoryService, IPhotoService photoService) 
     {
         _categoryService = categoryService;
+        _photoService = photoService;
     }
     
     [HttpGet("get-all")]
@@ -28,6 +32,13 @@ public class CategoriesController : BaseController
         await _categoryService.AddCategoryAsync(categoryDto);
         return Ok(new ResponseAPI(200, "Category added successfully"));
     }
+    
+    [HttpPost("uploadPhoto")]
+    public async Task<IActionResult> UploadPhoto([FromForm] UploadPhotoDTO uploadPhotoDto, CancellationToken ct = default)
+    {
+        await _photoService.UploadPhotoAsync(uploadPhotoDto, ct);
+        return Ok(new ResponseAPI(200, "Category photo uploaded successfully"));
+    }
 
     [HttpPut("update")]
     public async Task<IActionResult> Update(UpdateCategoryDTO categoryDto)
@@ -41,5 +52,19 @@ public class CategoriesController : BaseController
     {
         await _categoryService.DeleteCategoryAsync(id);
         return Ok(new ResponseAPI(200, "Category deleted successfully"));
+    }
+    
+    [HttpDelete("delete-photo/{photoId}")]
+    public async Task<IActionResult> DeletePhoto(int photoId, CancellationToken ct = default)
+    {
+        await _photoService.DeletePhotoAsync(photoId, ct);
+        return Ok(new ResponseAPI(200, "Category photo deleted successfully"));
+    }
+
+    [HttpDelete("delete-photos/{categoryId}")]
+    public async Task<IActionResult> DeletePhotos(int categoryId, CancellationToken ct = default)
+    {
+        await _photoService.DeleteEntityPhotosAsync(PhotoType.CategoryMedia, categoryId, ct);
+        return Ok(new ResponseAPI(200, "Category Media photos deleted successfully"));
     }
 }

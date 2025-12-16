@@ -12,7 +12,7 @@ public static class InfrastructureRegisteration
 {
     public static IServiceCollection InfrastructureConfiguratoin(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+        services.AddScoped(typeof(IGenericRepository<,>), typeof(GenericRepository<,>));
         
         //unit of work
         services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -20,8 +20,6 @@ public static class InfrastructureRegisteration
         //file provider
         services.AddSingleton<IFileProvider>(new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot")));
         
-        //file settings
-        services.Configure<FileSettings>(options => configuration.GetSection("FileSettings").Bind(options));
         
         //image management service
         services.AddScoped<IImageManagementService ,ImageManagementService>();

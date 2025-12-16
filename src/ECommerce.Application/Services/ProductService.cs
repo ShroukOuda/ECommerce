@@ -7,45 +7,44 @@ public class ProductService : IProductService
     private readonly IImageManagementService _imageManagementService;
     private readonly IValidator<AddProductDTO> _addProductDtoValidator;
     private readonly IValidator<UpdateProductDTO> _updateProductDtoValidator;
-    private readonly IValidator<UploadProductPhotoDto> _uploadProductPhotoDtoValidator;
+
 
     public ProductService(
         IUnitOfWork unitOfWork,
         IMapper mapper, 
         IImageManagementService imageManagementService,
         IValidator<AddProductDTO> addProductDtoValidator,
-        IValidator<UpdateProductDTO> updateProductDtoValidator,
-        IValidator<UploadProductPhotoDto> uploadProductPhotoDtoValidator)
+        IValidator<UpdateProductDTO> updateProductDtoValidator)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _imageManagementService = imageManagementService;
         _addProductDtoValidator = addProductDtoValidator;
         _updateProductDtoValidator = updateProductDtoValidator;
-        _uploadProductPhotoDtoValidator = uploadProductPhotoDtoValidator;
     }
     
     
-    public async Task<IEnumerable<GetProductDTO>> GetAllProductsAsync(ProductParams productParams)
+    public async Task<IEnumerable<GetProductDTO>> GetAllProductsAsync(ProductParams productParams, CancellationToken ct = default)
     {
-        var products = await _unitOfWork.ProductRepository.GetAllProductsAsync(productParams);
+        var products = await _unitOfWork.ProductRepository.GetAllAsync(productParams, ct);
         if (products is null)
             throw new KeyNotFoundException("Products not found");
         
         return  _mapper.Map<IEnumerable<GetProductDTO>>(products);
     }
 
-    public async Task<GetProductDTO> GetProductByIdAsync(int id)
+    public async Task<GetProductDTO> GetProductByIdAsync(int id, CancellationToken ct = default)
     {
         if (id <= 0)
             throw new ArgumentException("Product ID must be greater than zero.", nameof(id));
-        var product = await _unitOfWork.ProductRepository.GetByIdAsync(id, p=>p.Category, p=>p.Photos);
+        
+        var product = await _unitOfWork.ProductRepository.GetByIdAsync(id, ct);
         if (product is null)
             throw new KeyNotFoundException($"Product with ID {id} not found");
         return _mapper.Map<GetProductDTO>(product);
     }
 
-    public async Task AddProductAsync(AddProductDTO productDTO)
+    public async Task AddProductAsync(AddProductDTO productDTO, CancellationToken cancellationToken = default)
     {
         var validationResult = await _addProductDtoValidator.ValidateAsync(productDTO);
         if (!validationResult.IsValid)
@@ -55,7 +54,7 @@ public class ProductService : IProductService
         {
             product = _mapper.Map<Product>(productDTO);
             await _unitOfWork.ProductRepository.AddAsync(product);
-            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
             
         }
         catch (Exception e)
@@ -64,51 +63,23 @@ public class ProductService : IProductService
         }
        
     }
-
-    public async Task AddPhotoAsync(int ProductId, UploadProductPhotoDto productPhotoDTO)
+    
+    public async Task UpdateProductAsync(UpdateProductDTO productDto, CancellationToken ct = default)
     {
-        var validationResult = await _uploadProductPhotoDtoValidator.ValidateAsync(productPhotoDTO);
-        if (!validationResult.IsValid)
-            throw new ValidationException(validationResult.Errors);
-        
-        var product = await _unitOfWork.ProductRepository.GetByIdAsync(ProductId);
-        if (product == null)
-            throw new KeyNotFoundException($"Product with ID {ProductId} not found.");
-
-        try
-        {
-            var folder = $"Products/{ProductId}";
-            var imagePaths = await _imageManagementService.AddImageAsync(productPhotoDTO.Photos, folder);
-            var photos = imagePaths.Select(path => new Photo
-            {
-                ImageName = path,
-                ProductId = ProductId,
-            }).ToList();
-            await _unitOfWork.PhotoRepository.AddRangeAsync(photos);
-            await _unitOfWork.SaveChangesAsync();
-        }
-        catch (Exception e)
-        {
-            throw new Exception($"Error adding photos to product: {e.Message}", e);
-        }
-    }
-
-    public async Task UpdateProductAsync(UpdateProductDTO productDTO)
-    {
-        var validationResult = await _updateProductDtoValidator.ValidateAsync(productDTO);
+        var validationResult = await _updateProductDtoValidator.ValidateAsync(productDto, ct);
         if (!validationResult.IsValid)
             throw new ValidationException(validationResult.Errors);
         
         try
         {
-            var existingProduct = await _unitOfWork.ProductRepository.GetByIdAsync(productDTO.Id, p => p.Photos);
+            bool exists = await _unitOfWork.ProductRepository.ExistsAsync(p => p.Id == productDto.Id, ct);
             
-            if (existingProduct == null)
-                throw new KeyNotFoundException($"Product with ID {productDTO.Id} not found.");
+            if (!exists)
+                throw new KeyNotFoundException($"Product with ID {productDto.Id} not found.");
 
-            _mapper.Map(productDTO, existingProduct);
-            await _unitOfWork.ProductRepository.UpdateAsync(existingProduct);
-            await _unitOfWork.SaveChangesAsync();
+            var product = _mapper.Map<Product>(productDto);
+            await _unitOfWork.ProductRepository.UpdateAsync(product, ct);
+            await _unitOfWork.SaveChangesAsync(ct);
             
         }
         catch (Exception e)
@@ -117,29 +88,19 @@ public class ProductService : IProductService
         }
        
     }
-    public async Task DeleteProductAsync(int id)
+    public async Task DeleteProductAsync(int id, CancellationToken ct = default)
     {
         if (id <= 0)
             throw new ArgumentException("Product ID must be greater than zero.", nameof(id));
-        var product = await _unitOfWork.ProductRepository.GetByIdAsync(id);
-        if (product == null)
-            throw new KeyNotFoundException($"Product with ID {id} not found");
-        
-        var folder = $"Products/{product.Id}";
-        _imageManagementService.DeleteImagesFolder(folder);
-        await _unitOfWork.ProductRepository.DeleteAsync(id);
-        await _unitOfWork.SaveChangesAsync();
-    }
-    
-    public async Task DeletePhotoAsync(int photoId)
-    {
-        var photo = await _unitOfWork.PhotoRepository.GetByIdAsync(photoId);
-        if (photo == null)
-            throw new KeyNotFoundException($"Photo with ID {photoId} not found");
 
-        _imageManagementService.DeleteImageFile(photo.ImageName);
-        await _unitOfWork.PhotoRepository.DeleteAsync(photoId);
-        await _unitOfWork.SaveChangesAsync();
+        bool exists = await _unitOfWork.ProductRepository.ExistsAsync(p => p.Id == id, ct);
+        if (!exists)
+            throw new KeyNotFoundException($"Product with ID {id} not found.");
+      
+        Product productStub = new Product { Id = id };
+        await _unitOfWork.ProductRepository.DeleteAsync(productStub, ct);
+        await _unitOfWork.SaveChangesAsync(ct);
+    
     }
     
     public async Task<int> GetTotalCountAsync()

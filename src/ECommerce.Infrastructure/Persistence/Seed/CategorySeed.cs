@@ -1,39 +1,24 @@
 namespace ECommerce.Infrastructure.Persistence.Seed;
 public static class CategorySeed
 {
-    public static void SeedCategories(ModelBuilder modelBuilder)
+    public static List<Category> SeedCategories(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Category>().HasData(
-            new Category
-            {
-                Id = 1,
-                Name = "Electronics",
-                Description = "Devices, gadgets, and electronic accessories"
-            },
-            new Category
-            {
-                Id = 2,
-                Name = "Clothing",
-                Description = "Men’s, women’s, and children’s fashion items"
-            },
-            new Category
-            {
-                Id = 3,
-                Name = "Home & Kitchen",
-                Description = "Appliances, furniture, and home improvement tools"
-            },
-            new Category
-            {
-                Id = 4,
-                Name = "Beauty & Health",
-                Description = "Cosmetics, skincare, and healthcare products"
-            },
-            new Category
-            {
-                Id = 5,
-                Name = "Books",
-                Description = "Educational, fiction, and non-fiction books"
-            }
-            );
+        var categories = new List<Category>
+        {
+            new Category { Id = 1, Name = "Electronics", Description = "Devices and gadgets" },
+            new Category { Id = 2, Name = "Books", Description = "All genres of books" },
+            new Category { Id = 3, Name = "Clothing", Description = "Men and women apparel" },
+            new Category { Id = 4, Name = "Home & Kitchen", Description = "Household items" },
+            new Category { Id = 5, Name = "Sports", Description = "Sports and outdoors" },
+            new Category { Id = 6, Name = "Toys", Description = "Toys for kids of all ages" },
+            new Category { Id = 7, Name = "Beauty", Description = "Cosmetics and skincare" },
+            new Category { Id = 8, Name = "Automotive", Description = "Car accessories" },
+            new Category { Id = 9, Name = "Pet Supplies", Description = "Products for pets" },
+            new Category { Id = 10, Name = "Music & Instruments", Description = "Instruments and accessories" }
+        };
+
+        modelBuilder.Entity<Category>().HasData(categories.ToArray());
+
+        return categories;
     }
 }

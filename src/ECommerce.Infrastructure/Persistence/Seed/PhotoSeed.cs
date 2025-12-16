@@ -2,33 +2,55 @@ namespace ECommerce.Infrastructure.Persistence.Seed;
 
 public static class PhotoSeed
 {
-    public static void SeedPhotos(ModelBuilder modelBuilder)
+    public static void SeedPhotos(ModelBuilder modelBuilder, List<Product> products, List<Category> categories)
     {
-        modelBuilder.Entity<Photo>().HasData(
-            new Photo
+        var photos = new List<Photo>();
+        int photoId = 1;
+        
+        foreach (var product in products)
+        {
+            for (int j = 1; j <= 4; j++) 
             {
-                Id = 1,
-                ImageName = "Iphone1.jpg",
-                ProductId = 1
-            },
-            new Photo
-            {
-                Id = 2,
-                ImageName = "Iphone2.jpg",
-                ProductId = 1
-            },
-            new Photo
-            {
-                Id = 3,
-                ImageName = "Iphone3.jpg",
-                ProductId = 1
-            },
-            new Photo
-            {
-                Id = 4,
-                ImageName = "Iphone4.jpg",
-                ProductId = 1
+                photos.Add(new Photo
+                {
+                    Id = photoId++,
+                    Url = $"https://picsum.photos/seed/product{product.Id}_{j}/400/400",
+                    AltText = $"Photo {j} of {product.Name}",
+                    IsMain = j == 1,
+                    Type = PhotoType.ProductImage,
+                    ProductId = product.Id,
+                    CategoryId = product.CategoryId, 
+                    SubType = null
+                });
             }
-            );
+        }
+
+    
+        foreach (var category in categories)
+        {
+            for (int k = 1; k <= 3; k++) 
+            {
+                photos.Add(new Photo
+                {
+                    Id = photoId++,
+                    Url = $"https://picsum.photos/seed/category{category.Id}_{k}/400/400",
+                    AltText = $"Photo {k} of {category.Name}",
+                    IsMain = k == 1, 
+                    Type = PhotoType.CategoryMedia,
+                    CategoryId = category.Id,
+                    ProductId = null,
+                    SubType = k switch
+                    {
+                        1 => PhotoSubType.CategoryIcon,
+                        2 => PhotoSubType.CategoryBanner,
+                        3 => PhotoSubType.CategoryThumbnail,
+                        _ => PhotoSubType.CategoryThumbnail 
+                    }
+                });
+            }
+        }
+
+
+        modelBuilder.Entity<Photo>().HasData(photos.ToArray());
     }
 }

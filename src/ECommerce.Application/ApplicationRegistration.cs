@@ -10,6 +10,7 @@ public static class ApplicationRegistration
     {
         services.AddScoped<IProductService, ProductService>();
         services.AddScoped<ICategoryService, CategoryService>();
+        services.AddScoped<IPhotoService, PhotoService>();
         
         services.AddAutoMapper(cfg => { }, Assembly.GetExecutingAssembly());
       

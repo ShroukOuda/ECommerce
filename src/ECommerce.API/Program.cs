@@ -1,9 +1,11 @@
 using System.Text.Json.Serialization;
+using ECommerce.Core.Configuration;
 using ECommerce.API.Middleware;
 using ECommerce.Application;
 using ECommerce.Application.Validators.Photo;
 using ECommerce.Application.Validators.Product;
 using ECommerce.Infrastructure;
+using ECommerce.Infrastructure.Settings;
 using FluentValidation;
 
 namespace ECommerce.API;
@@ -24,12 +26,19 @@ public class Program
             });
         
         
+        builder.Services.Configure<FileValidationSettings>(
+            builder.Configuration.GetSection(FileValidationSettings.SectionName));
+
+        builder.Services.Configure<FileStorageSettings>(
+            builder.Configuration.GetSection(FileStorageSettings.SectionName));
+        
         //Product Validator
         builder.Services.AddValidatorsFromAssembly(typeof(AddProductDtoValidator).Assembly);
         builder.Services.AddValidatorsFromAssembly(typeof(UpdateProductDtoValidator).Assembly);
         
         //Photo Validator
-        builder.Services.AddValidatorsFromAssembly(typeof(UploadProductPhotoDtoValidator).Assembly);
+        builder.Services.AddValidatorsFromAssembly(typeof(UploadPhotoDtoValidator).Assembly);
+        builder.Services.AddValidatorsFromAssembly(typeof(UploadPhotosDtoValidator).Assembly);
         
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();

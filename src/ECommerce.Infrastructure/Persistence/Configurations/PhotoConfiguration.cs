@@ -8,7 +8,6 @@ public class PhotoConfiguration : IEntityTypeConfiguration<Photo>
     {
         builder.HasKey(photo => photo.Id);
         builder.Property(photo => photo.Id).IsRequired();
-        builder.Property(photo => photo.ImageName).HasMaxLength(100);
         
     }
 }

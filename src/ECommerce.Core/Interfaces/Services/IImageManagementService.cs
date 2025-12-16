@@ -3,7 +3,19 @@ namespace ECommerce.Core.Interfaces.Services;
 
 public interface IImageManagementService
 {
-    Task<List<string>> AddImageAsync(IFormFileCollection files, string src);
-    Task DeleteImageFile(string src);
-    Task DeleteImagesFolder(string folderName);
+    Task<string> SaveAsync(
+        Stream content,
+        string originalFileName,
+        string folder,
+        CancellationToken ct = default);
+    Task<IReadOnlyList<string>> SaveManyAsync(
+        IEnumerable<(Stream Content, string FileName)> files,
+        string folder,
+        CancellationToken ct = default);
+    Task<bool> DeleteAsync(
+        string relativePath,
+        CancellationToken ct = default);
+    Task<bool> DeleteFolderAsync(
+        string folder,
+        CancellationToken ct = default);
 }

@@ -1,83 +1,99 @@
 using System.Linq.Expressions;
-using Microsoft.EntityFrameworkCore;
+using ECommerce.Core.Common;
+using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace ECommerce.Infrastructure.Repositories;
 
-public class GenericRepository<T> : IGenericRepository<T> where T : class
+public class GenericRepository<T, TKey> : IGenericRepository<T, TKey>
+    where T : class
+    where TKey : IEquatable<TKey> 
 {
-    private readonly AppDbContext _context;
+    protected readonly DbSet<T> _dbSet;
 
     public GenericRepository(AppDbContext context)
     {
-        _context = context;
-    }
-    public async Task<IReadOnlyList<T>> GetAllAsync()
-    {
-        return await _context.Set<T>().AsNoTracking().ToListAsync();
-    }
-
-    public async Task<IReadOnlyList<T>> GetAllAsync(params Expression<Func<T, object>>[] includes)
-    {
-        var query = _context.Set<T>().AsQueryable();
-        foreach (var include in includes)
-        {
-            query = query.Include(include);
-        }
-        return await query.ToListAsync();
-    }
-
-    public async Task<T> GetByIdAsync(int id)
-    {
-        var entity = await _context.Set<T>().FindAsync(id);
-        return entity;
-    }
-
-    public async Task<T> GetByIdAsync(int id, params Expression<Func<T, object>>[] includes)
-    {
-        IQueryable<T> query = _context.Set<T>();
-        foreach (var include in includes)
-        {
-            query = query.Include(include);
-        }
-        var entity = await query.FirstOrDefaultAsync(x => EF.Property<int>(x, "Id") == id);
-        return entity;
-    }
-
-    public async Task AddAsync(T entity)
-    {
-        await _context.Set<T>().AddAsync(entity);
-    }
-
-    public async Task AddRangeAsync(IEnumerable<T> entities)
-    {
-        await _context.Set<T>().AddRangeAsync(entities);
-
-    }
-    public async Task UpdateAsync(T entity)
-    {
-        _context.Entry(entity).State = EntityState.Modified;
-     
-    }
-
-    public async Task DeleteAsync(int id)
-    {
-        var entity = await _context.Set<T>().FindAsync(id);
-        _context.Set<T>().Remove(entity);
-    
-    }
-
-    public async Task DeleteRangeAsync(IEnumerable<T> entities)
-    {
-        _context.Set<T>().RemoveRange(entities);
-      
+        _dbSet = context.Set<T>();
     }
     
-    public async Task<int> CountAsync(Expression<Func<T, bool>>? predicate = null)
+    public virtual async Task<IReadOnlyList<T>> GetAllAsync(
+        CancellationToken ct = default)
     {
-        if (predicate != null)
-        {
-            return await _context.Set<T>().CountAsync(predicate);
-        }
-        return await _context.Set<T>().CountAsync();
+        return await _dbSet
+            .AsNoTracking()
+            .ToListAsync(ct);
     }
+
+    public virtual async Task<T?> GetByIdAsync(
+        TKey id,
+        CancellationToken ct = default)
+    {
+        return await _dbSet.FindAsync(new object[] { id },  ct);
+    }
+    
+    public virtual async Task AddAsync(T entity, CancellationToken ct = default)
+    {
+        if (entity is BaseEntity<TKey> baseEntity)
+        {
+            baseEntity.CreatedAt = DateTime.UtcNow;
+            baseEntity.UpdatedAt = DateTime.UtcNow;
+        }
+
+        await _dbSet.AddAsync(entity, ct);
+    }
+    public virtual async Task AddRangeAsync(
+        IEnumerable<T> entities,
+        CancellationToken ct = default)
+    {
+        var now = DateTime.UtcNow;
+        foreach (var entity in entities)
+        {
+            if (entity is BaseEntity<TKey> baseEntity)
+            {
+                baseEntity.CreatedAt = now;
+                baseEntity.UpdatedAt = now;
+            }
+        }
+
+        await _dbSet.AddRangeAsync(entities, ct);
+    }
+    public virtual Task UpdateAsync(T entity, CancellationToken ct = default)
+    {
+        if (entity is BaseEntity<TKey> baseEntity)
+        {
+            baseEntity.UpdatedAt = DateTime.UtcNow;
+        }
+
+        _dbSet.Update(entity);
+        return Task.CompletedTask;
+    }
+    public virtual Task DeleteAsync(T entity, CancellationToken ct = default)
+    {
+        _dbSet.Remove(entity);
+        return Task.CompletedTask;
+    }
+    public virtual Task DeleteRangeAsync(
+        IEnumerable<T> entities,
+        CancellationToken ct = default)
+    {
+        _dbSet.RemoveRange(entities);
+        return Task.CompletedTask;
+    }
+    
+    public virtual async Task<bool> ExistsAsync(
+        Expression<Func<T, bool>> predicate,
+        CancellationToken ct = default)
+    {
+        return await _dbSet.AnyAsync(predicate, ct);
+    }
+    
+    public virtual async Task<int> CountAsync(
+        Expression<Func<T, bool>>? predicate = null,
+        CancellationToken ct = default)
+    {
+        return predicate == null
+            ? await _dbSet.CountAsync(ct)
+            : await _dbSet.CountAsync(predicate, ct);
+    }
+   
+  
 }

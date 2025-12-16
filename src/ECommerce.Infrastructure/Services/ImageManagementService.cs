@@ -4,89 +4,175 @@ using ECommerce.Infrastructure.Settings;
 using Microsoft.Extensions.Options;
 
 namespace ECommerce.Infrastructure.Services;
-
-
 public class ImageManagementService : IImageManagementService
 {
+   
     private readonly IFileProvider _fileProvider;
-    private readonly FileSettings _fileSettings;
+    private readonly FileStorageSettings _settings;
 
-    public ImageManagementService(IFileProvider fileProvider, IOptions<FileSettings> fileSettings)
+    public ImageManagementService(
+        IFileProvider fileProvider,
+        IOptions<FileStorageSettings> settings)
     {
         _fileProvider = fileProvider;
-        _fileSettings = fileSettings.Value;
+        _settings = settings.Value;
     }
-    public async Task<List<string>> AddImageAsync(IFormFileCollection files, string folderName)
+    
+    public async Task<string> SaveAsync(
+        Stream content,
+        string originalFileName,
+        string folder,
+        CancellationToken ct)
     {
-        List<string> SaveImageSrc =  new List<string>();
-        string root = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-        string imagesPath = Path.Combine(root, _fileSettings.ImagesPath, folderName);
+        ArgumentNullException.ThrowIfNull(content);
+        ArgumentNullException.ThrowIfNullOrWhiteSpace(originalFileName);
+        ArgumentNullException.ThrowIfNullOrWhiteSpace(folder);
         
+        var fileName = GenerateFileName(originalFileName);
+        var relativePath = Path.Combine(_settings.BasePath, folder, fileName);
 
-        if (!Directory.Exists(imagesPath))
+        var fileInfo = _fileProvider.GetFileInfo(relativePath);
+
+        if (fileInfo.PhysicalPath is null)
+            throw new InvalidOperationException("Physical storage is not available.");
+
+        var directory = Path.GetDirectoryName(fileInfo.PhysicalPath)!;
+        Directory.CreateDirectory(directory);
+
+        await using var stream = new FileStream(
+            fileInfo.PhysicalPath,
+            FileMode.Create,
+            FileAccess.Write,
+            FileShare.None,
+            bufferSize: 81920,
+            useAsync: true);
+
+        await content.CopyToAsync(stream, ct);
+        
+        return relativePath.Replace("\\", "/");
+    }
+    
+    public async Task<IReadOnlyList<string>> SaveManyAsync(
+        IEnumerable<(Stream Content, string FileName)> files,
+        string folder,
+        CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(files);
+        ArgumentNullException.ThrowIfNullOrWhiteSpace(folder);
+        
+        var savedPaths = new List<string>();
+
+        foreach (var (content, fileName) in files)
         {
-            Directory.CreateDirectory(imagesPath);
+            ct.ThrowIfCancellationRequested();
+
+            var path = await SaveAsync(
+                content,
+                fileName,
+                folder,
+                ct);
+
+            savedPaths.Add(path);
         }
 
-        foreach (var file in files)
+        return savedPaths;
+    }
+    
+    public Task<bool> DeleteAsync(
+        string relativePath,
+        CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(relativePath))
+            return Task.FromResult(false);
+
+        var fileInfo = _fileProvider.GetFileInfo(relativePath);
+
+        if (fileInfo.PhysicalPath is null || !File.Exists(fileInfo.PhysicalPath))
+            return Task.FromResult(false);
+
+        try
         {
-            if (file.Length > 0)
-            {
-                var extension = Path.GetExtension(file.FileName).ToLower();
-                if (!_fileSettings.AllowedExtensions.Contains(extension))
-                {
-                    throw new Exception("Invalid file format. Allowed: " +
-                                        string.Join(", ", _fileSettings.AllowedExtensions));
-                }
-
-                if (file.Length > _fileSettings.MaxFileSizeInBytes)
-                {
-                    throw new Exception($"Filer too large. Max Size: {_fileSettings.MaxFileSizeInMB}MB");
-                }
-                var newName = $"{Guid.NewGuid()}{extension}";
-                var fullPath = Path.Combine(imagesPath, newName);
-
-                using (FileStream fs = new FileStream(fullPath, FileMode.Create))
-                {
-                    await file.CopyToAsync(fs);
-                }
-
-                string ImageSrc = $"{_fileSettings.ImagesPath}/{folderName}/{newName}";
-                SaveImageSrc.Add(ImageSrc);
-            }
+            File.Delete(fileInfo.PhysicalPath);
+            return Task.FromResult(true);
         }
-        
-        return SaveImageSrc;
+        catch (IOException)
+        {
+            return Task.FromResult(false);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Task.FromResult(false);
+        }
+       
     }
-
-    public async Task DeleteImageFile(string src)
+    
+    public Task<bool> DeleteFolderAsync(
+        string folder,
+        CancellationToken ct)
     {
-        src = src.TrimStart('/');
+        if (string.IsNullOrWhiteSpace(folder))
+            return Task.FromResult(false);
 
-        string fullPath = Path.Combine(
-            Directory.GetCurrentDirectory(),
-            "wwwroot",
-            src
-        );
+        var directoryInfo = _fileProvider.GetDirectoryContents(folder);
 
-        if (File.Exists(fullPath))
-            await Task.Run(() => File.Delete(fullPath));
+        if (!directoryInfo.Exists)
+            return Task.FromResult(false);
+
+        var physicalPath = directoryInfo.FirstOrDefault()?.PhysicalPath;
+
+        if (physicalPath is null)
+            return Task.FromResult(false);
+
+        var directoryPath = Path.GetDirectoryName(physicalPath)!;
+
+        if (!Directory.Exists(directoryPath))
+            return Task.FromResult(false);
+
+        try
+        {
+            Directory.Delete(directoryPath, recursive: true);
+            return Task.FromResult(true);
+        }
+        catch (IOException)
+        {
+            return Task.FromResult(false);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Task.FromResult(false);
+        }
+    
     }
 
 
-    public async Task DeleteImagesFolder(string folderName)
+    private string GenerateFileName(string originalFileName)
     {
-        folderName = folderName.TrimStart('/');
+        var extension = Path.GetExtension(originalFileName).ToLowerInvariant();
 
-        string folderPath = Path.Combine(
-            Directory.GetCurrentDirectory(),
-            "wwwroot",
-            _fileSettings.ImagesPath,
-            folderName
-        );
-        
-        if (Directory.Exists(folderPath))
-            await Task.Run(() => Directory.Delete(folderPath, true));
+        return _settings.NamingStrategy switch
+        {
+            FileNamingStrategy.Guid =>
+                $"{Guid.NewGuid()}{extension}",
+
+            FileNamingStrategy.Timestamp =>
+                $"{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}{extension}",
+
+            FileNamingStrategy.Original =>
+                SanitizeFileName(originalFileName),
+
+            _ =>
+                $"{Guid.NewGuid()}{extension}"
+        };
     }
 
+    private static string SanitizeFileName(string fileName)
+    {
+        var invalidChars = Path.GetInvalidFileNameChars();
+        var name = string.Join("_", fileName.Split(invalidChars));
+
+        var extension = Path.GetExtension(name);
+        var baseName = Path.GetFileNameWithoutExtension(name);
+
+        return $"{baseName}_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}{extension}";
+    }
 }

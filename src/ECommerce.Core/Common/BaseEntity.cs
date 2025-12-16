@@ -1,8 +1,8 @@
 namespace ECommerce.Core.Common;
 
-public class BaseEntity<T>
+public class BaseEntity<TKey> where TKey : IEquatable<TKey>
 {
-    public T Id { get; set; }
+    public TKey Id { get; set; }
     public  DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }

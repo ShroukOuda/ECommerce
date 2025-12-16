@@ -4,7 +4,7 @@
         <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-        <RootNamespace>E_Commerece.Api</RootNamespace>
+        <RootNamespace>ECommerce.API</RootNamespace>
         <EnableDefaultContentItems>false</EnableDefaultContentItems>
     </PropertyGroup>
 
@@ -24,7 +24,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="wwwroot\Images\" />
-      <Folder Include="wwwroot\Images\Products\" />
+      <Folder Include="wwwroot\" />
     </ItemGroup>
 </Project>

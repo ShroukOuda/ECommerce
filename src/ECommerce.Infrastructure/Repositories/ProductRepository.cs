@@ -15,12 +15,14 @@ public class ProductRepository : GenericRepository<Product, int>, IProductReposi
     {
        return _context.Products
           .Include(p => p.Category)
-          .Include(p => p.Photos)
+          .Include(p => p.ProductImages)
           .AsNoTracking()
           .FirstOrDefaultAsync(p => p.Id == id, ct);
     }
 
-    public async Task<IEnumerable<Product>> GetAllAsync(ProductParams productParams, CancellationToken ct = default)
+    public async Task<(IEnumerable<Product> Products, int TotalCount)> GetAllAsync(
+       ProductParams productParams,
+       CancellationToken ct = default)
     {
         productParams.ValidatePrices();
        
@@ -29,21 +31,19 @@ public class ProductRepository : GenericRepository<Product, int>, IProductReposi
        
         var query = _context.Products
            .Include(p => p.Category)
-           .Include(p => p.Photos)
+           .Include(p => p.ProductImages)
            .AsNoTracking()
            .AsQueryable();
        
 
-        ApplyFilters(query, productParams);
-        ApplySorting(query, productParams);
-        ApplyPagination(query, productParams);
+        query = ApplyFilters(query, productParams);
+        int totalCount = await query.CountAsync(ct);
        
-      
+        query = ApplySorting(query, productParams);
+        query = ApplyPagination(query, productParams);
 
-        return await query
-           .Skip((pageNumber - 1) * pageSize)
-           .Take(pageSize)
-           .ToListAsync();
+        var products = await query.ToListAsync(ct);
+        return (products, totalCount);
 
     }
     

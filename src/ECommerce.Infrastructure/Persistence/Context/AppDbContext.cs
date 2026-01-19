@@ -10,7 +10,8 @@ public class AppDbContext:DbContext
     
     public virtual DbSet<Category> Categories { get; set; }
     public virtual DbSet<Product> Products { get; set; }
-    public virtual DbSet<Photo>  Photos { get; set; }
+    public virtual DbSet<ProductImage> ProductImages { get; set; }
+    public virtual DbSet<CategoryImage> CategoryImages { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

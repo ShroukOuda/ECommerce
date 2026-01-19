@@ -6,6 +6,6 @@ public static class ModelBuilderExtensions
     {
         var categories = CategorySeed.SeedCategories(modelBuilder);
         var products = ProductSeed.SeedProducts(modelBuilder);
-        PhotoSeed.SeedPhotos(modelBuilder, products, categories);
+        
     }
 }

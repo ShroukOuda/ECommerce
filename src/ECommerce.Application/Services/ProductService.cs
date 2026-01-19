@@ -24,13 +24,16 @@ public class ProductService : IProductService
     }
     
     
-    public async Task<IEnumerable<GetProductDTO>> GetAllProductsAsync(ProductParams productParams, CancellationToken ct = default)
+    public async Task<(IEnumerable<GetProductDTO> Products, int TotalCount)> GetAllProductsAsync(
+        ProductParams productParams,
+        CancellationToken ct = default)
     {
         var products = await _unitOfWork.ProductRepository.GetAllAsync(productParams, ct);
-        if (products is null)
+        if (products.Products is null)
             throw new KeyNotFoundException("Products not found");
         
-        return  _mapper.Map<IEnumerable<GetProductDTO>>(products);
+        var mapProducts = _mapper.Map<IEnumerable<GetProductDTO>>(products.Products);
+        return (mapProducts, products.TotalCount);
     }
 
     public async Task<GetProductDTO> GetProductByIdAsync(int id, CancellationToken ct = default)
@@ -96,7 +99,9 @@ public class ProductService : IProductService
         bool exists = await _unitOfWork.ProductRepository.ExistsAsync(p => p.Id == id, ct);
         if (!exists)
             throw new KeyNotFoundException($"Product with ID {id} not found.");
-      
+
+        var folderPath = $"products/{id}";
+        await _imageManagementService.DeleteFolderAsync(folderPath, ct);
         Product productStub = new Product { Id = id };
         await _unitOfWork.ProductRepository.DeleteAsync(productStub, ct);
         await _unitOfWork.SaveChangesAsync(ct);

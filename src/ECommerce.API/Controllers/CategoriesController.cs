@@ -1,3 +1,4 @@
+using ECommerce.Application.DTO.CategoryImages;
 using ECommerce.Core.Enums.Media;
 
 namespace ECommerce.API.Controllers;
@@ -5,11 +6,11 @@ namespace ECommerce.API.Controllers;
 public class CategoriesController : BaseController
 {
     private readonly ICategoryService _categoryService;
-    private readonly IPhotoService _photoService;
-    public CategoriesController(ICategoryService categoryService, IPhotoService photoService) 
+    private readonly ICategoryImageService _categoryImageService;
+    public CategoriesController(ICategoryService categoryService, ICategoryImageService categoryImageService) 
     {
         _categoryService = categoryService;
-        _photoService = photoService;
+        _categoryImageService = categoryImageService;
     }
     
     [HttpGet("get-all")]
@@ -34,10 +35,10 @@ public class CategoriesController : BaseController
     }
     
     [HttpPost("uploadPhoto")]
-    public async Task<IActionResult> UploadPhoto([FromForm] UploadPhotoDTO uploadPhotoDto, CancellationToken ct = default)
+    public async Task<IActionResult> UploadImage([FromForm] UploadCategoryImageDTO dto, CancellationToken ct = default)
     {
-        await _photoService.UploadPhotoAsync(uploadPhotoDto, ct);
-        return Ok(new ResponseAPI(200, "Category photo uploaded successfully"));
+        await _categoryImageService.UploadImageAsync(dto, ct);
+        return Ok(new ResponseAPI(200, "Category image uploaded successfully"));
     }
 
     [HttpPut("update")]
@@ -55,16 +56,16 @@ public class CategoriesController : BaseController
     }
     
     [HttpDelete("delete-photo/{photoId}")]
-    public async Task<IActionResult> DeletePhoto(int photoId, CancellationToken ct = default)
+    public async Task<IActionResult> DeleteImage(int photoId, int categoryId, CancellationToken ct = default)
     {
-        await _photoService.DeletePhotoAsync(photoId, ct);
-        return Ok(new ResponseAPI(200, "Category photo deleted successfully"));
+        await _categoryImageService.DeleteCategoryImageAsync(categoryId, photoId, ct);
+        return Ok(new ResponseAPI(200, "Category image deleted successfully"));
     }
 
     [HttpDelete("delete-photos/{categoryId}")]
-    public async Task<IActionResult> DeletePhotos(int categoryId, CancellationToken ct = default)
+    public async Task<IActionResult> DeleteImages(int categoryId, CancellationToken ct = default)
     {
-        await _photoService.DeleteEntityPhotosAsync(PhotoType.CategoryMedia, categoryId, ct);
-        return Ok(new ResponseAPI(200, "Category Media photos deleted successfully"));
+        await _categoryImageService.DeleteAllCategoryImagesAsync(categoryId, ct);
+        return Ok(new ResponseAPI(200, "Category Media images deleted successfully"));
     }
 }

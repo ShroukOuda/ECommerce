@@ -5,7 +5,7 @@ public class ProductMapping : Profile
     public ProductMapping()
     {
         CreateMap<AddProductDTO, Product>()
-            .ForMember(dest => dest.Photos, src=>src.Ignore())
+            .ForMember(dest => dest.ProductImages, src=>src.Ignore())
             .ReverseMap();
         CreateMap<UpdateProductDTO, Product>().ReverseMap();
         CreateMap<Product, GetProductDTO>()

@@ -1,16 +1,16 @@
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Options;
 
-namespace ECommerce.Application.Validators.Photo;
+namespace ECommerce.Application.Validators.Common;
 
-public class PhotoFileValidator : AbstractValidator<IFormFile>
+public class ImageFileValidator : AbstractValidator<IFormFile>
 {
     private readonly FileValidationSettings _validationSettings;
-    
-    public PhotoFileValidator(IOptions<FileValidationSettings> validationSettings)
+
+    public ImageFileValidator(
+        IOptions<FileValidationSettings> validationSettings)
     {
         _validationSettings = validationSettings.Value;
-
+        
         RuleFor(file => file)
             .NotNull()
             .WithMessage("File is required");
@@ -57,5 +57,4 @@ public class PhotoFileValidator : AbstractValidator<IFormFile>
 
         return validContentTypes.Contains(contentType.ToLowerInvariant());
     }
-    
 }

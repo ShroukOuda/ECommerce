@@ -1,6 +1,6 @@
 namespace ECommerce.Core.Enums.Media;
 
-public enum PhotoSubType
+public enum ImageSubType
 {
     CategoryIcon = 1,
     CategoryBanner = 2,

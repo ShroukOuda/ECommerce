@@ -27,5 +27,6 @@ public class ProductBaseValidator<T> : AbstractValidator<T> where T : ProductBas
             .NotEmpty().WithMessage("SKU is required.")
             .MaximumLength(50).WithMessage("SKU cannot exceed 50 characters.");
         
+        
     }
 }

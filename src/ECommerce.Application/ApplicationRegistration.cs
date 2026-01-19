@@ -2,6 +2,7 @@ using System.Reflection;
 using ECommerce.Application.Services;
 using Microsoft.Extensions.DependencyInjection;
 
+
 namespace ECommerce.Application;
 
 public static class ApplicationRegistration 
@@ -10,9 +11,16 @@ public static class ApplicationRegistration
     {
         services.AddScoped<IProductService, ProductService>();
         services.AddScoped<ICategoryService, CategoryService>();
-        services.AddScoped<IPhotoService, PhotoService>();
+        services.AddScoped<IProductImageService, ProductImageService>();
+        services.AddScoped<ICategoryImageService, CategoryImageService>();
         
-        services.AddAutoMapper(cfg => { }, Assembly.GetExecutingAssembly());
+        services.AddValidatorsFromAssembly(
+            typeof(ApplicationRegistration).Assembly
+        );
+        
+        services.AddAutoMapper(
+            cfg => { }, Assembly.GetExecutingAssembly()
+        );
       
 
         return services;

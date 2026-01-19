@@ -11,5 +11,5 @@ public class Product : BaseEntity<int>
 
     // Navigation Properties
     public Category Category { get; set; } = null!;
-    public ICollection<Photo> Photos { get; set; } = new List<Photo>();
+    public ICollection<ProductImage> ProductImages { get; set; } = new List<ProductImage>();
 }

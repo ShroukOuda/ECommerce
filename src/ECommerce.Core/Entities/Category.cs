@@ -7,5 +7,5 @@ public class Category:BaseEntity<int>
 
     // Navigation Properties
     public ICollection<Product> Products { get; set; } = new List<Product>();
-    public ICollection<Photo> Photos { get; set; } = new List<Photo>();
+    public ICollection<CategoryImage> CategoryImages { get; set; } = new List<CategoryImage>();
 }

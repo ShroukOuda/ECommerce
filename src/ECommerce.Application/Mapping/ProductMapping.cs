@@ -1,3 +1,5 @@
+using ECommerce.Core.Entities.Product;
+
 namespace ECommerce.Application.Mapping;
 
 public class ProductMapping : Profile

@@ -1,4 +1,6 @@
 using System.Reflection;
+using ECommerce.Core.Entities.Category;
+using ECommerce.Core.Entities.Product;
 using ECommerce.Infrastructure.Persistence.Seed;
 namespace ECommerce.Infrastructure.Persistence.Context;
 
@@ -13,6 +15,7 @@ public class AppDbContext:DbContext
     public virtual DbSet<ProductImage> ProductImages { get; set; }
     public virtual DbSet<CategoryImage> CategoryImages { get; set; }
 
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

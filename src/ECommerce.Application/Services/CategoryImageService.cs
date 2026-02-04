@@ -1,4 +1,6 @@
 using ECommerce.Application.DTO.CategoryImages;
+using ECommerce.Core.Entities.Category;
+using ECommerce.Core.Interfaces.Repositories;
 
 namespace ECommerce.Application.Services;
 

@@ -1,3 +1,5 @@
+using ECommerce.Core.Entities.Category;
+
 namespace ECommerce.Application.Interfaces;
 
 public interface ICategoryService

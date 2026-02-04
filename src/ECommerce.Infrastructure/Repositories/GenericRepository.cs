@@ -1,6 +1,6 @@
 using System.Linq.Expressions;
 using ECommerce.Core.Common;
-using Microsoft.EntityFrameworkCore.Metadata;
+using ECommerce.Core.Interfaces.Repositories;
 
 namespace ECommerce.Infrastructure.Repositories;
 

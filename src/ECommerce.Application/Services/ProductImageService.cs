@@ -1,4 +1,6 @@
 using ECommerce.Application.DTO.ProductImages;
+using ECommerce.Core.Entities.Product;
+using ECommerce.Core.Interfaces.Repositories;
 
 namespace ECommerce.Application.Services;
 

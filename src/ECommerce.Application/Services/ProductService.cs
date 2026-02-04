@@ -1,3 +1,6 @@
+using ECommerce.Core.Entities.Product;
+using ECommerce.Core.Interfaces.Repositories;
+
 namespace ECommerce.Application.Services;
 
 public class ProductService : IProductService

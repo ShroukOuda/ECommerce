@@ -1,8 +1,9 @@
+using ECommerce.Core.Entities.Product;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ECommerce.Infrastructure.Persistence.Configurations;
 
-public class ProductImageConfiguration : IEntityTypeConfiguration<ProductImage>
+internal class ProductImageConfiguration : IEntityTypeConfiguration<ProductImage>
 {
     public void Configure(EntityTypeBuilder<ProductImage> builder)
     {

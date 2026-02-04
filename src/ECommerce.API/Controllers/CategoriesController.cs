@@ -1,5 +1,4 @@
 using ECommerce.Application.DTO.CategoryImages;
-using ECommerce.Core.Enums.Media;
 
 namespace ECommerce.API.Controllers;
 

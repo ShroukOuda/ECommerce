@@ -1,4 +1,4 @@
-namespace ECommerce.Core.Interfaces;
+namespace ECommerce.Core.Interfaces.Repositories;
 
 public interface IUnitOfWork
 {

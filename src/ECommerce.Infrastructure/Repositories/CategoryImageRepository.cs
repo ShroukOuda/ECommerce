@@ -1,3 +1,6 @@
+using ECommerce.Core.Entities.Category;
+using ECommerce.Core.Interfaces.Repositories;
+
 namespace ECommerce.Infrastructure.Repositories;
 
 public class CategoryImageRepository : GenericRepository<CategoryImage, int>, ICategoryImageRepository

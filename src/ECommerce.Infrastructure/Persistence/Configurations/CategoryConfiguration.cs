@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+using ECommerce.Core.Entities.Category;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ECommerce.Infrastructure.Persistence.Configurations;

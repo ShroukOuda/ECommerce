@@ -1,3 +1,6 @@
+using ECommerce.Core.Entities.Product;
+using ECommerce.Core.Interfaces.Repositories;
+
 namespace ECommerce.Infrastructure.Repositories;
 
 public class ProductImageRepository : GenericRepository<ProductImage, int>, IProductImageRepository

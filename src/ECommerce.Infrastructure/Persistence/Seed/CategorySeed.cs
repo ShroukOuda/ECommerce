@@ -1,3 +1,5 @@
+using ECommerce.Core.Entities.Category;
+
 namespace ECommerce.Infrastructure.Persistence.Seed;
 public static class CategorySeed
 {

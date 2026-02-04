@@ -1,3 +1,5 @@
+using ECommerce.Core.Entities.Product;
+using ECommerce.Core.Interfaces.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace ECommerce.Infrastructure.Repositories;
@@ -67,12 +69,12 @@ public class ProductRepository : GenericRepository<Product, int>, IProductReposi
 
        if (productParams.MinPrice.HasValue)
        {
-          query = query.Where(p => p.Price >= productParams.MinPrice.Value);
+          query = query.Where(p => p.BasePrice >= productParams.MinPrice.Value);
        }
 
        if (productParams.MaxPrice.HasValue)
        {
-          query = query.Where(p => p.Price <= productParams.MaxPrice.Value);
+          query = query.Where(p => p.BasePrice <= productParams.MaxPrice.Value);
        }
 
        return query;
@@ -84,8 +86,8 @@ public class ProductRepository : GenericRepository<Product, int>, IProductReposi
     {
        return productParams.SortBy switch
        {
-          ProductSortBy.PriceAsc => query.OrderBy(p => p.Price),
-          ProductSortBy.PriceDesc => query.OrderByDescending(p => p.Price),
+          ProductSortBy.PriceAsc => query.OrderBy(p => p.BasePrice),
+          ProductSortBy.PriceDesc => query.OrderByDescending(p => p.BasePrice),
           ProductSortBy.NameAsc => query.OrderBy(p => p.Name),
           ProductSortBy.NameDesc => query.OrderByDescending(p => p.Name),
           ProductSortBy.Oldest => query.OrderByDescending(p => p.CreatedAt),

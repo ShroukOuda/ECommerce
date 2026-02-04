@@ -1,4 +1,4 @@
-namespace ECommerce.Core.Entities;
+namespace ECommerce.Core.Entities.Category;
 
 public class CategoryImage : BaseImage
 {
@@ -7,5 +7,5 @@ public class CategoryImage : BaseImage
     public ImageSubType? SubType { get; set; }
     
     // Navigation Properties
-    public Category? Category { get; set; }
+    public virtual Category? Category { get; set; }
 }

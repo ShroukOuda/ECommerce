@@ -17,7 +17,7 @@ public class ProductVariant : BaseEntity<int>
     //Navigation Properties
     public virtual Product? Product { get; set; }
     public virtual ICollection<ProductImage> ProductImages { get; set; } = new List<ProductImage>();
-    public virtual ICollection<VariantOptionValue> VariantOptionValues { get; set; } = new List<VariantOptionValue>();
+    public virtual ICollection<ProductVariantOptionValue> ProductVariantOptionValues { get; set; } = new List<ProductVariantOptionValue>();
     public ICollection<Order.OrderItem> OrderItems { get; set; } = new List<Order.OrderItem>();
     public ICollection<Cart.CartItem> CartItems { get; set; } = new List<Cart.CartItem>();
 }

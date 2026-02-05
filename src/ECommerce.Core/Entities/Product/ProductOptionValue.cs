@@ -13,6 +13,6 @@ public class ProductOptionValue
     
     //Navigation Properties
     public virtual ProductOption? ProductOption { get; set; }
-    public virtual ICollection<VariantOptionValue> VariantOptionValues { get; set; } = new List<VariantOptionValue>();
+    public virtual ICollection<ProductVariantOptionValue> ProductVariantOptionValues { get; set; } = new List<ProductVariantOptionValue>();
 
 }

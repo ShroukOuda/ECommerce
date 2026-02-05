@@ -1,4 +1,5 @@
 using ECommerce.Core.Enums;
+using ECommerce.Core.Enums.Product;
 
 namespace ECommerce.Core.Entities.Product;
 

@@ -1,6 +1,6 @@
 namespace ECommerce.Core.Entities.Product;
 
-public class ProductVariantOptionValue
+public class ProductVariantOptionValue : BaseEntity<int>
 {
     //FK
     public int ProductVariantId { get; set; }

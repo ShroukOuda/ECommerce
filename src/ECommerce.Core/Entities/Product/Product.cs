@@ -1,4 +1,6 @@
-using ECommerce.Core.Enums;
+using System.ComponentModel.DataAnnotations.Schema;
+using ECommerce.Core.Enums.Inventory;
+using ECommerce.Core.Enums.Product;
 
 namespace ECommerce.Core.Entities.Product;
 
@@ -17,11 +19,15 @@ public class Product : BaseEntity<int>
     public bool IsHotDeal { get; set; }
     public bool IsTopRated { get; set; }
     public bool IsFeatured { get; set; }
-    
-    public bool IsActive { get; set; }
+
+    public ProductStatus Status { get; set; } = ProductStatus.Published;
     
     public decimal AverageRating { get; set; }
     public int ReviewCount { get; set; }
+    
+    [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+    public bool IsOnSale => SalePrice < BasePrice && SalePrice > 0;
+    public decimal DiscountPercentage => BasePrice > 0 ? ((BasePrice - SalePrice) / BasePrice) * 100 : 0;
     
     
     //FK
@@ -39,4 +45,6 @@ public class Product : BaseEntity<int>
     public virtual ICollection<Cart.CartItem> CartItems { get; set; } = new List<Cart.CartItem>();
     public virtual ICollection<Review.ProductReview> ProductReviews { get; set; } = new List<Review.ProductReview>();
     public virtual ICollection<Wishlist.Wishlist> Wishlists { get; set; } = new List<Wishlist.Wishlist>();
+    public virtual ICollection<Inventory.InventoryHistory> InventoryHistories { get; set; } = new List<Inventory.InventoryHistory>();
+    public virtual ICollection<Return.ReturnItem> ReturnItems { get; set; } = new List<Return.ReturnItem>();
 }

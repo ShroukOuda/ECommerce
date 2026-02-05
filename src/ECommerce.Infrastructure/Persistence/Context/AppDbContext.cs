@@ -6,11 +6,14 @@ using ECommerce.Core.Entities.Coupon;
 using ECommerce.Core.Entities.Order;
 using ECommerce.Core.Entities.Product;
 using ECommerce.Core.Entities.Review;
+using ECommerce.Core.Entities.User;
 using ECommerce.Core.Entities.Wishlist;
 using ECommerce.Infrastructure.Persistence.Seed;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+
 namespace ECommerce.Infrastructure.Persistence.Context;
 
-public class AppDbContext:DbContext
+public class AppDbContext : IdentityDbContext<User>
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {

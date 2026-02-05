@@ -7,10 +7,11 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
 {
     public void Configure(EntityTypeBuilder<Category> builder)
     {
-        builder.HasKey(x => x.Id);
-        builder.Property(x => x.Id).IsRequired();
-        builder.Property(x => x.Name).IsRequired().HasMaxLength(50);
-        builder.Property(x => x.Description).IsRequired().HasMaxLength(200);
+        builder.HasKey(c => c.Id);
+        builder.Property(c => c.Id).IsRequired();
+        builder.HasIndex(c => c.Slug).IsUnique();
+        builder.Property(c => c.Name).IsRequired().HasMaxLength(50);
+        builder.Property(c => c.Description).IsRequired().HasMaxLength(200);
         
     }
 }

@@ -1,4 +1,4 @@
-using ECommerce.Core.Enums;
+using ECommerce.Core.Enums.Coupon;
 
 namespace ECommerce.Core.Entities.Coupon;
 
@@ -15,7 +15,8 @@ public class Coupon : BaseEntity<int>
     public int PerUserLimit { get; set; } = 1;
     public DateTime ValidFrom { get; set; }
     public DateTime ValidUntil { get; set; }
-    public bool IsActive { get; set; }
+    
+    public CouponStatus Status { get; set; } = CouponStatus.Active;
     
     //Navigation Properties
     public virtual ICollection<CouponUsage> CouponUsages { get; set; } = new List<CouponUsage>();

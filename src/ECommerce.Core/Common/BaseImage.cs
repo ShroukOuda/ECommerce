@@ -1,9 +1,10 @@
 namespace ECommerce.Core.Common;
 
-public class BaseImage 
+public class BaseImage : BaseEntity<int>
 {
-    public int Id { get; set; }
-    public string ImageUrl { get; set; }
-    public string AltText { get; set; }
-    public DateTime UploadedAt { get; set; }
+    public string ImageUrl { get; set; } = string.Empty;
+    public string? AltText { get; set; }
+    public DateTime UploadedAt { get; set; } = DateTime.Now;
+    public int SortOrder { get; set; } = 0;
+    public bool IsMain { get; set; } = false;
 }

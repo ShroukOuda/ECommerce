@@ -1,6 +1,6 @@
 namespace ECommerce.Core.Entities.Product;
 
-public class ProductOptionValue
+public class ProductOptionValue : BaseEntity<int>
 {
     public string Value { get; set; } = string.Empty;
     public string Label { get; set; } = string.Empty;

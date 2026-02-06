@@ -1,7 +1,7 @@
 using ECommerce.Core.Entities.Category;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace ECommerce.Infrastructure.Persistence.Configurations;
+namespace ECommerce.Infrastructure.Persistence.Configurations.Category;
 
 public class CategoryImageConfiguration : IEntityTypeConfiguration<CategoryImage>
 {

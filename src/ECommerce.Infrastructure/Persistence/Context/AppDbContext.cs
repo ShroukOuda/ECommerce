@@ -3,9 +3,13 @@ using ECommerce.Core.Entities.Brand;
 using ECommerce.Core.Entities.Cart;
 using ECommerce.Core.Entities.Category;
 using ECommerce.Core.Entities.Coupon;
+using ECommerce.Core.Entities.Inventory;
 using ECommerce.Core.Entities.Order;
+using ECommerce.Core.Entities.Payment;
 using ECommerce.Core.Entities.Product;
+using ECommerce.Core.Entities.Return;
 using ECommerce.Core.Entities.Review;
+using ECommerce.Core.Entities.Shipping;
 using ECommerce.Core.Entities.User;
 using ECommerce.Core.Entities.Wishlist;
 using ECommerce.Infrastructure.Persistence.Seed;
@@ -56,6 +60,23 @@ public class AppDbContext : IdentityDbContext<User>
     
     //Wishlist
     public virtual DbSet<Wishlist> Wishlists { get; set; }
+    
+    //Inventory
+    public virtual DbSet<InventoryHistory> InventoryHistories { get; set; }
+    
+    //Payment
+    public virtual DbSet<Payment> Payments { get; set; }
+    
+    //Return
+    public virtual DbSet<ReturnRequest> ReturnRequests { get; set; }
+    public virtual DbSet<ReturnItem> ReturnItems { get; set; }
+    
+    //Shipping
+    public virtual DbSet<Shipping> Shippings { get; set; }
+    
+    //User
+    public virtual DbSet<UserSession> UserSessions { get; set; }
+    public virtual DbSet<Address> Addresses { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

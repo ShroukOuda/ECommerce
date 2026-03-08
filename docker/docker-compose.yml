@@ -3,7 +3,7 @@ services:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: ecommerce-sqlserver
     environment:
-      SA_PASSWORD: 'Docker123#'
+      SA_PASSWORD: "Docker123#"
       ACCEPT_EULA: "Y"
       MSSQL_PID: "Express"
     ports:
@@ -29,6 +29,7 @@ services:
       ASPNETCORE_ENVIRONMENT: "Development"
       ASPNETCORE_URLS: "http://+:8080"
       ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=ECommerceDb;User=sa;Password=Docker123#;TrustServerCertificate=true;Connect Timeout=60;"
+      AUTO_MIGRATE: "true"
     ports:
       - "8080:8080"
     depends_on:
@@ -37,8 +38,14 @@ services:
     networks:
       - ecommerce-network
     volumes:
-      - ./images:/app/wwwroot/images
-      - ./logs:/app/logs
+      - api-images:/app/wwwroot/images
+      - api-logs:/app/logs
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/swagger/index.html || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
     restart: unless-stopped
 
 networks:
@@ -47,3 +54,5 @@ networks:
 
 volumes:
   sqlserver-data:
+  api-images:
+  api-logs:

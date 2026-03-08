@@ -1,0 +1,13 @@
+# Development overrides
+services:
+  ecommerce-api:
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      AUTO_MIGRATE: "true"
+      Logging__LogLevel__Default: "Debug"
+      Logging__LogLevel__Microsoft.AspNetCore: "Warning"
+      Logging__LogLevel__Microsoft.EntityFrameworkCore: "Information"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../src:/src:ro

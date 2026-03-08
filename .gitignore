@@ -1,16 +1,46 @@
+# Build outputs
 bin/
 obj/
 /packages/
-riderModule.iml
-/_ReSharper.Caches/
+*.nupkg
+
+# IDE - Rider / JetBrains
 .idea/
-# Rider / JetBrains user settings
+riderModule.iml
+_ReSharper.Caches/
 *.DotSettings.user
 *.sln.DotSettings.user
+
+# IDE - Visual Studio
 .vs/
-# User-specific files
 *.user
 *.userosscache
 *.suo
 *.sln.docstates
+launchSettings.json
+
+# IDE - VS Code
+.vscode/
+
+# User files
+notes.txt
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test results & coverage
+TestResults/
+coverage/
+*.trx
+
+# Docker
+docker/images/
+docker/logs/
+
+# Secrets (never commit)
+appsettings.Production.json
+*.pfx
+*.key
 

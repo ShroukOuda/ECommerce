@@ -14,7 +14,7 @@ public class Order : BaseEntity<int>
     public decimal TotalAmount { get; set; }
     
     //FK
-    public int UserId { get; set; }
+    public string UserId { get; set; }
     public int? ShippingAddressId { get; set; }
     public int? BillingAddressId { get; set; }
     

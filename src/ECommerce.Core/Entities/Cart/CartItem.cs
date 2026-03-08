@@ -14,4 +14,5 @@ public class CartItem : BaseEntity<int>
     public virtual Cart? Cart { get; set; }
     public virtual Product.Product? Product { get; set; }
     public virtual Product.ProductVariant? ProductVariant { get; set; }
+    public virtual ICollection<CartItemOption> CartItemOptions { get; set; } = new List<CartItemOption>();
 }

@@ -19,7 +19,7 @@ public class ReturnRequest : BaseEntity<int>
     
     //FK
     public int OrderId { get; set; }
-    public int UserId { get; set; }
+    public string UserId { get; set; }
     
     //Navigation Properties
     public virtual Order.Order? Order { get; set; }

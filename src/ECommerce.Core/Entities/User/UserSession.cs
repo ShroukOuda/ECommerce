@@ -8,7 +8,7 @@ public class UserSession : BaseEntity<int>
     public string? UserAgent { get; set; }
     
     //FK
-    public int UserId { get; set; }
+    public string UserId { get; set; }
     
     //Navigation Properties
     public virtual User? User { get; set; }

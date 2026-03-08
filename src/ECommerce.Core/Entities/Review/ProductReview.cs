@@ -13,7 +13,7 @@ public class ProductReview : BaseEntity<int>
     //FK
     public int ProductId { get; set; }
     public int OrderId { get; set; }
-    public int UserId { get; set; }
+    public string UserId { get; set; }
     
     //Navigation Properties
     public virtual ICollection<ReviewHelpfulVote> ReviewHelpfulVotes { get; set; } = new List<ReviewHelpfulVote>();

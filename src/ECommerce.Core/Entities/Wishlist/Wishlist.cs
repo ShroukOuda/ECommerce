@@ -8,7 +8,7 @@ public class Wishlist : BaseEntity<int>
     
     //FK
     public int ProductId { get; set; }
-    public int UserId { get; set; }
+    public string UserId { get; set; }
     
     //Navigation Properties
     public virtual Product.Product? Product { get; set; }

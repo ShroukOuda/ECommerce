@@ -7,7 +7,7 @@ public class CouponUsage : BaseEntity<int>
     //FK
     public int CouponId { get; set; }
     public int OrderId { get; set; }
-    public int UserId { get; set; }
+    public string UserId { get; set; }
     
     //Navigation Properties
     public virtual Coupon? Coupon { get; set; }

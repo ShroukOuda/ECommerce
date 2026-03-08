@@ -1,0 +1,62 @@
+using ECommerce.Application.DTO.Address;
+using ECommerce.Core.Entities.User;
+using ECommerce.Core.Interfaces.Repositories;
+
+namespace ECommerce.Application.Services;
+
+public class AddressService : IAddressService
+{
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
+    private readonly IValidator<AddAddressDTO> _addValidator;
+    private readonly IValidator<UpdateAddressDTO> _updateValidator;
+
+    public AddressService(IUnitOfWork unitOfWork, IMapper mapper,
+        IValidator<AddAddressDTO> addValidator, IValidator<UpdateAddressDTO> updateValidator)
+    {
+        _unitOfWork = unitOfWork;
+        _mapper = mapper;
+        _addValidator = addValidator;
+        _updateValidator = updateValidator;
+    }
+
+    public async Task<IEnumerable<GetAddressDTO>> GetAddressesByUserIdAsync(string userId, CancellationToken ct = default)
+    {
+        var addresses = await _unitOfWork.AddressRepository.GetAddressesByUserIdAsync(userId, ct);
+        return _mapper.Map<IEnumerable<GetAddressDTO>>(addresses);
+    }
+
+    public async Task<GetAddressDTO> GetAddressByIdAsync(int id, CancellationToken ct = default)
+    {
+        var address = await _unitOfWork.AddressRepository.GetByIdAsync(id, ct);
+        if (address is null) throw new KeyNotFoundException($"Address with ID {id} not found.");
+        return _mapper.Map<GetAddressDTO>(address);
+    }
+
+    public async Task AddAddressAsync(AddAddressDTO dto, CancellationToken ct = default)
+    {
+        var result = await _addValidator.ValidateAsync(dto, ct);
+        if (!result.IsValid) throw new ValidationException(result.Errors);
+        var address = _mapper.Map<Address>(dto);
+        await _unitOfWork.AddressRepository.AddAsync(address, ct);
+        await _unitOfWork.SaveChangesAsync(ct);
+    }
+
+    public async Task UpdateAddressAsync(UpdateAddressDTO dto, CancellationToken ct = default)
+    {
+        var result = await _updateValidator.ValidateAsync(dto, ct);
+        if (!result.IsValid) throw new ValidationException(result.Errors);
+        var address = _mapper.Map<Address>(dto);
+        await _unitOfWork.AddressRepository.UpdateAsync(address, ct);
+        await _unitOfWork.SaveChangesAsync(ct);
+    }
+
+    public async Task DeleteAddressAsync(int id, CancellationToken ct = default)
+    {
+        bool exists = await _unitOfWork.AddressRepository.ExistsAsync(a => a.Id == id, ct);
+        if (!exists) throw new KeyNotFoundException($"Address with ID {id} not found.");
+        var stub = new Address { Id = id };
+        await _unitOfWork.AddressRepository.DeleteAsync(stub, ct);
+        await _unitOfWork.SaveChangesAsync(ct);
+    }
+}

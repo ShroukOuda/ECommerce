@@ -1,0 +1,14 @@
+using ECommerce.Core.Entities.Coupon;
+
+namespace ECommerce.Infrastructure.Repositories;
+
+public class CouponRepository : GenericRepository<Coupon, int>, ICouponRepository
+{
+    public CouponRepository(AppDbContext context) : base(context) { }
+
+    public async Task<Coupon?> GetByCodeAsync(string code, CancellationToken ct = default)
+    {
+        return await _dbSet.AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Code == code, ct);
+    }
+}

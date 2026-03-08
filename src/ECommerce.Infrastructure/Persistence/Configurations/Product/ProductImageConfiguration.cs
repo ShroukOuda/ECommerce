@@ -22,10 +22,10 @@ public class ProductImageConfiguration : IEntityTypeConfiguration<ProductImage>
             .HasFilter("IsMain = 1")
             .IsUnique();
 
-        builder.HasCheckConstraint(
+        builder.ToTable(t => t.HasCheckConstraint(
             "CK_ProductImage_IsMain_Valid",
             "IsMain IN (0, 1)"
-        );
+        ));
 
         builder.HasOne(pi => pi.Product)
             .WithMany(p => p.ProductImages)

@@ -14,7 +14,7 @@ public class InventoryHistory : BaseEntity<int>
     //FK
     public int ProductId { get; set; }
     public int? ProductVariantId { get; set; }
-    public int? UserId { get; set; }
+    public string? UserId { get; set; }
     
     //Navigation Properties
     public virtual Product.Product? Product { get; set; }

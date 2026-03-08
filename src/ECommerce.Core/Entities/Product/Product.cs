@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations.Schema;
 using ECommerce.Core.Enums.Inventory;
 using ECommerce.Core.Enums.Product;
 
@@ -25,7 +24,6 @@ public class Product : BaseEntity<int>
     public decimal AverageRating { get; set; }
     public int ReviewCount { get; set; }
     
-    [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
     public bool IsOnSale => SalePrice < BasePrice && SalePrice > 0;
     public decimal DiscountPercentage => BasePrice > 0 ? ((BasePrice - SalePrice) / BasePrice) * 100 : 0;
     

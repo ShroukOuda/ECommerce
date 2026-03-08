@@ -10,10 +10,9 @@ public class Cart : BaseEntity<int>
     public CartStatus Status { get; set; } = CartStatus.Active;
     
     //FK
-    public int? UserId { get; set; }
+    public string? UserId { get; set; }
     
     //Navigation Properties
     public virtual User.User? User { get; set; }
     public virtual ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
-    public virtual ICollection<CartItemOption> CartItemOptions { get; set; } = new List<CartItemOption>();
 }

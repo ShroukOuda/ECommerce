@@ -16,10 +16,11 @@ public class Address : BaseEntity<int>
     public AddressStatus Status { get; set; } = AddressStatus.Active;
     
     //FK
-    public int UserId { get; set; }
+    public string UserId { get; set; }
     
     //Navigation Properties
     public virtual User? User { get; set; }
-    public virtual ICollection<Order.Order> Orders { get; set; } = new List<Order.Order>();
+    public virtual ICollection<Order.Order> ShippingOrders { get; set; } = new List<Order.Order>();
+    public virtual ICollection<Order.Order> BillingOrders { get; set; } = new List<Order.Order>();
     public virtual ICollection<Shipping.Shipping> Shippings { get; set; } = new List<Shipping.Shipping>();
 }

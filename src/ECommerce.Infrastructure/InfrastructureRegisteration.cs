@@ -1,6 +1,9 @@
+using ECommerce.Core.Entities.User;
+using ECommerce.Infrastructure.Persistence.Context;
 using ECommerce.Infrastructure.Repositories;
 using ECommerce.Infrastructure.Services;
 using ECommerce.Infrastructure.Settings;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,7 +21,16 @@ public static class InfrastructureRegisteration
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         
         //file provider
-        services.AddSingleton<IFileProvider>(new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot")));
+        var wwwrootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+        if (Directory.Exists(wwwrootPath))
+        {
+            services.AddSingleton<IFileProvider>(new PhysicalFileProvider(wwwrootPath));
+        }
+        else
+        {
+            Directory.CreateDirectory(wwwrootPath);
+            services.AddSingleton<IFileProvider>(new PhysicalFileProvider(wwwrootPath));
+        }
         
         
         //image management service
@@ -40,6 +52,20 @@ public static class InfrastructureRegisteration
                 }
             );
         });
+        
+        // Identity
+        services.AddIdentity<User, IdentityRole>(options =>
+        {
+            options.Password.RequireDigit = true;
+            options.Password.RequireLowercase = true;
+            options.Password.RequireUppercase = true;
+            options.Password.RequireNonAlphanumeric = false;
+            options.Password.RequiredLength = 6;
+            options.User.RequireUniqueEmail = true;
+        })
+        .AddEntityFrameworkStores<AppDbContext>()
+        .AddDefaultTokenProviders();
+        
         return services;
     }
 }

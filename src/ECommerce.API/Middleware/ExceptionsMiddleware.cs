@@ -54,7 +54,7 @@ public class ExceptionsMiddleware
 
     private bool IsRequestAllowed(HttpContext context)
     {
-        string ip = context.Connection.RemoteIpAddress.ToString() ?? "unknown";
+        string ip = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
         string cacheKey = $"RateLimit: {ip}";
         DateTime dateNow = DateTime.Now;
 

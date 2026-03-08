@@ -3,7 +3,9 @@ using ECommerce.Core.Configuration;
 using ECommerce.API.Middleware;
 using ECommerce.Application;
 using ECommerce.Infrastructure;
+using ECommerce.Infrastructure.Persistence.Context;
 using ECommerce.Infrastructure.Settings;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace ECommerce.API;
@@ -60,7 +62,14 @@ public class Program
 
         var app = builder.Build();
         
-       
+        // Auto-migrate on startup when enabled
+        if (builder.Configuration.GetValue<bool>("AUTO_MIGRATE", false) ||
+            app.Environment.IsDevelopment())
+        {
+            using var scope = app.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            db.Database.Migrate();
+        }
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
@@ -75,7 +84,10 @@ public class Program
         app.UseMiddleware<ExceptionsMiddleware>();
         
         app.UseHttpsRedirection();
+        
+        app.UseStaticFiles();
 
+        app.UseAuthentication();
         app.UseAuthorization();
 
 

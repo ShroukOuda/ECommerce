@@ -1,5 +1,6 @@
 using System.Text.Json;
 using ECommerce.Core.Entities.Product;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ECommerce.Infrastructure.Persistence.Configurations.Product;
@@ -19,11 +20,17 @@ public class ProductVariantConfiguration : IEntityTypeConfiguration<ProductVaria
         builder.Property(pv => pv.VariantName)
             .HasMaxLength(200);
 
+        var dictionaryComparer = new ValueComparer<Dictionary<string, string>>(
+            (d1, d2) => JsonSerializer.Serialize(d1, (JsonSerializerOptions?)null) == JsonSerializer.Serialize(d2, (JsonSerializerOptions?)null),
+            d => d == null ? 0 : JsonSerializer.Serialize(d, (JsonSerializerOptions?)null).GetHashCode(),
+            d => JsonSerializer.Deserialize<Dictionary<string, string>>(JsonSerializer.Serialize(d, (JsonSerializerOptions?)null), (JsonSerializerOptions?)null)!);
+
         builder.Property(pv => pv.Attributes)
             .HasColumnType("nvarchar(max)")
             .HasConversion(
                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions?)null));
+                v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions?)null))
+            .Metadata.SetValueComparer(dictionaryComparer);
 
         builder.Property(pv => pv.Size)
             .HasMaxLength(100);

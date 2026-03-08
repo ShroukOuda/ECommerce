@@ -5,6 +5,7 @@ using ECommerce.Infrastructure.Services;
 using ECommerce.Infrastructure.Settings;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
@@ -39,6 +40,7 @@ public static class InfrastructureRegisteration
         //db context
         services.AddDbContext<AppDbContext>(option =>
         {
+            option.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
             option.UseSqlServer(
                 configuration.GetConnectionString("DefaultConnection"),
                 sqlServerOptionsAction: sqlOptions =>

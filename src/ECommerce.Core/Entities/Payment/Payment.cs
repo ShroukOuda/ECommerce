@@ -2,7 +2,7 @@ using ECommerce.Core.Enums.Payment;
 
 namespace ECommerce.Core.Entities.Payment;
 
-public class Payment : BaseEntity<int>
+public class Payment : BaseEntity<Guid>
 {
     public string TransactionId { get; set; } = string.Empty;
     public string Currency { get; set; } = "USD";
@@ -15,7 +15,7 @@ public class Payment : BaseEntity<int>
     public DateTime PaidAt { get; set; }
     
     //FK
-    public int OrderId { get; set; }
+    public Guid OrderId { get; set; }
     public string UserId { get; set; }
     
     //Navigation Properties

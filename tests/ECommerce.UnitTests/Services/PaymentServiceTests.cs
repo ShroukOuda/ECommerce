@@ -32,14 +32,14 @@ public class PaymentServiceTests
     [Fact]
     public async Task GetPaymentsByOrderIdAsync_ShouldReturnMappedPayments()
     {
-        var payments = new List<Payment> { new() { Id = 1, OrderId = 1 } };
-        var paymentDtos = new List<GetPaymentDTO> { new() { Id = 1, OrderId = 1 } };
+        var payments = new List<Payment> { new() { Id = TestGuid.FromInt(1), OrderId = TestGuid.FromInt(1) } };
+        var paymentDtos = new List<GetPaymentDTO> { new() { Id = TestGuid.FromInt(1), OrderId = TestGuid.FromInt(1) } };
 
-        _unitOfWorkMock.Setup(u => u.PaymentRepository.GetPaymentsByOrderIdAsync(1, It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.PaymentRepository.GetPaymentsByOrderIdAsync(TestGuid.FromInt(1), It.IsAny<CancellationToken>()))
             .ReturnsAsync(payments);
         _mapperMock.Setup(m => m.Map<IEnumerable<GetPaymentDTO>>(payments)).Returns(paymentDtos);
 
-        var result = await _paymentService.GetPaymentsByOrderIdAsync(1);
+        var result = await _paymentService.GetPaymentsByOrderIdAsync(TestGuid.FromInt(1));
 
         result.Should().HaveCount(1);
     }
@@ -47,14 +47,14 @@ public class PaymentServiceTests
     [Fact]
     public async Task GetPaymentByIdAsync_WhenExists_ShouldReturnPayment()
     {
-        var payment = new Payment { Id = 1, Amount = 99.99m };
-        var paymentDto = new GetPaymentDTO { Id = 1, Amount = 99.99m };
+        var payment = new Payment { Id = TestGuid.FromInt(1), Amount = 99.99m };
+        var paymentDto = new GetPaymentDTO { Id = TestGuid.FromInt(1), Amount = 99.99m };
 
-        _unitOfWorkMock.Setup(u => u.PaymentRepository.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.PaymentRepository.GetByIdAsync(TestGuid.FromInt(1), It.IsAny<CancellationToken>()))
             .ReturnsAsync(payment);
         _mapperMock.Setup(m => m.Map<GetPaymentDTO>(payment)).Returns(paymentDto);
 
-        var result = await _paymentService.GetPaymentByIdAsync(1);
+        var result = await _paymentService.GetPaymentByIdAsync(TestGuid.FromInt(1));
 
         result.Should().NotBeNull();
         result.Amount.Should().Be(99.99m);
@@ -63,10 +63,10 @@ public class PaymentServiceTests
     [Fact]
     public async Task GetPaymentByIdAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
-        _unitOfWorkMock.Setup(u => u.PaymentRepository.GetByIdAsync(999, It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.PaymentRepository.GetByIdAsync(TestGuid.FromInt(999), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Payment?)null);
 
-        var act = () => _paymentService.GetPaymentByIdAsync(999);
+        var act = () => _paymentService.GetPaymentByIdAsync(TestGuid.FromInt(999));
 
         await act.Should().ThrowAsync<KeyNotFoundException>();
     }
@@ -74,8 +74,8 @@ public class PaymentServiceTests
     [Fact]
     public async Task CreatePaymentAsync_WithValidData_ShouldCreatePayment()
     {
-        var dto = new CreatePaymentDTO { OrderId = 1, UserId = "user1", Amount = 99.99m, Method = "CreditCard", Currency = "USD" };
-        var paymentDto = new GetPaymentDTO { Id = 1, Amount = 99.99m };
+        var dto = new CreatePaymentDTO { OrderId = TestGuid.FromInt(1), UserId = "user1", Amount = 99.99m, Method = "CreditCard", Currency = "USD" };
+        var paymentDto = new GetPaymentDTO { Id = TestGuid.FromInt(1), Amount = 99.99m };
 
         _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
@@ -93,7 +93,7 @@ public class PaymentServiceTests
     [Fact]
     public async Task CreatePaymentAsync_WithInvalidData_ShouldThrowValidationException()
     {
-        var dto = new CreatePaymentDTO { OrderId = 0 };
+        var dto = new CreatePaymentDTO { OrderId = Guid.Empty };
         var failures = new List<ValidationFailure> { new("OrderId", "OrderId required") };
 
         _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))

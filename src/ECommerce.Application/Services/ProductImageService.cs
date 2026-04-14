@@ -86,7 +86,7 @@ public class ProductImageService : IProductImageService
 
 
     public async Task<IReadOnlyList<ProductImageDTO>> GetProductImagesAsync(
-        int productId,
+        Guid productId,
         CancellationToken ct = default)
     {
         var images = await _unitOfWork.ProductImageRepository
@@ -96,8 +96,8 @@ public class ProductImageService : IProductImageService
     
 
     public async Task SetMainImageAsync(
-        int productId, 
-        int imageId, 
+        Guid productId, 
+        Guid imageId, 
         CancellationToken ct = default)
     {
         var photo = await _unitOfWork.ProductImageRepository.GetByIdAsync(imageId, ct);
@@ -126,8 +126,8 @@ public class ProductImageService : IProductImageService
     }
 
     public async Task DeleteProductImageAsync(
-        int productId, 
-        int imageId, 
+        Guid productId, 
+        Guid imageId, 
         CancellationToken ct = default)
     {
         var image = await _unitOfWork.ProductImageRepository.GetByIdAsync(imageId, ct);
@@ -156,7 +156,7 @@ public class ProductImageService : IProductImageService
     
 
     public async Task DeleteAllProductImagesAsync(
-        int productId, 
+        Guid productId, 
         CancellationToken ct = default)
     {
         if (!await _unitOfWork.ProductRepository.ExistsAsync(p => p.Id == productId, ct))
@@ -182,16 +182,16 @@ public class ProductImageService : IProductImageService
     }
     
     public async Task<ProductImageDTO?> GetImageByIdAsync(
-        int imageId, 
+        Guid imageId, 
         CancellationToken ct = default)
     {
         var image = await _unitOfWork.ProductImageRepository.GetByIdAsync(imageId, ct);
-        if (image == null || image.ProductId == null) return null;
+        if (image == null) return null;
         return _mapper.Map<ProductImageDTO>(image);
     }
     
     public async Task<ProductImageDTO?> GetProductMainImageAsync(
-        int productId,
+        Guid productId,
         CancellationToken ct = default)
     {
         var image = await _unitOfWork.ProductImageRepository
@@ -201,7 +201,7 @@ public class ProductImageService : IProductImageService
     
 
     private async Task ResetExistingMainImageAsync(
-        int productId, 
+        Guid productId, 
         CancellationToken ct)
     {
         var existingMain = await _unitOfWork.ProductImageRepository

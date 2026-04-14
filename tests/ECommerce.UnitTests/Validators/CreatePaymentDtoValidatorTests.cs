@@ -13,7 +13,7 @@ public class CreatePaymentDtoValidatorTests
     {
         var dto = new CreatePaymentDTO
         {
-            OrderId = 1, UserId = "user1", Amount = 99.99m, Method = "CreditCard", Currency = "USD"
+            OrderId = TestGuid.FromInt(1), UserId = "user1", Amount = 99.99m, Method = "CreditCard", Currency = "USD"
         };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeTrue();
@@ -24,7 +24,7 @@ public class CreatePaymentDtoValidatorTests
     {
         var dto = new CreatePaymentDTO
         {
-            OrderId = 0, UserId = "user1", Amount = 99.99m, Method = "CreditCard", Currency = "USD"
+            OrderId = Guid.Empty, UserId = "user1", Amount = 99.99m, Method = "CreditCard", Currency = "USD"
         };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
@@ -36,7 +36,7 @@ public class CreatePaymentDtoValidatorTests
     {
         var dto = new CreatePaymentDTO
         {
-            OrderId = 1, UserId = "", Amount = 99.99m, Method = "CreditCard", Currency = "USD"
+            OrderId = TestGuid.FromInt(1), UserId = "", Amount = 99.99m, Method = "CreditCard", Currency = "USD"
         };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
@@ -48,7 +48,7 @@ public class CreatePaymentDtoValidatorTests
     {
         var dto = new CreatePaymentDTO
         {
-            OrderId = 1, UserId = "user1", Amount = 0, Method = "CreditCard", Currency = "USD"
+            OrderId = TestGuid.FromInt(1), UserId = "user1", Amount = 0, Method = "CreditCard", Currency = "USD"
         };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
@@ -62,7 +62,7 @@ public class CreatePaymentDtoValidatorTests
     {
         var dto = new CreatePaymentDTO
         {
-            OrderId = 1, UserId = "user1", Amount = 99.99m, Method = method!, Currency = "USD"
+            OrderId = TestGuid.FromInt(1), UserId = "user1", Amount = 99.99m, Method = method!, Currency = "USD"
         };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
@@ -74,7 +74,7 @@ public class CreatePaymentDtoValidatorTests
     {
         var dto = new CreatePaymentDTO
         {
-            OrderId = 1, UserId = "user1", Amount = 99.99m, Method = "CreditCard", Currency = ""
+            OrderId = TestGuid.FromInt(1), UserId = "user1", Amount = 99.99m, Method = "CreditCard", Currency = ""
         };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
@@ -86,7 +86,7 @@ public class CreatePaymentDtoValidatorTests
     {
         var dto = new CreatePaymentDTO
         {
-            OrderId = 1, UserId = "user1", Amount = 99.99m, Method = "CreditCard", Currency = "TOOLONGCURR"
+            OrderId = TestGuid.FromInt(1), UserId = "user1", Amount = 99.99m, Method = "CreditCard", Currency = "TOOLONGCURR"
         };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();

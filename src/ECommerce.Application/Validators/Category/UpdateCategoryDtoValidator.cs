@@ -5,6 +5,6 @@ public class UpdateCategoryDtoValidator : CategoryBaseValidator<UpdateCategoryDT
     public UpdateCategoryDtoValidator()
     {
         RuleFor(x => x.Id)
-            .GreaterThan(0).WithMessage("Category Id must be greater than zero.");
+            .NotEmpty().WithMessage("Category Id is required.");
     }
 }

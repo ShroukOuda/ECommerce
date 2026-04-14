@@ -20,7 +20,7 @@ public class OrdersController : BaseController
     }
 
     [HttpGet("get-by-id/{id}")]
-    public async Task<IActionResult> GetById(int id)
+    public async Task<IActionResult> GetById(Guid id)
     {
         var order = await _orderService.GetOrderByIdAsync(id);
         return Ok(order);
@@ -41,7 +41,7 @@ public class OrdersController : BaseController
     }
 
     [HttpDelete("delete/{id}")]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> Delete(Guid id)
     {
         await _orderService.DeleteOrderAsync(id);
         return Ok(new ResponseAPI(200, "Order deleted successfully"));

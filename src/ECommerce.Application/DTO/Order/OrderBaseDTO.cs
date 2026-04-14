@@ -4,6 +4,6 @@ public class OrderBaseDTO
 {
     public string OrderType { get; set; } = "Standard";
     public string Currency { get; set; } = "USD";
-    public int? ShippingAddressId { get; set; }
-    public int? BillingAddressId { get; set; }
+    public Guid? ShippingAddressId { get; set; }
+    public Guid? BillingAddressId { get; set; }
 }

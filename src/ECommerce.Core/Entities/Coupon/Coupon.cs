@@ -2,7 +2,7 @@ using ECommerce.Core.Enums.Coupon;
 
 namespace ECommerce.Core.Entities.Coupon;
 
-public class Coupon : BaseEntity<int>
+public class Coupon : BaseEntity<Guid>
 {
     public string Code { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;

@@ -2,11 +2,11 @@ using ECommerce.Core.Entities.Inventory;
 
 namespace ECommerce.Infrastructure.Repositories;
 
-public class InventoryHistoryRepository : GenericRepository<InventoryHistory, int>, IInventoryHistoryRepository
+public class InventoryHistoryRepository : GenericRepository<InventoryHistory, Guid>, IInventoryHistoryRepository
 {
     public InventoryHistoryRepository(AppDbContext context) : base(context) { }
 
-    public async Task<IReadOnlyList<InventoryHistory>> GetHistoryByProductIdAsync(int productId, CancellationToken ct = default)
+    public async Task<IReadOnlyList<InventoryHistory>> GetHistoryByProductIdAsync(Guid productId, CancellationToken ct = default)
     {
         return await _dbSet.AsNoTracking()
             .Where(ih => ih.ProductId == productId)

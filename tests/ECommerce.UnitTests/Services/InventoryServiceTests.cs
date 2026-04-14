@@ -32,14 +32,14 @@ public class InventoryServiceTests
     [Fact]
     public async Task GetHistoryByProductIdAsync_ShouldReturnMappedHistory()
     {
-        var history = new List<InventoryHistory> { new() { Id = 1, ProductId = 1 } };
-        var historyDtos = new List<GetInventoryHistoryDTO> { new() { Id = 1, ProductId = 1 } };
+        var history = new List<InventoryHistory> { new() { Id = TestGuid.FromInt(1), ProductId = TestGuid.FromInt(1) } };
+        var historyDtos = new List<GetInventoryHistoryDTO> { new() { Id = TestGuid.FromInt(1), ProductId = TestGuid.FromInt(1) } };
 
-        _unitOfWorkMock.Setup(u => u.InventoryHistoryRepository.GetHistoryByProductIdAsync(1, It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.InventoryHistoryRepository.GetHistoryByProductIdAsync(TestGuid.FromInt(1), It.IsAny<CancellationToken>()))
             .ReturnsAsync(history);
         _mapperMock.Setup(m => m.Map<IEnumerable<GetInventoryHistoryDTO>>(history)).Returns(historyDtos);
 
-        var result = await _inventoryService.GetHistoryByProductIdAsync(1);
+        var result = await _inventoryService.GetHistoryByProductIdAsync(TestGuid.FromInt(1));
 
         result.Should().HaveCount(1);
     }
@@ -47,8 +47,8 @@ public class InventoryServiceTests
     [Fact]
     public async Task AddInventoryHistoryAsync_WithValidData_ShouldAddHistory()
     {
-        var dto = new CreateInventoryHistoryDTO { ProductId = 1, NewQuantity = 100, ChangeType = "Restock" };
-        var history = new InventoryHistory { ProductId = 1 };
+        var dto = new CreateInventoryHistoryDTO { ProductId = TestGuid.FromInt(1), NewQuantity = 100, ChangeType = "Restock" };
+        var history = new InventoryHistory { ProductId = TestGuid.FromInt(1) };
 
         _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
@@ -65,7 +65,7 @@ public class InventoryServiceTests
     [Fact]
     public async Task AddInventoryHistoryAsync_WithInvalidData_ShouldThrowValidationException()
     {
-        var dto = new CreateInventoryHistoryDTO { ProductId = 0 };
+        var dto = new CreateInventoryHistoryDTO { ProductId = Guid.Empty };
         var failures = new List<ValidationFailure> { new("ProductId", "ProductId required") };
 
         _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))

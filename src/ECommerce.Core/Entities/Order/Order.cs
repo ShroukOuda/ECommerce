@@ -2,7 +2,7 @@ using ECommerce.Core.Enums.Order;
 
 namespace ECommerce.Core.Entities.Order;
 
-public class Order : BaseEntity<int>
+public class Order : BaseEntity<Guid>
 {
     public OrderType OrderType { get; set; } = OrderType.Standard;
     public decimal SubTotal { get; set; }
@@ -15,8 +15,8 @@ public class Order : BaseEntity<int>
     
     //FK
     public string UserId { get; set; }
-    public int? ShippingAddressId { get; set; }
-    public int? BillingAddressId { get; set; }
+    public Guid? ShippingAddressId { get; set; }
+    public Guid? BillingAddressId { get; set; }
     
     //Navigation Properties
     public virtual User.User? User { get; set; }

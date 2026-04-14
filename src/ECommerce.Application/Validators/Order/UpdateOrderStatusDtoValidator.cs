@@ -6,7 +6,7 @@ public class UpdateOrderStatusDtoValidator : AbstractValidator<UpdateOrderStatus
 {
     public UpdateOrderStatusDtoValidator()
     {
-        RuleFor(x => x.Id).GreaterThan(0);
+        RuleFor(x => x.Id).NotEmpty();
         RuleFor(x => x.OrderStatus).NotEmpty().WithMessage("Order status is required.");
     }
 }

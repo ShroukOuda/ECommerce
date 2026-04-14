@@ -2,7 +2,7 @@ using ECommerce.Core.Entities.Brand;
 
 namespace ECommerce.Core.Interfaces.Repositories;
 
-public interface IBrandLogoRepository : IGenericRepository<BrandLogo, int>
+public interface IBrandLogoRepository : IGenericRepository<BrandLogo, Guid>
 {
-    Task<IReadOnlyList<BrandLogo>> GetLogosByBrandIdAsync(int brandId, CancellationToken ct = default);
+    Task<IReadOnlyList<BrandLogo>> GetLogosByBrandIdAsync(Guid brandId, CancellationToken ct = default);
 }

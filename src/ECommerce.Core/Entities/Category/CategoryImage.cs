@@ -3,7 +3,7 @@ namespace ECommerce.Core.Entities.Category;
 public class CategoryImage : BaseImage
 {
     //FK
-    public int CategoryId { get; set; }   
+    public Guid CategoryId { get; set; }   
     public ImageSubType? SubType { get; set; }
     
     //Navigation Properties

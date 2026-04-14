@@ -2,11 +2,11 @@ using ECommerce.Core.Entities.Review;
 
 namespace ECommerce.Infrastructure.Repositories;
 
-public class ProductReviewRepository : GenericRepository<ProductReview, int>, IProductReviewRepository
+public class ProductReviewRepository : GenericRepository<ProductReview, Guid>, IProductReviewRepository
 {
     public ProductReviewRepository(AppDbContext context) : base(context) { }
 
-    public async Task<IReadOnlyList<ProductReview>> GetReviewsByProductIdAsync(int productId, CancellationToken ct = default)
+    public async Task<IReadOnlyList<ProductReview>> GetReviewsByProductIdAsync(Guid productId, CancellationToken ct = default)
     {
         return await _dbSet.AsNoTracking()
             .Where(r => r.ProductId == productId)

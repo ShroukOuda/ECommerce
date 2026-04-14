@@ -20,7 +20,7 @@ public class UserSessionsController : BaseController
     }
 
     [HttpDelete("delete/{id}")]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> Delete(Guid id)
     {
         await _userSessionService.DeleteSessionAsync(id);
         return Ok(new ResponseAPI(200, "Session deleted successfully"));

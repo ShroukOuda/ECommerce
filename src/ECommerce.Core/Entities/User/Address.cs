@@ -3,7 +3,7 @@ using ECommerce.Core.Enums.Address;
 
 namespace ECommerce.Core.Entities.User;
 
-public class Address : BaseEntity<int>
+public class Address : BaseEntity<Guid>
 {
     public string AddressLine1 { get; set; } = string.Empty;
     public string? AddressLine2 { get; set; }

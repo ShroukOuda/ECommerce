@@ -2,7 +2,7 @@ using ECommerce.Core.Enums.Return;
 
 namespace ECommerce.Core.Entities.Return;
 
-public class ReturnRequest : BaseEntity<int>
+public class ReturnRequest : BaseEntity<Guid>
 {
     public string ReturnNumber { get; set; } = string.Empty; 
     public string Reason { get; set; } = string.Empty;
@@ -18,7 +18,7 @@ public class ReturnRequest : BaseEntity<int>
     public DateTime? CompletedDate { get; set; }
     
     //FK
-    public int OrderId { get; set; }
+    public Guid OrderId { get; set; }
     public string UserId { get; set; }
     
     //Navigation Properties

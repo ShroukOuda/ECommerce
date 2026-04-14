@@ -11,7 +11,7 @@ public class AddCartItemDtoValidatorTests
     [Fact]
     public async Task Validate_WithValidData_ShouldPass()
     {
-        var dto = new AddCartItemDTO { CartId = 1, ProductId = 1, Quantity = 2 };
+        var dto = new AddCartItemDTO { CartId = TestGuid.FromInt(1), ProductId = TestGuid.FromInt(1), Quantity = 2 };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeTrue();
     }
@@ -19,7 +19,7 @@ public class AddCartItemDtoValidatorTests
     [Fact]
     public async Task Validate_WithCartIdZero_ShouldFail()
     {
-        var dto = new AddCartItemDTO { CartId = 0, ProductId = 1, Quantity = 2 };
+        var dto = new AddCartItemDTO { CartId = Guid.Empty, ProductId = TestGuid.FromInt(1), Quantity = 2 };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "CartId");
@@ -28,7 +28,7 @@ public class AddCartItemDtoValidatorTests
     [Fact]
     public async Task Validate_WithProductIdZero_ShouldFail()
     {
-        var dto = new AddCartItemDTO { CartId = 1, ProductId = 0, Quantity = 2 };
+        var dto = new AddCartItemDTO { CartId = TestGuid.FromInt(1), ProductId = Guid.Empty, Quantity = 2 };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "ProductId");
@@ -37,7 +37,7 @@ public class AddCartItemDtoValidatorTests
     [Fact]
     public async Task Validate_WithQuantityZero_ShouldFail()
     {
-        var dto = new AddCartItemDTO { CartId = 1, ProductId = 1, Quantity = 0 };
+        var dto = new AddCartItemDTO { CartId = TestGuid.FromInt(1), ProductId = TestGuid.FromInt(1), Quantity = 0 };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "Quantity");
@@ -46,7 +46,7 @@ public class AddCartItemDtoValidatorTests
     [Fact]
     public async Task Validate_WithNegativeQuantity_ShouldFail()
     {
-        var dto = new AddCartItemDTO { CartId = 1, ProductId = 1, Quantity = -1 };
+        var dto = new AddCartItemDTO { CartId = TestGuid.FromInt(1), ProductId = TestGuid.FromInt(1), Quantity = -1 };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
     }

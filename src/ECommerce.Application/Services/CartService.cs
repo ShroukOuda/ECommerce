@@ -17,7 +17,7 @@ public class CartService : ICartService
         _addItemValidator = addItemValidator;
     }
 
-    public async Task<GetCartDTO> GetCartByIdAsync(int id, CancellationToken ct = default)
+    public async Task<GetCartDTO> GetCartByIdAsync(Guid id, CancellationToken ct = default)
     {
         var cart = await _unitOfWork.CartRepository.GetCartWithItemsAsync(id, ct);
         if (cart is null) throw new KeyNotFoundException($"Cart with ID {id} not found.");
@@ -49,7 +49,7 @@ public class CartService : ICartService
         await _unitOfWork.SaveChangesAsync(ct);
     }
 
-    public async Task RemoveCartItemAsync(int cartItemId, CancellationToken ct = default)
+    public async Task RemoveCartItemAsync(Guid cartItemId, CancellationToken ct = default)
     {
         var item = await _unitOfWork.CartItemRepository.GetByIdAsync(cartItemId, ct);
         if (item is null) throw new KeyNotFoundException($"Cart item with ID {cartItemId} not found.");
@@ -57,7 +57,7 @@ public class CartService : ICartService
         await _unitOfWork.SaveChangesAsync(ct);
     }
 
-    public async Task ClearCartAsync(int cartId, CancellationToken ct = default)
+    public async Task ClearCartAsync(Guid cartId, CancellationToken ct = default)
     {
         var items = await _unitOfWork.CartItemRepository.GetItemsByCartIdAsync(cartId, ct);
         if (items.Any())

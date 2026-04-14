@@ -26,7 +26,7 @@ public class AddressService : IAddressService
         return _mapper.Map<IEnumerable<GetAddressDTO>>(addresses);
     }
 
-    public async Task<GetAddressDTO> GetAddressByIdAsync(int id, CancellationToken ct = default)
+    public async Task<GetAddressDTO> GetAddressByIdAsync(Guid id, CancellationToken ct = default)
     {
         var address = await _unitOfWork.AddressRepository.GetByIdAsync(id, ct);
         if (address is null) throw new KeyNotFoundException($"Address with ID {id} not found.");
@@ -51,7 +51,7 @@ public class AddressService : IAddressService
         await _unitOfWork.SaveChangesAsync(ct);
     }
 
-    public async Task DeleteAddressAsync(int id, CancellationToken ct = default)
+    public async Task DeleteAddressAsync(Guid id, CancellationToken ct = default)
     {
         bool exists = await _unitOfWork.AddressRepository.ExistsAsync(a => a.Id == id, ct);
         if (!exists) throw new KeyNotFoundException($"Address with ID {id} not found.");

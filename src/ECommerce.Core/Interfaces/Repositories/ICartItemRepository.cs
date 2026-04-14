@@ -2,7 +2,7 @@ using ECommerce.Core.Entities.Cart;
 
 namespace ECommerce.Core.Interfaces.Repositories;
 
-public interface ICartItemRepository : IGenericRepository<CartItem, int>
+public interface ICartItemRepository : IGenericRepository<CartItem, Guid>
 {
-    Task<IReadOnlyList<CartItem>> GetItemsByCartIdAsync(int cartId, CancellationToken ct = default);
+    Task<IReadOnlyList<CartItem>> GetItemsByCartIdAsync(Guid cartId, CancellationToken ct = default);
 }

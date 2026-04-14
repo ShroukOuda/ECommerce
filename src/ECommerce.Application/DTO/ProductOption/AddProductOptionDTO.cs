@@ -9,5 +9,5 @@ public class AddProductOptionDTO
     public bool IsRequired { get; set; }
     public decimal PriceValue { get; set; }
     public int SortOrder { get; set; }
-    public int ProductId { get; set; }
+    public Guid ProductId { get; set; }
 }

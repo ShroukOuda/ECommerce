@@ -9,23 +9,23 @@ public interface ICategoryImageService
         CancellationToken ct = default);
     
     Task<IReadOnlyList<CategoryImageDTO>> GetCategoryImagesAsync(
-        int categoryId, 
+        Guid categoryId, 
         CancellationToken ct = default);
     Task<CategoryImageDTO?> GetCategoryImageBySubTypeAsync(
-        int categoryId, 
+        Guid categoryId, 
         ImageSubType subType, 
         CancellationToken ct = default);
     
     Task<CategoryImageDTO?> GetImageByIdAsync(
-        int imageId,
+        Guid imageId,
         CancellationToken ct = default);
     Task DeleteCategoryImageAsync(
-        int categoryId,
-        int imageId,
+        Guid categoryId,
+        Guid imageId,
         CancellationToken ct = default);
 
     Task DeleteAllCategoryImagesAsync(
-        int categoryId,
+        Guid categoryId,
         CancellationToken ct = default);
 
  

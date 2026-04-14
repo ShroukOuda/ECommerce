@@ -17,7 +17,7 @@ public class InventoryService : IInventoryService
         _createValidator = createValidator;
     }
 
-    public async Task<IEnumerable<GetInventoryHistoryDTO>> GetHistoryByProductIdAsync(int productId, CancellationToken ct = default)
+    public async Task<IEnumerable<GetInventoryHistoryDTO>> GetHistoryByProductIdAsync(Guid productId, CancellationToken ct = default)
     {
         var history = await _unitOfWork.InventoryHistoryRepository.GetHistoryByProductIdAsync(productId, ct);
         return _mapper.Map<IEnumerable<GetInventoryHistoryDTO>>(history);

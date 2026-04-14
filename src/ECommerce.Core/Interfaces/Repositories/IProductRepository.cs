@@ -2,7 +2,7 @@ using ECommerce.Core.Entities.Product;
 
 namespace ECommerce.Core.Interfaces.Repositories;
 
-public interface IProductRepository : IGenericRepository<Product, int>
+public interface IProductRepository : IGenericRepository<Product, Guid>
 {
     public Task<(IEnumerable<Product> Products, int TotalCount)> GetAllAsync(
         ProductParams productParams, 

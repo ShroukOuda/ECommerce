@@ -2,7 +2,7 @@ using ECommerce.Core.Enums.Cart;
 
 namespace ECommerce.Core.Entities.Cart;
 
-public class Cart : BaseEntity<int>
+public class Cart : BaseEntity<Guid>
 {
     public string GuestToken { get; set; } = string.Empty;
     public decimal DiscountAmount { get; set; }

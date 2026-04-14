@@ -24,13 +24,13 @@ public class ProductOptionService : IProductOptionService
         _addValueValidator = addValueValidator;
     }
 
-    public async Task<IEnumerable<GetProductOptionDTO>> GetOptionsByProductIdAsync(int productId, CancellationToken ct = default)
+    public async Task<IEnumerable<GetProductOptionDTO>> GetOptionsByProductIdAsync(Guid productId, CancellationToken ct = default)
     {
         var options = await _unitOfWork.ProductOptionRepository.GetOptionsByProductIdAsync(productId, ct);
         return _mapper.Map<IEnumerable<GetProductOptionDTO>>(options);
     }
 
-    public async Task<GetProductOptionDTO> GetOptionByIdAsync(int id, CancellationToken ct = default)
+    public async Task<GetProductOptionDTO> GetOptionByIdAsync(Guid id, CancellationToken ct = default)
     {
         var option = await _unitOfWork.ProductOptionRepository.GetByIdAsync(id, ct);
         if (option is null) throw new KeyNotFoundException($"Product option with ID {id} not found.");
@@ -55,7 +55,7 @@ public class ProductOptionService : IProductOptionService
         await _unitOfWork.SaveChangesAsync(ct);
     }
 
-    public async Task DeleteOptionAsync(int id, CancellationToken ct = default)
+    public async Task DeleteOptionAsync(Guid id, CancellationToken ct = default)
     {
         bool exists = await _unitOfWork.ProductOptionRepository.ExistsAsync(o => o.Id == id, ct);
         if (!exists) throw new KeyNotFoundException($"Product option with ID {id} not found.");
@@ -73,7 +73,7 @@ public class ProductOptionService : IProductOptionService
         await _unitOfWork.SaveChangesAsync(ct);
     }
 
-    public async Task DeleteOptionValueAsync(int id, CancellationToken ct = default)
+    public async Task DeleteOptionValueAsync(Guid id, CancellationToken ct = default)
     {
         bool exists = await _unitOfWork.ProductOptionValueRepository.ExistsAsync(v => v.Id == id, ct);
         if (!exists) throw new KeyNotFoundException($"Product option value with ID {id} not found.");

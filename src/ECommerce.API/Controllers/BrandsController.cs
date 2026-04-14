@@ -20,7 +20,7 @@ public class BrandsController : BaseController
     }
 
     [HttpGet("get-by-id/{id}")]
-    public async Task<IActionResult> GetById(int id)
+    public async Task<IActionResult> GetById(Guid id)
     {
         var brand = await _brandService.GetBrandByIdAsync(id);
         return Ok(brand);
@@ -41,7 +41,7 @@ public class BrandsController : BaseController
     }
 
     [HttpDelete("delete/{id}")]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> Delete(Guid id)
     {
         await _brandService.DeleteBrandAsync(id);
         return Ok(new ResponseAPI(200, "Brand deleted successfully"));

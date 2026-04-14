@@ -36,8 +36,8 @@ public class BrandServiceTests
     public async Task GetAllBrandsAsync_ShouldReturnMappedBrands()
     {
         // Arrange
-        var brands = new List<Brand> { new() { Id = 1, Name = "Nike" } };
-        var brandDtos = new List<GetBrandDTO> { new() { Id = 1, Name = "Nike" } };
+        var brands = new List<Brand> { new() { Id = TestGuid.FromInt(1), Name = "Nike" } };
+        var brandDtos = new List<GetBrandDTO> { new() { Id = TestGuid.FromInt(1), Name = "Nike" } };
 
         _unitOfWorkMock.Setup(u => u.BrandRepository.GetAllAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(brands);
@@ -56,16 +56,16 @@ public class BrandServiceTests
     public async Task GetBrandByIdAsync_WhenBrandExists_ShouldReturnBrand()
     {
         // Arrange
-        var brand = new Brand { Id = 1, Name = "Nike" };
-        var brandDto = new GetBrandDTO { Id = 1, Name = "Nike" };
+        var brand = new Brand { Id = TestGuid.FromInt(1), Name = "Nike" };
+        var brandDto = new GetBrandDTO { Id = TestGuid.FromInt(1), Name = "Nike" };
 
-        _unitOfWorkMock.Setup(u => u.BrandRepository.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.BrandRepository.GetByIdAsync(TestGuid.FromInt(1), It.IsAny<CancellationToken>()))
             .ReturnsAsync(brand);
         _mapperMock.Setup(m => m.Map<GetBrandDTO>(brand))
             .Returns(brandDto);
 
         // Act
-        var result = await _brandService.GetBrandByIdAsync(1);
+        var result = await _brandService.GetBrandByIdAsync(TestGuid.FromInt(1));
 
         // Assert
         result.Should().NotBeNull();
@@ -76,11 +76,11 @@ public class BrandServiceTests
     public async Task GetBrandByIdAsync_WhenBrandNotFound_ShouldThrowKeyNotFoundException()
     {
         // Arrange
-        _unitOfWorkMock.Setup(u => u.BrandRepository.GetByIdAsync(999, It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.BrandRepository.GetByIdAsync(TestGuid.FromInt(999), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Brand?)null);
 
         // Act
-        var act = () => _brandService.GetBrandByIdAsync(999);
+        var act = () => _brandService.GetBrandByIdAsync(TestGuid.FromInt(999));
 
         // Assert
         await act.Should().ThrowAsync<KeyNotFoundException>();
@@ -136,7 +136,7 @@ public class BrandServiceTests
             .ReturnsAsync(true);
 
         // Act
-        await _brandService.DeleteBrandAsync(1);
+        await _brandService.DeleteBrandAsync(TestGuid.FromInt(1));
 
         // Assert
         _unitOfWorkMock.Verify(u => u.BrandRepository.DeleteAsync(It.IsAny<Brand>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -152,7 +152,7 @@ public class BrandServiceTests
             .ReturnsAsync(false);
 
         // Act
-        var act = () => _brandService.DeleteBrandAsync(999);
+        var act = () => _brandService.DeleteBrandAsync(TestGuid.FromInt(999));
 
         // Assert
         await act.Should().ThrowAsync<KeyNotFoundException>();

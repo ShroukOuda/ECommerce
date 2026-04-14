@@ -15,7 +15,7 @@ public class CreateOrderDtoValidatorTests
         {
             UserId = "user1",
             Currency = "USD",
-            Items = new List<CreateOrderItemDTO> { new() { ProductId = 1, Quantity = 2 } }
+            Items = new List<CreateOrderItemDTO> { new() { ProductId = TestGuid.FromInt(1), Quantity = 2 } }
         };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeTrue();
@@ -28,7 +28,7 @@ public class CreateOrderDtoValidatorTests
         {
             UserId = "",
             Currency = "USD",
-            Items = new List<CreateOrderItemDTO> { new() { ProductId = 1, Quantity = 2 } }
+            Items = new List<CreateOrderItemDTO> { new() { ProductId = TestGuid.FromInt(1), Quantity = 2 } }
         };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
@@ -51,7 +51,7 @@ public class CreateOrderDtoValidatorTests
         {
             UserId = "user1",
             Currency = "",
-            Items = new List<CreateOrderItemDTO> { new() { ProductId = 1, Quantity = 2 } }
+            Items = new List<CreateOrderItemDTO> { new() { ProductId = TestGuid.FromInt(1), Quantity = 2 } }
         };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();

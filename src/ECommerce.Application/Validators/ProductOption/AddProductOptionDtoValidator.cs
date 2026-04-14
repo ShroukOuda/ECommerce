@@ -10,6 +10,6 @@ public class AddProductOptionDtoValidator : AbstractValidator<AddProductOptionDT
         RuleFor(x => x.DisplayType).NotEmpty();
         RuleFor(x => x.Type).NotEmpty();
         RuleFor(x => x.AttributeKey).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.ProductId).GreaterThan(0);
+        RuleFor(x => x.ProductId).NotEmpty();
     }
 }

@@ -14,7 +14,7 @@ public class AddProductOptionDtoValidatorTests
         DisplayType = "Swatch",
         Type = "Visual",
         AttributeKey = "color",
-        ProductId = 1
+        ProductId = TestGuid.FromInt(1)
     };
 
     [Fact]
@@ -91,7 +91,7 @@ public class AddProductOptionDtoValidatorTests
     public async Task Validate_WithProductIdZero_ShouldFail()
     {
         var dto = CreateValidDto();
-        dto.ProductId = 0;
+        dto.ProductId = Guid.Empty;
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "ProductId");

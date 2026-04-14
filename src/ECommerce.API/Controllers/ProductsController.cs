@@ -24,7 +24,7 @@ public class ProductsController : BaseController
     }
 
     [HttpGet("get-by-id/{id}")]
-    public async Task<IActionResult> GetById(int id)
+    public async Task<IActionResult> GetById(Guid id)
     {
         var product = await _productService.GetProductByIdAsync(id);
         return Ok(product);
@@ -52,21 +52,21 @@ public class ProductsController : BaseController
     }
 
     [HttpDelete("delete/{id}")]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> Delete(Guid id)
     {
         await _productService.DeleteProductAsync(id);
         return Ok("Deleted Successfully");
     }
     
     [HttpDelete("delete-photo/{imageId}")]
-    public async Task<IActionResult> DeleteImage(int productId, int imageId, CancellationToken ct = default)
+    public async Task<IActionResult> DeleteImage(Guid productId, Guid imageId, CancellationToken ct = default)
     {
         await _productImageService.DeleteProductImageAsync(productId, imageId);
         return Ok("Image Deleted Successfully");
     }
 
     [HttpDelete("delete-photos/{productId}")]
-    public async Task<IActionResult> DeleteImages(int productId, CancellationToken ct = default)
+    public async Task<IActionResult> DeleteImages(Guid productId, CancellationToken ct = default)
     {
         await _productImageService.DeleteAllProductImagesAsync(productId, ct);
         return Ok("Images Deleted Successfully");

@@ -2,7 +2,7 @@ using ECommerce.Core.Entities.Return;
 
 namespace ECommerce.Infrastructure.Repositories;
 
-public class ReturnRequestRepository : GenericRepository<ReturnRequest, int>, IReturnRequestRepository
+public class ReturnRequestRepository : GenericRepository<ReturnRequest, Guid>, IReturnRequestRepository
 {
     private readonly AppDbContext _context;
 
@@ -11,7 +11,7 @@ public class ReturnRequestRepository : GenericRepository<ReturnRequest, int>, IR
         _context = context;
     }
 
-    public async Task<ReturnRequest?> GetReturnWithItemsAsync(int returnId, CancellationToken ct = default)
+    public async Task<ReturnRequest?> GetReturnWithItemsAsync(Guid returnId, CancellationToken ct = default)
     {
         return await _context.ReturnRequests
             .Include(r => r.ReturnItems)

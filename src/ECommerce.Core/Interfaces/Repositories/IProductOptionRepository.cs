@@ -2,7 +2,7 @@ using ECommerce.Core.Entities.Product;
 
 namespace ECommerce.Core.Interfaces.Repositories;
 
-public interface IProductOptionRepository : IGenericRepository<ProductOption, int>
+public interface IProductOptionRepository : IGenericRepository<ProductOption, Guid>
 {
-    Task<IReadOnlyList<ProductOption>> GetOptionsByProductIdAsync(int productId, CancellationToken ct = default);
+    Task<IReadOnlyList<ProductOption>> GetOptionsByProductIdAsync(Guid productId, CancellationToken ct = default);
 }

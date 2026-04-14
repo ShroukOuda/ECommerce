@@ -38,14 +38,14 @@ public class ProductOptionServiceTests
     [Fact]
     public async Task GetOptionsByProductIdAsync_ShouldReturnMappedOptions()
     {
-        var options = new List<ProductOption> { new() { Id = 1, Name = "Color" } };
-        var optionDtos = new List<GetProductOptionDTO> { new() { Id = 1, Name = "Color" } };
+        var options = new List<ProductOption> { new() { Id = TestGuid.FromInt(1), Name = "Color" } };
+        var optionDtos = new List<GetProductOptionDTO> { new() { Id = TestGuid.FromInt(1), Name = "Color" } };
 
-        _unitOfWorkMock.Setup(u => u.ProductOptionRepository.GetOptionsByProductIdAsync(1, It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.ProductOptionRepository.GetOptionsByProductIdAsync(TestGuid.FromInt(1), It.IsAny<CancellationToken>()))
             .ReturnsAsync(options);
         _mapperMock.Setup(m => m.Map<IEnumerable<GetProductOptionDTO>>(options)).Returns(optionDtos);
 
-        var result = await _productOptionService.GetOptionsByProductIdAsync(1);
+        var result = await _productOptionService.GetOptionsByProductIdAsync(TestGuid.FromInt(1));
 
         result.Should().HaveCount(1);
         result.First().Name.Should().Be("Color");
@@ -54,14 +54,14 @@ public class ProductOptionServiceTests
     [Fact]
     public async Task GetOptionByIdAsync_WhenExists_ShouldReturnOption()
     {
-        var option = new ProductOption { Id = 1, Name = "Size" };
-        var optionDto = new GetProductOptionDTO { Id = 1, Name = "Size" };
+        var option = new ProductOption { Id = TestGuid.FromInt(1), Name = "Size" };
+        var optionDto = new GetProductOptionDTO { Id = TestGuid.FromInt(1), Name = "Size" };
 
-        _unitOfWorkMock.Setup(u => u.ProductOptionRepository.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.ProductOptionRepository.GetByIdAsync(TestGuid.FromInt(1), It.IsAny<CancellationToken>()))
             .ReturnsAsync(option);
         _mapperMock.Setup(m => m.Map<GetProductOptionDTO>(option)).Returns(optionDto);
 
-        var result = await _productOptionService.GetOptionByIdAsync(1);
+        var result = await _productOptionService.GetOptionByIdAsync(TestGuid.FromInt(1));
 
         result.Should().NotBeNull();
         result.Name.Should().Be("Size");
@@ -70,10 +70,10 @@ public class ProductOptionServiceTests
     [Fact]
     public async Task GetOptionByIdAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
-        _unitOfWorkMock.Setup(u => u.ProductOptionRepository.GetByIdAsync(999, It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.ProductOptionRepository.GetByIdAsync(TestGuid.FromInt(999), It.IsAny<CancellationToken>()))
             .ReturnsAsync((ProductOption?)null);
 
-        var act = () => _productOptionService.GetOptionByIdAsync(999);
+        var act = () => _productOptionService.GetOptionByIdAsync(TestGuid.FromInt(999));
 
         await act.Should().ThrowAsync<KeyNotFoundException>();
     }
@@ -81,7 +81,7 @@ public class ProductOptionServiceTests
     [Fact]
     public async Task AddOptionAsync_WithValidData_ShouldAddOption()
     {
-        var dto = new AddProductOptionDTO { Name = "Color", DisplayType = "Dropdown", Type = "VariantSelector", AttributeKey = "color", ProductId = 1 };
+        var dto = new AddProductOptionDTO { Name = "Color", DisplayType = "Dropdown", Type = "VariantSelector", AttributeKey = "color", ProductId = TestGuid.FromInt(1) };
         var option = new ProductOption { Name = "Color" };
 
         _addValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
@@ -118,7 +118,7 @@ public class ProductOptionServiceTests
             .ReturnsAsync(true);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-        await _productOptionService.DeleteOptionAsync(1);
+        await _productOptionService.DeleteOptionAsync(TestGuid.FromInt(1));
 
         _unitOfWorkMock.Verify(u => u.ProductOptionRepository.DeleteAsync(It.IsAny<ProductOption>(), It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -130,7 +130,7 @@ public class ProductOptionServiceTests
             It.IsAny<System.Linq.Expressions.Expression<Func<ProductOption, bool>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
-        var act = () => _productOptionService.DeleteOptionAsync(999);
+        var act = () => _productOptionService.DeleteOptionAsync(TestGuid.FromInt(999));
 
         await act.Should().ThrowAsync<KeyNotFoundException>();
     }
@@ -138,7 +138,7 @@ public class ProductOptionServiceTests
     [Fact]
     public async Task AddOptionValueAsync_WithValidData_ShouldAddValue()
     {
-        var dto = new AddProductOptionValueDTO { Value = "Red", Label = "Red", OptionId = 1 };
+        var dto = new AddProductOptionValueDTO { Value = "Red", Label = "Red", OptionId = TestGuid.FromInt(1) };
         var value = new ProductOptionValue { Value = "Red" };
 
         _addValueValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
@@ -161,7 +161,7 @@ public class ProductOptionServiceTests
             .ReturnsAsync(true);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-        await _productOptionService.DeleteOptionValueAsync(1);
+        await _productOptionService.DeleteOptionValueAsync(TestGuid.FromInt(1));
 
         _unitOfWorkMock.Verify(u => u.ProductOptionValueRepository.DeleteAsync(It.IsAny<ProductOptionValue>(), It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -173,7 +173,7 @@ public class ProductOptionServiceTests
             It.IsAny<System.Linq.Expressions.Expression<Func<ProductOptionValue, bool>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
-        var act = () => _productOptionService.DeleteOptionValueAsync(999);
+        var act = () => _productOptionService.DeleteOptionValueAsync(TestGuid.FromInt(999));
 
         await act.Should().ThrowAsync<KeyNotFoundException>();
     }

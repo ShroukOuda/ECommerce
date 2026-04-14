@@ -2,7 +2,7 @@ using ECommerce.Core.Entities.User;
 
 namespace ECommerce.Infrastructure.Repositories;
 
-public class UserSessionRepository : GenericRepository<UserSession, int>, IUserSessionRepository
+public class UserSessionRepository : GenericRepository<UserSession, Guid>, IUserSessionRepository
 {
     public UserSessionRepository(AppDbContext context) : base(context) { }
 

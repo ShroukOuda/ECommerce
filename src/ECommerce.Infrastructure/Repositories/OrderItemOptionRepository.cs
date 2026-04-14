@@ -2,7 +2,7 @@ using ECommerce.Core.Entities.Order;
 
 namespace ECommerce.Infrastructure.Repositories;
 
-public class OrderItemOptionRepository : GenericRepository<OrderItemOption, int>, IOrderItemOptionRepository
+public class OrderItemOptionRepository : GenericRepository<OrderItemOption, Guid>, IOrderItemOptionRepository
 {
     public OrderItemOptionRepository(AppDbContext context) : base(context) { }
 }

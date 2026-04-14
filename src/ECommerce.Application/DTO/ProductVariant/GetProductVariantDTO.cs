@@ -2,7 +2,7 @@ namespace ECommerce.Application.DTO.ProductVariant;
 
 public class GetProductVariantDTO
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     public string Sku { get; set; } = string.Empty;
     public string VariantName { get; set; } = string.Empty;
     public string? Size { get; set; }
@@ -12,5 +12,5 @@ public class GetProductVariantDTO
     public int StockQuantity { get; set; }
     public string StockStatus { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
-    public int ProductId { get; set; }
+    public Guid ProductId { get; set; }
 }

@@ -2,7 +2,7 @@ using ECommerce.Core.Entities.Order;
 
 namespace ECommerce.Core.Interfaces.Repositories;
 
-public interface IOrderStatusHistoryRepository : IGenericRepository<OrderStatusHistory, int>
+public interface IOrderStatusHistoryRepository : IGenericRepository<OrderStatusHistory, Guid>
 {
-    Task<IReadOnlyList<OrderStatusHistory>> GetHistoryByOrderIdAsync(int orderId, CancellationToken ct = default);
+    Task<IReadOnlyList<OrderStatusHistory>> GetHistoryByOrderIdAsync(Guid orderId, CancellationToken ct = default);
 }

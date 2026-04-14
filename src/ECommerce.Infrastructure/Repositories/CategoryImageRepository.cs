@@ -3,14 +3,14 @@ using ECommerce.Core.Interfaces.Repositories;
 
 namespace ECommerce.Infrastructure.Repositories;
 
-public class CategoryImageRepository : GenericRepository<CategoryImage, int>, ICategoryImageRepository
+public class CategoryImageRepository : GenericRepository<CategoryImage, Guid>, ICategoryImageRepository
 {
     public CategoryImageRepository(AppDbContext context) : base(context)
     {
     }
 
     public async Task<IReadOnlyList<CategoryImage>> GetImagesByCategoryIdAsync(
-        int categoryId, 
+        Guid categoryId, 
         CancellationToken ct = default)
     {
         return await _dbSet
@@ -21,7 +21,7 @@ public class CategoryImageRepository : GenericRepository<CategoryImage, int>, IC
     }
 
     public async Task<CategoryImage> GetCategoryImageBySubTypeAsync(
-        int categoryId, 
+        Guid categoryId, 
         ImageSubType subType, 
         CancellationToken ct = default)
     {

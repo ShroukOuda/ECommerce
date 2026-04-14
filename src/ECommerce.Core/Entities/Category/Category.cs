@@ -2,7 +2,7 @@ using ECommerce.Core.Enums.Category;
 
 namespace ECommerce.Core.Entities.Category;
 
-public class Category:BaseEntity<int>
+public class Category:BaseEntity<Guid>
 {
     public string Name { get; set; } = string.Empty;
     public string Slug { get; set; } = string.Empty;
@@ -11,7 +11,7 @@ public class Category:BaseEntity<int>
     public CategoryStatus Status { get; set; } = CategoryStatus.Active;
     
     //FK
-    public int? ParentCategoryId { get; set; } 
+    public Guid? ParentCategoryId { get; set; } 
 
     // Navigation Properties
     public virtual Category? ParentCategory { get; set; }

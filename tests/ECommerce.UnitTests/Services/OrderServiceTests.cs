@@ -32,8 +32,8 @@ public class OrderServiceTests
     [Fact]
     public async Task GetAllOrdersAsync_ShouldReturnMappedOrders()
     {
-        var orders = new List<Order> { new() { Id = 1, OrderNumber = "ORD-001" } };
-        var orderDtos = new List<GetOrderDTO> { new() { Id = 1, OrderNumber = "ORD-001" } };
+        var orders = new List<Order> { new() { Id = TestGuid.FromInt(1), OrderNumber = "ORD-001" } };
+        var orderDtos = new List<GetOrderDTO> { new() { Id = TestGuid.FromInt(1), OrderNumber = "ORD-001" } };
 
         _unitOfWorkMock.Setup(u => u.OrderRepository.GetAllAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(orders);
@@ -49,15 +49,15 @@ public class OrderServiceTests
     [Fact]
     public async Task GetOrderByIdAsync_WhenOrderExists_ShouldReturnOrder()
     {
-        var order = new Order { Id = 1, OrderNumber = "ORD-001" };
-        var orderDto = new GetOrderDTO { Id = 1, OrderNumber = "ORD-001" };
+        var order = new Order { Id = TestGuid.FromInt(1), OrderNumber = "ORD-001" };
+        var orderDto = new GetOrderDTO { Id = TestGuid.FromInt(1), OrderNumber = "ORD-001" };
 
-        _unitOfWorkMock.Setup(u => u.OrderRepository.GetOrderWithDetailsAsync(1, It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.OrderRepository.GetOrderWithDetailsAsync(TestGuid.FromInt(1), It.IsAny<CancellationToken>()))
             .ReturnsAsync(order);
         _mapperMock.Setup(m => m.Map<GetOrderDTO>(order))
             .Returns(orderDto);
 
-        var result = await _orderService.GetOrderByIdAsync(1);
+        var result = await _orderService.GetOrderByIdAsync(TestGuid.FromInt(1));
 
         result.Should().NotBeNull();
         result.OrderNumber.Should().Be("ORD-001");
@@ -66,10 +66,10 @@ public class OrderServiceTests
     [Fact]
     public async Task GetOrderByIdAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
-        _unitOfWorkMock.Setup(u => u.OrderRepository.GetOrderWithDetailsAsync(999, It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.OrderRepository.GetOrderWithDetailsAsync(TestGuid.FromInt(999), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Order?)null);
 
-        var act = () => _orderService.GetOrderByIdAsync(999);
+        var act = () => _orderService.GetOrderByIdAsync(TestGuid.FromInt(999));
 
         await act.Should().ThrowAsync<KeyNotFoundException>();
     }
@@ -77,8 +77,8 @@ public class OrderServiceTests
     [Fact]
     public async Task GetOrdersByUserIdAsync_ShouldReturnMappedOrders()
     {
-        var orders = new List<Order> { new() { Id = 1, UserId = "user1" } };
-        var orderDtos = new List<GetOrderDTO> { new() { Id = 1, UserId = "user1" } };
+        var orders = new List<Order> { new() { Id = TestGuid.FromInt(1), UserId = "user1" } };
+        var orderDtos = new List<GetOrderDTO> { new() { Id = TestGuid.FromInt(1), UserId = "user1" } };
 
         _unitOfWorkMock.Setup(u => u.OrderRepository.GetOrdersByUserIdAsync("user1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(orders);
@@ -97,11 +97,11 @@ public class OrderServiceTests
         {
             UserId = "user1",
             Currency = "USD",
-            ShippingAddressId = 1,
-            BillingAddressId = 1,
-            Items = new List<CreateOrderItemDTO> { new() { ProductId = 1, Quantity = 2 } }
+            ShippingAddressId = TestGuid.FromInt(1),
+            BillingAddressId = TestGuid.FromInt(1),
+            Items = new List<CreateOrderItemDTO> { new() { ProductId = TestGuid.FromInt(1), Quantity = 2 } }
         };
-        var orderDto = new GetOrderDTO { Id = 1 };
+        var orderDto = new GetOrderDTO { Id = TestGuid.FromInt(1) };
 
         _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
@@ -133,10 +133,10 @@ public class OrderServiceTests
     [Fact]
     public async Task UpdateOrderStatusAsync_WhenOrderExists_ShouldUpdateStatus()
     {
-        var dto = new UpdateOrderStatusDTO { Id = 1, OrderStatus = "Shipped" };
-        var order = new Order { Id = 1 };
+        var dto = new UpdateOrderStatusDTO { Id = TestGuid.FromInt(1), OrderStatus = "Shipped" };
+        var order = new Order { Id = TestGuid.FromInt(1) };
 
-        _unitOfWorkMock.Setup(u => u.OrderRepository.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.OrderRepository.GetByIdAsync(TestGuid.FromInt(1), It.IsAny<CancellationToken>()))
             .ReturnsAsync(order);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
@@ -148,9 +148,9 @@ public class OrderServiceTests
     [Fact]
     public async Task UpdateOrderStatusAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
-        var dto = new UpdateOrderStatusDTO { Id = 999, OrderStatus = "Shipped" };
+        var dto = new UpdateOrderStatusDTO { Id = TestGuid.FromInt(999), OrderStatus = "Shipped" };
 
-        _unitOfWorkMock.Setup(u => u.OrderRepository.GetByIdAsync(999, It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.OrderRepository.GetByIdAsync(TestGuid.FromInt(999), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Order?)null);
 
         var act = () => _orderService.UpdateOrderStatusAsync(dto);
@@ -161,10 +161,10 @@ public class OrderServiceTests
     [Fact]
     public async Task UpdateOrderStatusAsync_WithInvalidStatus_ShouldThrowArgumentException()
     {
-        var dto = new UpdateOrderStatusDTO { Id = 1, OrderStatus = "InvalidStatus" };
-        var order = new Order { Id = 1 };
+        var dto = new UpdateOrderStatusDTO { Id = TestGuid.FromInt(1), OrderStatus = "InvalidStatus" };
+        var order = new Order { Id = TestGuid.FromInt(1) };
 
-        _unitOfWorkMock.Setup(u => u.OrderRepository.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.OrderRepository.GetByIdAsync(TestGuid.FromInt(1), It.IsAny<CancellationToken>()))
             .ReturnsAsync(order);
 
         var act = () => _orderService.UpdateOrderStatusAsync(dto);
@@ -180,7 +180,7 @@ public class OrderServiceTests
             .ReturnsAsync(true);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-        await _orderService.DeleteOrderAsync(1);
+        await _orderService.DeleteOrderAsync(TestGuid.FromInt(1));
 
         _unitOfWorkMock.Verify(u => u.OrderRepository.DeleteAsync(It.IsAny<Order>(), It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -192,7 +192,7 @@ public class OrderServiceTests
             It.IsAny<System.Linq.Expressions.Expression<Func<Order, bool>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
-        var act = () => _orderService.DeleteOrderAsync(999);
+        var act = () => _orderService.DeleteOrderAsync(TestGuid.FromInt(999));
 
         await act.Should().ThrowAsync<KeyNotFoundException>();
     }

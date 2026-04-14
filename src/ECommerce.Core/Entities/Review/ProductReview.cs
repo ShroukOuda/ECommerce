@@ -2,7 +2,7 @@ using ECommerce.Core.Enums.Review;
 
 namespace ECommerce.Core.Entities.Review;
 
-public class ProductReview : BaseEntity<int>
+public class ProductReview : BaseEntity<Guid>
 {
     public int Rating { get; set; }
     public string Title { get; set; } = string.Empty;
@@ -11,8 +11,8 @@ public class ProductReview : BaseEntity<int>
     public ReviewStatus Status { get; set; } = ReviewStatus.Pending;
     
     //FK
-    public int ProductId { get; set; }
-    public int OrderId { get; set; }
+    public Guid ProductId { get; set; }
+    public Guid OrderId { get; set; }
     public string UserId { get; set; }
     
     //Navigation Properties

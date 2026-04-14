@@ -17,8 +17,8 @@ public class UploadProductImageDTOValidator : AbstractValidator<UploadProductIma
         _validationSettings = validationSettings.Value;
         
         RuleFor(x => x.ProductId)
-            .GreaterThan(0)
-            .WithMessage("ProductId must be greater than 0");
+            .NotEmpty()
+            .WithMessage("ProductId is required");
         
         RuleFor(x => x.File)
             .NotNull()

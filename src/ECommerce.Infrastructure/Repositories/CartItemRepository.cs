@@ -2,11 +2,11 @@ using ECommerce.Core.Entities.Cart;
 
 namespace ECommerce.Infrastructure.Repositories;
 
-public class CartItemRepository : GenericRepository<CartItem, int>, ICartItemRepository
+public class CartItemRepository : GenericRepository<CartItem, Guid>, ICartItemRepository
 {
     public CartItemRepository(AppDbContext context) : base(context) { }
 
-    public async Task<IReadOnlyList<CartItem>> GetItemsByCartIdAsync(int cartId, CancellationToken ct = default)
+    public async Task<IReadOnlyList<CartItem>> GetItemsByCartIdAsync(Guid cartId, CancellationToken ct = default)
     {
         return await _dbSet.AsNoTracking()
             .Where(ci => ci.CartId == cartId)

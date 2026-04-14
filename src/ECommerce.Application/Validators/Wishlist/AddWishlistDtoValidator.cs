@@ -6,7 +6,7 @@ public class AddWishlistDtoValidator : AbstractValidator<AddWishlistDTO>
 {
     public AddWishlistDtoValidator()
     {
-        RuleFor(x => x.ProductId).GreaterThan(0);
+        RuleFor(x => x.ProductId).NotEmpty();
         RuleFor(x => x.UserId).NotEmpty();
     }
 }

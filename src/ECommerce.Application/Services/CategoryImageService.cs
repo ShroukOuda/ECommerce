@@ -84,7 +84,7 @@ public class CategoryImageService : ICategoryImageService
     }
     
     public async Task<IReadOnlyList<CategoryImageDTO>> GetCategoryImagesAsync(
-        int categoryId,
+        Guid categoryId,
         CancellationToken ct = default)
     {
         var image = await _unitOfWork.CategoryImageRepository
@@ -93,7 +93,7 @@ public class CategoryImageService : ICategoryImageService
     }
     
     public async Task<CategoryImageDTO?> GetCategoryImageBySubTypeAsync(
-        int categoryId,
+        Guid categoryId,
         ImageSubType subType,
         CancellationToken ct = default)
     {
@@ -103,8 +103,8 @@ public class CategoryImageService : ICategoryImageService
     }
     
     public async Task DeleteCategoryImageAsync(
-        int categoryId,
-        int imageId,
+        Guid categoryId,
+        Guid imageId,
         CancellationToken ct = default)
     {
         var image = await _unitOfWork.CategoryImageRepository.GetByIdAsync(imageId, ct);
@@ -120,7 +120,7 @@ public class CategoryImageService : ICategoryImageService
     }
     
     public async Task DeleteAllCategoryImagesAsync(
-        int categoryId,
+        Guid categoryId,
         CancellationToken ct = default)
     {
         var images = await _unitOfWork.CategoryImageRepository
@@ -142,11 +142,11 @@ public class CategoryImageService : ICategoryImageService
     }
     
     public async Task<CategoryImageDTO?> GetImageByIdAsync(
-        int imageId,
+        Guid imageId,
         CancellationToken ct = default)
     {
         var image = await _unitOfWork.CategoryImageRepository.GetByIdAsync(imageId, ct);
-        if (image == null || image.CategoryId <= 0) return null;
+        if (image == null) return null;
         return _mapper.Map<CategoryImageDTO>(image);
     }
 

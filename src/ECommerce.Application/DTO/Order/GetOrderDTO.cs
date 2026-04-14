@@ -2,7 +2,7 @@ namespace ECommerce.Application.DTO.Order;
 
 public class GetOrderDTO
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     public string OrderNumber { get; set; } = string.Empty;
     public string OrderType { get; set; } = string.Empty;
     public string OrderStatus { get; set; } = string.Empty;

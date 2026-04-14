@@ -9,6 +9,6 @@ public class AddProductVariantDTO
     public string? Material { get; set; }
     public decimal PriceAdjustment { get; set; }
     public int StockQuantity { get; set; }
-    public int ProductId { get; set; }
-    public List<int> OptionValueIds { get; set; } = new();
+    public Guid ProductId { get; set; }
+    public List<Guid> OptionValueIds { get; set; } = new();
 }

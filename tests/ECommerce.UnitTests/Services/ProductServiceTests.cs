@@ -40,8 +40,8 @@ public class ProductServiceTests
     [Fact]
     public async Task GetAllProductsAsync_ShouldReturnMappedProducts()
     {
-        var products = new List<Product> { new() { Id = 1, Name = "Laptop" } };
-        var productDtos = new List<GetProductDTO> { new() { Id = 1, Name = "Laptop" } };
+        var products = new List<Product> { new() { Id = TestGuid.FromInt(1), Name = "Laptop" } };
+        var productDtos = new List<GetProductDTO> { new() { Id = TestGuid.FromInt(1), Name = "Laptop" } };
         var productParams = new ProductParams();
 
         _unitOfWorkMock.Setup(u => u.ProductRepository.GetAllAsync(productParams, It.IsAny<CancellationToken>()))
@@ -71,15 +71,15 @@ public class ProductServiceTests
     [Fact]
     public async Task GetProductByIdAsync_WhenProductExists_ShouldReturnProduct()
     {
-        var product = new Product { Id = 1, Name = "Laptop" };
-        var productDto = new GetProductDTO { Id = 1, Name = "Laptop" };
+        var product = new Product { Id = TestGuid.FromInt(1), Name = "Laptop" };
+        var productDto = new GetProductDTO { Id = TestGuid.FromInt(1), Name = "Laptop" };
 
-        _unitOfWorkMock.Setup(u => u.ProductRepository.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.ProductRepository.GetByIdAsync(TestGuid.FromInt(1), It.IsAny<CancellationToken>()))
             .ReturnsAsync(product);
         _mapperMock.Setup(m => m.Map<GetProductDTO>(product))
             .Returns(productDto);
 
-        var result = await _productService.GetProductByIdAsync(1);
+        var result = await _productService.GetProductByIdAsync(TestGuid.FromInt(1));
 
         result.Should().NotBeNull();
         result.Name.Should().Be("Laptop");
@@ -88,10 +88,10 @@ public class ProductServiceTests
     [Fact]
     public async Task GetProductByIdAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
-        _unitOfWorkMock.Setup(u => u.ProductRepository.GetByIdAsync(999, It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.ProductRepository.GetByIdAsync(TestGuid.FromInt(999), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Product?)null);
 
-        var act = () => _productService.GetProductByIdAsync(999);
+        var act = () => _productService.GetProductByIdAsync(TestGuid.FromInt(999));
 
         await act.Should().ThrowAsync<KeyNotFoundException>();
     }
@@ -99,7 +99,7 @@ public class ProductServiceTests
     [Fact]
     public async Task GetProductByIdAsync_WithZeroId_ShouldThrowArgumentException()
     {
-        var act = () => _productService.GetProductByIdAsync(0);
+        var act = () => _productService.GetProductByIdAsync(Guid.Empty);
 
         await act.Should().ThrowAsync<ArgumentException>();
     }
@@ -107,7 +107,7 @@ public class ProductServiceTests
     [Fact]
     public async Task AddProductAsync_WithValidData_ShouldAddProduct()
     {
-        var dto = new AddProductDTO { Name = "Laptop", Price = 999, SKU = "LAP-001", CategoryId = 1 };
+        var dto = new AddProductDTO { Name = "Laptop", Price = 999, SKU = "LAP-001", CategoryId = TestGuid.FromInt(1) };
         var product = new Product { Name = "Laptop" };
 
         _addValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
@@ -147,7 +147,7 @@ public class ProductServiceTests
             .ReturnsAsync(true);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-        await _productService.DeleteProductAsync(1);
+        await _productService.DeleteProductAsync(TestGuid.FromInt(1));
 
         _unitOfWorkMock.Verify(u => u.ProductRepository.DeleteAsync(It.IsAny<Product>(), It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -159,7 +159,7 @@ public class ProductServiceTests
             It.IsAny<System.Linq.Expressions.Expression<Func<Product, bool>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
-        var act = () => _productService.DeleteProductAsync(1);
+        var act = () => _productService.DeleteProductAsync(TestGuid.FromInt(1));
 
         await act.Should().ThrowAsync<KeyNotFoundException>();
     }
@@ -167,7 +167,7 @@ public class ProductServiceTests
     [Fact]
     public async Task DeleteProductAsync_WithZeroId_ShouldThrowArgumentException()
     {
-        var act = () => _productService.DeleteProductAsync(0);
+        var act = () => _productService.DeleteProductAsync(Guid.Empty);
 
         await act.Should().ThrowAsync<ArgumentException>();
     }

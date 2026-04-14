@@ -12,7 +12,6 @@ using ECommerce.Core.Entities.Review;
 using ECommerce.Core.Entities.Shipping;
 using ECommerce.Core.Entities.User;
 using ECommerce.Core.Entities.Wishlist;
-using ECommerce.Infrastructure.Persistence.Seed;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace ECommerce.Infrastructure.Persistence.Context;
@@ -82,6 +81,6 @@ public class AppDbContext : IdentityDbContext<User>
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
-        modelBuilder.Seed();
+        // modelBuilder.Seed();
     }
 }

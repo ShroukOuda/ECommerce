@@ -1,6 +1,6 @@
 namespace ECommerce.Core.Common;
 
-public class BaseImage : BaseEntity<int>
+public class BaseImage : BaseEntity<Guid>
 {
     public string ImageUrl { get; set; } = string.Empty;
     public string? AltText { get; set; }

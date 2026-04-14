@@ -16,8 +16,8 @@ public class UploadCategoryImageDTOValidator : AbstractValidator<UploadCategoryI
         _validationSettings = validationSettings.Value;
         
         RuleFor(x => x.CategoryId)
-            .GreaterThan(0)
-            .WithMessage("CategoryId must be greater than 0");
+            .NotEmpty()
+            .WithMessage("CategoryId is required");
 
         RuleFor(x => x.SubType)
             .IsInEnum()

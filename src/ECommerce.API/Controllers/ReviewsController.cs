@@ -13,14 +13,14 @@ public class ReviewsController : BaseController
     }
 
     [HttpGet("get-by-product/{productId}")]
-    public async Task<IActionResult> GetByProduct(int productId)
+    public async Task<IActionResult> GetByProduct(Guid productId)
     {
         var reviews = await _reviewService.GetReviewsByProductIdAsync(productId);
         return Ok(reviews);
     }
 
     [HttpGet("get-by-id/{id}")]
-    public async Task<IActionResult> GetById(int id)
+    public async Task<IActionResult> GetById(Guid id)
     {
         var review = await _reviewService.GetReviewByIdAsync(id);
         return Ok(review);
@@ -34,7 +34,7 @@ public class ReviewsController : BaseController
     }
 
     [HttpDelete("delete/{id}")]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> Delete(Guid id)
     {
         await _reviewService.DeleteReviewAsync(id);
         return Ok(new ResponseAPI(200, "Review deleted successfully"));

@@ -11,7 +11,7 @@ public class AddReviewDtoValidatorTests
     [Fact]
     public async Task Validate_WithValidData_ShouldPass()
     {
-        var dto = new AddReviewDTO { Rating = 5, Title = "Great", ProductId = 1, OrderId = 1, UserId = "user1" };
+        var dto = new AddReviewDTO { Rating = 5, Title = "Great", ProductId = TestGuid.FromInt(1), OrderId = TestGuid.FromInt(1), UserId = "user1" };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeTrue();
     }
@@ -22,7 +22,7 @@ public class AddReviewDtoValidatorTests
     [InlineData(6)]
     public async Task Validate_WithInvalidRating_ShouldFail(int rating)
     {
-        var dto = new AddReviewDTO { Rating = rating, Title = "Great", ProductId = 1, OrderId = 1, UserId = "user1" };
+        var dto = new AddReviewDTO { Rating = rating, Title = "Great", ProductId = TestGuid.FromInt(1), OrderId = TestGuid.FromInt(1), UserId = "user1" };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "Rating");
@@ -33,7 +33,7 @@ public class AddReviewDtoValidatorTests
     {
         for (int i = 1; i <= 5; i++)
         {
-            var dto = new AddReviewDTO { Rating = i, Title = "Good", ProductId = 1, OrderId = 1, UserId = "user1" };
+            var dto = new AddReviewDTO { Rating = i, Title = "Good", ProductId = TestGuid.FromInt(1), OrderId = TestGuid.FromInt(1), UserId = "user1" };
             var result = await _validator.ValidateAsync(dto);
             result.IsValid.Should().BeTrue();
         }
@@ -44,7 +44,7 @@ public class AddReviewDtoValidatorTests
     [InlineData(null)]
     public async Task Validate_WithEmptyTitle_ShouldFail(string? title)
     {
-        var dto = new AddReviewDTO { Rating = 5, Title = title!, ProductId = 1, OrderId = 1, UserId = "user1" };
+        var dto = new AddReviewDTO { Rating = 5, Title = title!, ProductId = TestGuid.FromInt(1), OrderId = TestGuid.FromInt(1), UserId = "user1" };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "Title");
@@ -55,7 +55,7 @@ public class AddReviewDtoValidatorTests
     {
         var dto = new AddReviewDTO
         {
-            Rating = 5, Title = new string('A', 201), ProductId = 1, OrderId = 1, UserId = "user1"
+            Rating = 5, Title = new string('A', 201), ProductId = TestGuid.FromInt(1), OrderId = TestGuid.FromInt(1), UserId = "user1"
         };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
@@ -65,7 +65,7 @@ public class AddReviewDtoValidatorTests
     [Fact]
     public async Task Validate_WithProductIdZero_ShouldFail()
     {
-        var dto = new AddReviewDTO { Rating = 5, Title = "Great", ProductId = 0, OrderId = 1, UserId = "user1" };
+        var dto = new AddReviewDTO { Rating = 5, Title = "Great", ProductId = Guid.Empty, OrderId = TestGuid.FromInt(1), UserId = "user1" };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "ProductId");
@@ -74,7 +74,7 @@ public class AddReviewDtoValidatorTests
     [Fact]
     public async Task Validate_WithOrderIdZero_ShouldFail()
     {
-        var dto = new AddReviewDTO { Rating = 5, Title = "Great", ProductId = 1, OrderId = 0, UserId = "user1" };
+        var dto = new AddReviewDTO { Rating = 5, Title = "Great", ProductId = TestGuid.FromInt(1), OrderId = Guid.Empty, UserId = "user1" };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "OrderId");
@@ -83,7 +83,7 @@ public class AddReviewDtoValidatorTests
     [Fact]
     public async Task Validate_WithEmptyUserId_ShouldFail()
     {
-        var dto = new AddReviewDTO { Rating = 5, Title = "Great", ProductId = 1, OrderId = 1, UserId = "" };
+        var dto = new AddReviewDTO { Rating = 5, Title = "Great", ProductId = TestGuid.FromInt(1), OrderId = TestGuid.FromInt(1), UserId = "" };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "UserId");

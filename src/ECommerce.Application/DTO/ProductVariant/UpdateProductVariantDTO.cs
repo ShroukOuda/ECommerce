@@ -2,7 +2,7 @@ namespace ECommerce.Application.DTO.ProductVariant;
 
 public class UpdateProductVariantDTO
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     public string Sku { get; set; } = string.Empty;
     public string VariantName { get; set; } = string.Empty;
     public string? Size { get; set; }

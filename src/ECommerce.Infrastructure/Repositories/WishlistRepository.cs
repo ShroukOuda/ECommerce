@@ -2,7 +2,7 @@ using ECommerce.Core.Entities.Wishlist;
 
 namespace ECommerce.Infrastructure.Repositories;
 
-public class WishlistRepository : GenericRepository<Wishlist, int>, IWishlistRepository
+public class WishlistRepository : GenericRepository<Wishlist, Guid>, IWishlistRepository
 {
     public WishlistRepository(AppDbContext context) : base(context) { }
 

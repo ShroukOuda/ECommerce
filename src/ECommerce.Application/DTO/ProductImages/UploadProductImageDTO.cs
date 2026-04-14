@@ -5,6 +5,6 @@ namespace ECommerce.Application.DTO.ProductImages;
 
 public class UploadProductImageDTO : UploadImageDTO
 {
-    public int ProductId { get; set; } 
+    public Guid ProductId { get; set; } 
     public bool IsMain { get; set; }
 }

@@ -20,7 +20,7 @@ public class CouponsController : BaseController
     }
 
     [HttpGet("get-by-id/{id}")]
-    public async Task<IActionResult> GetById(int id)
+    public async Task<IActionResult> GetById(Guid id)
     {
         var coupon = await _couponService.GetCouponByIdAsync(id);
         return Ok(coupon);
@@ -48,7 +48,7 @@ public class CouponsController : BaseController
     }
 
     [HttpDelete("delete/{id}")]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> Delete(Guid id)
     {
         await _couponService.DeleteCouponAsync(id);
         return Ok(new ResponseAPI(200, "Coupon deleted successfully"));

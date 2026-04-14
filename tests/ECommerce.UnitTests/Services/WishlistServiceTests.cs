@@ -32,8 +32,8 @@ public class WishlistServiceTests
     [Fact]
     public async Task GetWishlistByUserIdAsync_ShouldReturnMappedItems()
     {
-        var items = new List<Wishlist> { new() { Id = 1, ProductId = 1, UserId = "user1" } };
-        var itemDtos = new List<GetWishlistDTO> { new() { Id = 1, ProductId = 1, UserId = "user1" } };
+        var items = new List<Wishlist> { new() { Id = TestGuid.FromInt(1), ProductId = TestGuid.FromInt(1), UserId = "user1" } };
+        var itemDtos = new List<GetWishlistDTO> { new() { Id = TestGuid.FromInt(1), ProductId = TestGuid.FromInt(1), UserId = "user1" } };
 
         _unitOfWorkMock.Setup(u => u.WishlistRepository.GetWishlistByUserIdAsync("user1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(items);
@@ -47,8 +47,8 @@ public class WishlistServiceTests
     [Fact]
     public async Task AddToWishlistAsync_WithValidData_ShouldAddItem()
     {
-        var dto = new AddWishlistDTO { ProductId = 1, UserId = "user1" };
-        var wishlist = new Wishlist { ProductId = 1, UserId = "user1" };
+        var dto = new AddWishlistDTO { ProductId = TestGuid.FromInt(1), UserId = "user1" };
+        var wishlist = new Wishlist { ProductId = TestGuid.FromInt(1), UserId = "user1" };
 
         _addValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
@@ -68,7 +68,7 @@ public class WishlistServiceTests
     [Fact]
     public async Task AddToWishlistAsync_WhenAlreadyExists_ShouldThrowInvalidOperationException()
     {
-        var dto = new AddWishlistDTO { ProductId = 1, UserId = "user1" };
+        var dto = new AddWishlistDTO { ProductId = TestGuid.FromInt(1), UserId = "user1" };
 
         _addValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
@@ -84,7 +84,7 @@ public class WishlistServiceTests
     [Fact]
     public async Task AddToWishlistAsync_WithInvalidData_ShouldThrowValidationException()
     {
-        var dto = new AddWishlistDTO { ProductId = 0 };
+        var dto = new AddWishlistDTO { ProductId = Guid.Empty };
         var failures = new List<ValidationFailure> { new("ProductId", "ProductId required") };
 
         _addValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
@@ -98,13 +98,13 @@ public class WishlistServiceTests
     [Fact]
     public async Task RemoveFromWishlistAsync_WhenExists_ShouldRemoveItem()
     {
-        var item = new Wishlist { Id = 1 };
+        var item = new Wishlist { Id = TestGuid.FromInt(1) };
 
-        _unitOfWorkMock.Setup(u => u.WishlistRepository.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.WishlistRepository.GetByIdAsync(TestGuid.FromInt(1), It.IsAny<CancellationToken>()))
             .ReturnsAsync(item);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-        await _wishlistService.RemoveFromWishlistAsync(1);
+        await _wishlistService.RemoveFromWishlistAsync(TestGuid.FromInt(1));
 
         _unitOfWorkMock.Verify(u => u.WishlistRepository.DeleteAsync(item, It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -112,10 +112,10 @@ public class WishlistServiceTests
     [Fact]
     public async Task RemoveFromWishlistAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
-        _unitOfWorkMock.Setup(u => u.WishlistRepository.GetByIdAsync(999, It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.WishlistRepository.GetByIdAsync(TestGuid.FromInt(999), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Wishlist?)null);
 
-        var act = () => _wishlistService.RemoveFromWishlistAsync(999);
+        var act = () => _wishlistService.RemoveFromWishlistAsync(TestGuid.FromInt(999));
 
         await act.Should().ThrowAsync<KeyNotFoundException>();
     }

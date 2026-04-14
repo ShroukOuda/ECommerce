@@ -27,8 +27,8 @@ public class UserSessionServiceTests
     [Fact]
     public async Task GetSessionsByUserIdAsync_ShouldReturnMappedSessions()
     {
-        var sessions = new List<UserSession> { new() { Id = 1, UserId = "user1" } };
-        var sessionDtos = new List<GetUserSessionDTO> { new() { Id = 1, UserId = "user1" } };
+        var sessions = new List<UserSession> { new() { Id = TestGuid.FromInt(1), UserId = "user1" } };
+        var sessionDtos = new List<GetUserSessionDTO> { new() { Id = TestGuid.FromInt(1), UserId = "user1" } };
 
         _unitOfWorkMock.Setup(u => u.UserSessionRepository.GetSessionsByUserIdAsync("user1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(sessions);
@@ -42,13 +42,13 @@ public class UserSessionServiceTests
     [Fact]
     public async Task DeleteSessionAsync_WhenExists_ShouldDeleteSession()
     {
-        var session = new UserSession { Id = 1 };
+        var session = new UserSession { Id = TestGuid.FromInt(1) };
 
-        _unitOfWorkMock.Setup(u => u.UserSessionRepository.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.UserSessionRepository.GetByIdAsync(TestGuid.FromInt(1), It.IsAny<CancellationToken>()))
             .ReturnsAsync(session);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-        await _userSessionService.DeleteSessionAsync(1);
+        await _userSessionService.DeleteSessionAsync(TestGuid.FromInt(1));
 
         _unitOfWorkMock.Verify(u => u.UserSessionRepository.DeleteAsync(session, It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -56,10 +56,10 @@ public class UserSessionServiceTests
     [Fact]
     public async Task DeleteSessionAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
-        _unitOfWorkMock.Setup(u => u.UserSessionRepository.GetByIdAsync(999, It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.UserSessionRepository.GetByIdAsync(TestGuid.FromInt(999), It.IsAny<CancellationToken>()))
             .ReturnsAsync((UserSession?)null);
 
-        var act = () => _userSessionService.DeleteSessionAsync(999);
+        var act = () => _userSessionService.DeleteSessionAsync(TestGuid.FromInt(999));
 
         await act.Should().ThrowAsync<KeyNotFoundException>();
     }

@@ -2,7 +2,7 @@ using ECommerce.Core.Enums.Brand;
 
 namespace ECommerce.Core.Entities.Brand;
 
-public class Brand : BaseEntity<int>
+public class Brand : BaseEntity<Guid>
 {
     public string Name { get; set; } = string.Empty;
     public string Slug { get; set; } = string.Empty;

@@ -39,11 +39,8 @@ public class ProductService : IProductService
         return (mapProducts, products.TotalCount);
     }
 
-    public async Task<GetProductDTO> GetProductByIdAsync(int id, CancellationToken ct = default)
+    public async Task<GetProductDTO> GetProductByIdAsync(Guid id, CancellationToken ct = default)
     {
-        if (id <= 0)
-            throw new ArgumentException("Product ID must be greater than zero.", nameof(id));
-        
         var product = await _unitOfWork.ProductRepository.GetByIdAsync(id, ct);
         if (product is null)
             throw new KeyNotFoundException($"Product with ID {id} not found");
@@ -94,11 +91,8 @@ public class ProductService : IProductService
         }
        
     }
-    public async Task DeleteProductAsync(int id, CancellationToken ct = default)
+    public async Task DeleteProductAsync(Guid id, CancellationToken ct = default)
     {
-        if (id <= 0)
-            throw new ArgumentException("Product ID must be greater than zero.", nameof(id));
-
         bool exists = await _unitOfWork.ProductRepository.ExistsAsync(p => p.Id == id, ct);
         if (!exists)
             throw new KeyNotFoundException($"Product with ID {id} not found.");

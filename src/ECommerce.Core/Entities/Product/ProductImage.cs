@@ -3,8 +3,8 @@ namespace ECommerce.Core.Entities.Product;
 public class ProductImage : BaseImage
 {
     //FK
-    public int ProductId { get; set; }
-    public int? ProductVariantId { get; set; }
+    public Guid ProductId { get; set; }
+    public Guid? ProductVariantId { get; set; }
     
     // Navigation Properties
     public virtual Product? Product { get; set; }

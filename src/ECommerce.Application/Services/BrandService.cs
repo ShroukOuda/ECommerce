@@ -29,7 +29,7 @@ public class BrandService : IBrandService
         return _mapper.Map<IEnumerable<GetBrandDTO>>(brands);
     }
 
-    public async Task<GetBrandDTO> GetBrandByIdAsync(int id, CancellationToken ct = default)
+    public async Task<GetBrandDTO> GetBrandByIdAsync(Guid id, CancellationToken ct = default)
     {
         var brand = await _unitOfWork.BrandRepository.GetByIdAsync(id, ct);
         if (brand is null) throw new KeyNotFoundException($"Brand with ID {id} not found.");
@@ -56,7 +56,7 @@ public class BrandService : IBrandService
         await _unitOfWork.SaveChangesAsync(ct);
     }
 
-    public async Task DeleteBrandAsync(int id, CancellationToken ct = default)
+    public async Task DeleteBrandAsync(Guid id, CancellationToken ct = default)
     {
         bool exists = await _unitOfWork.BrandRepository.ExistsAsync(b => b.Id == id, ct);
         if (!exists) throw new KeyNotFoundException($"Brand with ID {id} not found.");

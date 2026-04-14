@@ -26,7 +26,7 @@ public class CouponService : ICouponService
         return _mapper.Map<IEnumerable<GetCouponDTO>>(coupons);
     }
 
-    public async Task<GetCouponDTO> GetCouponByIdAsync(int id, CancellationToken ct = default)
+    public async Task<GetCouponDTO> GetCouponByIdAsync(Guid id, CancellationToken ct = default)
     {
         var coupon = await _unitOfWork.CouponRepository.GetByIdAsync(id, ct);
         if (coupon is null) throw new KeyNotFoundException($"Coupon with ID {id} not found.");
@@ -57,7 +57,7 @@ public class CouponService : ICouponService
         await _unitOfWork.SaveChangesAsync(ct);
     }
 
-    public async Task DeleteCouponAsync(int id, CancellationToken ct = default)
+    public async Task DeleteCouponAsync(Guid id, CancellationToken ct = default)
     {
         bool exists = await _unitOfWork.CouponRepository.ExistsAsync(c => c.Id == id, ct);
         if (!exists) throw new KeyNotFoundException($"Coupon with ID {id} not found.");

@@ -2,7 +2,7 @@ using ECommerce.Core.Entities.Order;
 
 namespace ECommerce.Infrastructure.Repositories;
 
-public class OrderRepository : GenericRepository<Order, int>, IOrderRepository
+public class OrderRepository : GenericRepository<Order, Guid>, IOrderRepository
 {
     private readonly AppDbContext _context;
 
@@ -11,7 +11,7 @@ public class OrderRepository : GenericRepository<Order, int>, IOrderRepository
         _context = context;
     }
 
-    public async Task<Order?> GetOrderWithDetailsAsync(int orderId, CancellationToken ct = default)
+    public async Task<Order?> GetOrderWithDetailsAsync(Guid orderId, CancellationToken ct = default)
     {
         return await _context.Orders
             .Include(o => o.OrderItems).ThenInclude(oi => oi.OrderItemOptions)

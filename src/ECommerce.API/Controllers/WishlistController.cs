@@ -27,7 +27,7 @@ public class WishlistController : BaseController
     }
 
     [HttpDelete("remove/{id}")]
-    public async Task<IActionResult> Remove(int id)
+    public async Task<IActionResult> Remove(Guid id)
     {
         await _wishlistService.RemoveFromWishlistAsync(id);
         return Ok(new ResponseAPI(200, "Removed from wishlist successfully"));

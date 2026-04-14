@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ECommerce.Infrastructure.Repositories;
 
-public class ProductRepository : GenericRepository<Product, int>, IProductRepository
+public class ProductRepository : GenericRepository<Product, Guid>, IProductRepository
 {
     private readonly AppDbContext _context;
     
@@ -13,7 +13,7 @@ public class ProductRepository : GenericRepository<Product, int>, IProductReposi
         _context = context;
     }
 
-    public override Task<Product?> GetByIdAsync(int id, CancellationToken ct = default)
+   public override Task<Product?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
        return _context.Products
           .Include(p => p.Category)

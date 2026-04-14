@@ -21,13 +21,13 @@ public class ProductVariantService : IProductVariantService
         _updateValidator = updateValidator;
     }
 
-    public async Task<IEnumerable<GetProductVariantDTO>> GetVariantsByProductIdAsync(int productId, CancellationToken ct = default)
+    public async Task<IEnumerable<GetProductVariantDTO>> GetVariantsByProductIdAsync(Guid productId, CancellationToken ct = default)
     {
         var variants = await _unitOfWork.ProductVariantRepository.GetVariantsByProductIdAsync(productId, ct);
         return _mapper.Map<IEnumerable<GetProductVariantDTO>>(variants);
     }
 
-    public async Task<GetProductVariantDTO> GetVariantByIdAsync(int id, CancellationToken ct = default)
+    public async Task<GetProductVariantDTO> GetVariantByIdAsync(Guid id, CancellationToken ct = default)
     {
         var variant = await _unitOfWork.ProductVariantRepository.GetByIdAsync(id, ct);
         if (variant is null) throw new KeyNotFoundException($"Product variant with ID {id} not found.");
@@ -67,7 +67,7 @@ public class ProductVariantService : IProductVariantService
         await _unitOfWork.SaveChangesAsync(ct);
     }
 
-    public async Task DeleteVariantAsync(int id, CancellationToken ct = default)
+    public async Task DeleteVariantAsync(Guid id, CancellationToken ct = default)
     {
         bool exists = await _unitOfWork.ProductVariantRepository.ExistsAsync(v => v.Id == id, ct);
         if (!exists) throw new KeyNotFoundException($"Product variant with ID {id} not found.");

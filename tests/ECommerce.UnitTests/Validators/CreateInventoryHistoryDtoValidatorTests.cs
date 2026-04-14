@@ -11,7 +11,7 @@ public class CreateInventoryHistoryDtoValidatorTests
     [Fact]
     public async Task Validate_WithValidData_ShouldPass()
     {
-        var dto = new CreateInventoryHistoryDTO { ProductId = 1, NewQuantity = 10, ChangeType = "Addition" };
+        var dto = new CreateInventoryHistoryDTO { ProductId = TestGuid.FromInt(1), NewQuantity = 10, ChangeType = "Addition" };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeTrue();
     }
@@ -19,7 +19,7 @@ public class CreateInventoryHistoryDtoValidatorTests
     [Fact]
     public async Task Validate_WithProductIdZero_ShouldFail()
     {
-        var dto = new CreateInventoryHistoryDTO { ProductId = 0, NewQuantity = 10, ChangeType = "Addition" };
+        var dto = new CreateInventoryHistoryDTO { ProductId = Guid.Empty, NewQuantity = 10, ChangeType = "Addition" };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "ProductId");
@@ -28,7 +28,7 @@ public class CreateInventoryHistoryDtoValidatorTests
     [Fact]
     public async Task Validate_WithNegativeNewQuantity_ShouldFail()
     {
-        var dto = new CreateInventoryHistoryDTO { ProductId = 1, NewQuantity = -1, ChangeType = "Addition" };
+        var dto = new CreateInventoryHistoryDTO { ProductId = TestGuid.FromInt(1), NewQuantity = -1, ChangeType = "Addition" };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "NewQuantity");
@@ -37,7 +37,7 @@ public class CreateInventoryHistoryDtoValidatorTests
     [Fact]
     public async Task Validate_WithZeroNewQuantity_ShouldPass()
     {
-        var dto = new CreateInventoryHistoryDTO { ProductId = 1, NewQuantity = 0, ChangeType = "Addition" };
+        var dto = new CreateInventoryHistoryDTO { ProductId = TestGuid.FromInt(1), NewQuantity = 0, ChangeType = "Addition" };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeTrue();
     }
@@ -47,7 +47,7 @@ public class CreateInventoryHistoryDtoValidatorTests
     [InlineData(null)]
     public async Task Validate_WithEmptyChangeType_ShouldFail(string? changeType)
     {
-        var dto = new CreateInventoryHistoryDTO { ProductId = 1, NewQuantity = 10, ChangeType = changeType! };
+        var dto = new CreateInventoryHistoryDTO { ProductId = TestGuid.FromInt(1), NewQuantity = 10, ChangeType = changeType! };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "ChangeType");

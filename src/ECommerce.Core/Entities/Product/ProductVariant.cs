@@ -3,7 +3,7 @@ using ECommerce.Core.Enums.Product;
 
 namespace ECommerce.Core.Entities.Product;
 
-public class ProductVariant : BaseEntity<int>
+public class ProductVariant : BaseEntity<Guid>
 {
     public string Sku { get; set; } = string.Empty;
     public string VariantName { get; set; } = string.Empty;
@@ -17,7 +17,7 @@ public class ProductVariant : BaseEntity<int>
     public ProductVariantStatus Status { get; set; } = ProductVariantStatus.Active;
     
     //FK
-    public int ProductId { get; set; } 
+    public Guid ProductId { get; set; } 
     
     //Navigation Properties
     public virtual Product? Product { get; set; }

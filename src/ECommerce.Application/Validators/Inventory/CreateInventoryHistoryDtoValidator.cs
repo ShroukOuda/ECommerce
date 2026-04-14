@@ -6,7 +6,7 @@ public class CreateInventoryHistoryDtoValidator : AbstractValidator<CreateInvent
 {
     public CreateInventoryHistoryDtoValidator()
     {
-        RuleFor(x => x.ProductId).GreaterThan(0);
+        RuleFor(x => x.ProductId).NotEmpty();
         RuleFor(x => x.NewQuantity).GreaterThanOrEqualTo(0);
         RuleFor(x => x.ChangeType).NotEmpty();
     }

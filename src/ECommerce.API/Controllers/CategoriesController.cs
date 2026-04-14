@@ -20,7 +20,7 @@ public class CategoriesController : BaseController
     }
 
     [HttpGet("get-by-id/{id}")]
-    public async Task<IActionResult> GetById(int id)
+    public async Task<IActionResult> GetById(Guid id)
     {
         var category = await _categoryService.GetCategoryByIdAsync(id);
         return Ok(category);
@@ -48,21 +48,21 @@ public class CategoriesController : BaseController
     }
     
     [HttpDelete("delete/{id}")]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> Delete(Guid id)
     {
         await _categoryService.DeleteCategoryAsync(id);
         return Ok(new ResponseAPI(200, "Category deleted successfully"));
     }
     
     [HttpDelete("delete-photo/{photoId}")]
-    public async Task<IActionResult> DeleteImage(int photoId, int categoryId, CancellationToken ct = default)
+    public async Task<IActionResult> DeleteImage(Guid photoId, Guid categoryId, CancellationToken ct = default)
     {
         await _categoryImageService.DeleteCategoryImageAsync(categoryId, photoId, ct);
         return Ok(new ResponseAPI(200, "Category image deleted successfully"));
     }
 
     [HttpDelete("delete-photos/{categoryId}")]
-    public async Task<IActionResult> DeleteImages(int categoryId, CancellationToken ct = default)
+    public async Task<IActionResult> DeleteImages(Guid categoryId, CancellationToken ct = default)
     {
         await _categoryImageService.DeleteAllCategoryImagesAsync(categoryId, ct);
         return Ok(new ResponseAPI(200, "Category Media images deleted successfully"));

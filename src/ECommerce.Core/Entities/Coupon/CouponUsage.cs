@@ -1,12 +1,12 @@
 namespace ECommerce.Core.Entities.Coupon;
 
-public class CouponUsage : BaseEntity<int>
+public class CouponUsage : BaseEntity<Guid>
 {
     public decimal DiscountAmount { get; set; }
     
     //FK
-    public int CouponId { get; set; }
-    public int OrderId { get; set; }
+    public Guid CouponId { get; set; }
+    public Guid OrderId { get; set; }
     public string UserId { get; set; }
     
     //Navigation Properties

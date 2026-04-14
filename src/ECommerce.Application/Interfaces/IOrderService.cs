@@ -5,9 +5,9 @@ namespace ECommerce.Application.Interfaces;
 public interface IOrderService
 {
     Task<IEnumerable<GetOrderDTO>> GetAllOrdersAsync(CancellationToken ct = default);
-    Task<GetOrderDTO> GetOrderByIdAsync(int id, CancellationToken ct = default);
+    Task<GetOrderDTO> GetOrderByIdAsync(Guid id, CancellationToken ct = default);
     Task<IEnumerable<GetOrderDTO>> GetOrdersByUserIdAsync(string userId, CancellationToken ct = default);
     Task<GetOrderDTO> CreateOrderAsync(CreateOrderDTO dto, CancellationToken ct = default);
     Task UpdateOrderStatusAsync(UpdateOrderStatusDTO dto, CancellationToken ct = default);
-    Task DeleteOrderAsync(int id, CancellationToken ct = default);
+    Task DeleteOrderAsync(Guid id, CancellationToken ct = default);
 }

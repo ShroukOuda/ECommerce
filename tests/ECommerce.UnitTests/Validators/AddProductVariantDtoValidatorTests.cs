@@ -13,8 +13,8 @@ public class AddProductVariantDtoValidatorTests
         Sku = "SKU-001",
         VariantName = "Red Large",
         StockQuantity = 10,
-        ProductId = 1,
-        OptionValueIds = new List<int> { 1, 2 }
+        ProductId = TestGuid.FromInt(1),
+        OptionValueIds = new List<Guid> { TestGuid.FromInt(1), TestGuid.FromInt(2) }
     };
 
     [Fact]
@@ -92,7 +92,7 @@ public class AddProductVariantDtoValidatorTests
     public async Task Validate_WithProductIdZero_ShouldFail()
     {
         var dto = CreateValidDto();
-        dto.ProductId = 0;
+        dto.ProductId = Guid.Empty;
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "ProductId");

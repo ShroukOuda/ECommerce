@@ -1,6 +1,6 @@
 namespace ECommerce.Core.Entities.Product;
 
-public class ProductOptionValue : BaseEntity<int>
+public class ProductOptionValue : BaseEntity<Guid>
 {
     public string Value { get; set; } = string.Empty;
     public string Label { get; set; } = string.Empty;
@@ -9,7 +9,7 @@ public class ProductOptionValue : BaseEntity<int>
     public int SortOrder { get; set; }
     public string ImageUrl { get; set; } = string.Empty;
     
-    public int OptionId { get; set; } //FK
+    public Guid OptionId { get; set; } //FK
     
     //Navigation Properties
     public virtual ProductOption? ProductOption { get; set; }

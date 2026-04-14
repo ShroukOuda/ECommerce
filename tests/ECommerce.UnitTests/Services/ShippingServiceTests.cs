@@ -32,14 +32,14 @@ public class ShippingServiceTests
     [Fact]
     public async Task GetShippingsByOrderIdAsync_ShouldReturnMappedShippings()
     {
-        var shippings = new List<Shipping> { new() { Id = 1, OrderId = 1 } };
-        var shippingDtos = new List<GetShippingDTO> { new() { Id = 1, OrderId = 1 } };
+        var shippings = new List<Shipping> { new() { Id = TestGuid.FromInt(1), OrderId = TestGuid.FromInt(1) } };
+        var shippingDtos = new List<GetShippingDTO> { new() { Id = TestGuid.FromInt(1), OrderId = TestGuid.FromInt(1) } };
 
-        _unitOfWorkMock.Setup(u => u.ShippingRepository.GetShippingsByOrderIdAsync(1, It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.ShippingRepository.GetShippingsByOrderIdAsync(TestGuid.FromInt(1), It.IsAny<CancellationToken>()))
             .ReturnsAsync(shippings);
         _mapperMock.Setup(m => m.Map<IEnumerable<GetShippingDTO>>(shippings)).Returns(shippingDtos);
 
-        var result = await _shippingService.GetShippingsByOrderIdAsync(1);
+        var result = await _shippingService.GetShippingsByOrderIdAsync(TestGuid.FromInt(1));
 
         result.Should().HaveCount(1);
     }
@@ -47,14 +47,14 @@ public class ShippingServiceTests
     [Fact]
     public async Task GetShippingByIdAsync_WhenExists_ShouldReturnShipping()
     {
-        var shipping = new Shipping { Id = 1, TrackingNumber = "SHP-001" };
-        var shippingDto = new GetShippingDTO { Id = 1, TrackingNumber = "SHP-001" };
+        var shipping = new Shipping { Id = TestGuid.FromInt(1), TrackingNumber = "SHP-001" };
+        var shippingDto = new GetShippingDTO { Id = TestGuid.FromInt(1), TrackingNumber = "SHP-001" };
 
-        _unitOfWorkMock.Setup(u => u.ShippingRepository.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.ShippingRepository.GetByIdAsync(TestGuid.FromInt(1), It.IsAny<CancellationToken>()))
             .ReturnsAsync(shipping);
         _mapperMock.Setup(m => m.Map<GetShippingDTO>(shipping)).Returns(shippingDto);
 
-        var result = await _shippingService.GetShippingByIdAsync(1);
+        var result = await _shippingService.GetShippingByIdAsync(TestGuid.FromInt(1));
 
         result.Should().NotBeNull();
         result.TrackingNumber.Should().Be("SHP-001");
@@ -63,10 +63,10 @@ public class ShippingServiceTests
     [Fact]
     public async Task GetShippingByIdAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
-        _unitOfWorkMock.Setup(u => u.ShippingRepository.GetByIdAsync(999, It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.ShippingRepository.GetByIdAsync(TestGuid.FromInt(999), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Shipping?)null);
 
-        var act = () => _shippingService.GetShippingByIdAsync(999);
+        var act = () => _shippingService.GetShippingByIdAsync(TestGuid.FromInt(999));
 
         await act.Should().ThrowAsync<KeyNotFoundException>();
     }
@@ -74,8 +74,8 @@ public class ShippingServiceTests
     [Fact]
     public async Task CreateShippingAsync_WithValidData_ShouldCreateShipping()
     {
-        var dto = new CreateShippingDTO { OrderId = 1, AddressId = 1, Method = "Standard", Cost = 9.99m };
-        var shippingDto = new GetShippingDTO { Id = 1 };
+        var dto = new CreateShippingDTO { OrderId = TestGuid.FromInt(1), AddressId = TestGuid.FromInt(1), Method = "Standard", Cost = 9.99m };
+        var shippingDto = new GetShippingDTO { Id = TestGuid.FromInt(1) };
 
         _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
@@ -93,7 +93,7 @@ public class ShippingServiceTests
     [Fact]
     public async Task CreateShippingAsync_WithInvalidData_ShouldThrowValidationException()
     {
-        var dto = new CreateShippingDTO { OrderId = 0 };
+        var dto = new CreateShippingDTO { OrderId = Guid.Empty };
         var failures = new List<ValidationFailure> { new("OrderId", "OrderId required") };
 
         _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))

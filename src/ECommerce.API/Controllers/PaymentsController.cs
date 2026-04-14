@@ -13,14 +13,14 @@ public class PaymentsController : BaseController
     }
 
     [HttpGet("get-by-order/{orderId}")]
-    public async Task<IActionResult> GetByOrder(int orderId)
+    public async Task<IActionResult> GetByOrder(Guid orderId)
     {
         var payments = await _paymentService.GetPaymentsByOrderIdAsync(orderId);
         return Ok(payments);
     }
 
     [HttpGet("get-by-id/{id}")]
-    public async Task<IActionResult> GetById(int id)
+    public async Task<IActionResult> GetById(Guid id)
     {
         var payment = await _paymentService.GetPaymentByIdAsync(id);
         return Ok(payment);

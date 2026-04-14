@@ -21,7 +21,7 @@ public class UserSessionService : IUserSessionService
         return _mapper.Map<IEnumerable<GetUserSessionDTO>>(sessions);
     }
 
-    public async Task DeleteSessionAsync(int id, CancellationToken ct = default)
+    public async Task DeleteSessionAsync(Guid id, CancellationToken ct = default)
     {
         var session = await _unitOfWork.UserSessionRepository.GetByIdAsync(id, ct);
         if (session is null) throw new KeyNotFoundException($"Session with ID {id} not found.");

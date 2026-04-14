@@ -8,6 +8,6 @@ public class AddProductOptionValueDtoValidator : AbstractValidator<AddProductOpt
     {
         RuleFor(x => x.Value).NotEmpty().MaximumLength(200);
         RuleFor(x => x.Label).NotEmpty().MaximumLength(200);
-        RuleFor(x => x.OptionId).GreaterThan(0);
+        RuleFor(x => x.OptionId).NotEmpty();
     }
 }

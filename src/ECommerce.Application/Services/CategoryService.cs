@@ -30,7 +30,7 @@ public class CategoryService : ICategoryService
         return await _unitOfWork.CategoryRepository.GetAllAsync();
     }
 
-    public async Task<Category> GetCategoryByIdAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<Category> GetCategoryByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await _unitOfWork.CategoryRepository.GetByIdAsync(id, cancellationToken);
     }
@@ -56,11 +56,8 @@ public class CategoryService : ICategoryService
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task DeleteCategoryAsync(int id, CancellationToken cancellationToken = default)
+    public async Task DeleteCategoryAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        if (id <= 0)
-            throw new ArgumentException("Category ID must be greater than zero.", nameof(id));
-        
         bool exist = await _unitOfWork.CategoryRepository.ExistsAsync(c => c.Id == id, cancellationToken);
         if (!exist)
             throw new KeyNotFoundException($"Category with ID {id} not found.");

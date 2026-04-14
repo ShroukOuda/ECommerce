@@ -2,17 +2,17 @@ using ECommerce.Core.Entities.Product;
 
 namespace ECommerce.Core.Interfaces.Repositories;
 
-public interface IProductImageRepository : IGenericRepository<ProductImage, int>
+public interface IProductImageRepository : IGenericRepository<ProductImage, Guid>
 {
     Task<IReadOnlyList<ProductImage>> GetImagesByProductIdAsync(
-        int productId, 
+        Guid productId, 
         CancellationToken ct = default);
     
     Task<ProductImage> GetProductMainImageAsync(
-        int productId, 
+        Guid productId, 
         CancellationToken ct = default);
     
     Task<int> CountProductImagesAsync(
-        int productId, 
+        Guid productId, 
         CancellationToken ct = default);
 }

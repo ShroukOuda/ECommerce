@@ -1,6 +1,6 @@
 namespace ECommerce.Core.Entities.User;
 
-public class UserSession : BaseEntity<int>
+public class UserSession : BaseEntity<Guid>
 {
     public string SessionToken { get; set; } = string.Empty;
     public DateTime? ExpiresAt { get; set; }

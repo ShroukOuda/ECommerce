@@ -3,7 +3,7 @@ using ECommerce.Core.Enums.Shipping;
 
 namespace ECommerce.Core.Entities.Shipping;
 
-public class Shipping : BaseEntity<int>
+public class Shipping : BaseEntity<Guid>
 {
     public string TrackingNumber { get; set; } = string.Empty;
     public ShippingMethod Method { get; set; }
@@ -13,8 +13,8 @@ public class Shipping : BaseEntity<int>
     public ShippingStatus Status { get; set; } = ShippingStatus.Pending;
     
     //FK
-    public int OrderId { get; set; }
-    public int AddressId { get; set; }
+    public Guid OrderId { get; set; }
+    public Guid AddressId { get; set; }
     
     //Navigation Properties
     public virtual Order.Order? Order { get; set; }

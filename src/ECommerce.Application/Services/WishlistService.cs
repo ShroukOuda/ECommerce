@@ -37,7 +37,7 @@ public class WishlistService : IWishlistService
         await _unitOfWork.SaveChangesAsync(ct);
     }
 
-    public async Task RemoveFromWishlistAsync(int id, CancellationToken ct = default)
+    public async Task RemoveFromWishlistAsync(Guid id, CancellationToken ct = default)
     {
         var item = await _unitOfWork.WishlistRepository.GetByIdAsync(id, ct);
         if (item is null) throw new KeyNotFoundException($"Wishlist item with ID {id} not found.");

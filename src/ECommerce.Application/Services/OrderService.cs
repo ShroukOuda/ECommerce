@@ -23,7 +23,7 @@ public class OrderService : IOrderService
         return _mapper.Map<IEnumerable<GetOrderDTO>>(orders);
     }
 
-    public async Task<GetOrderDTO> GetOrderByIdAsync(int id, CancellationToken ct = default)
+    public async Task<GetOrderDTO> GetOrderByIdAsync(Guid id, CancellationToken ct = default)
     {
         var order = await _unitOfWork.OrderRepository.GetOrderWithDetailsAsync(id, ct);
         if (order is null) throw new KeyNotFoundException($"Order with ID {id} not found.");
@@ -69,7 +69,7 @@ public class OrderService : IOrderService
         await _unitOfWork.SaveChangesAsync(ct);
     }
 
-    public async Task DeleteOrderAsync(int id, CancellationToken ct = default)
+    public async Task DeleteOrderAsync(Guid id, CancellationToken ct = default)
     {
         bool exists = await _unitOfWork.OrderRepository.ExistsAsync(o => o.Id == id, ct);
         if (!exists) throw new KeyNotFoundException($"Order with ID {id} not found.");

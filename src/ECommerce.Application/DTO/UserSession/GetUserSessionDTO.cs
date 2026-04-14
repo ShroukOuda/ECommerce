@@ -2,7 +2,7 @@ namespace ECommerce.Application.DTO.UserSession;
 
 public class GetUserSessionDTO
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     public string SessionToken { get; set; } = string.Empty;
     public DateTime? ExpiresAt { get; set; }
     public string? IpAddress { get; set; }

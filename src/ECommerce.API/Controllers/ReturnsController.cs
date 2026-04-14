@@ -20,7 +20,7 @@ public class ReturnsController : BaseController
     }
 
     [HttpGet("get-by-id/{id}")]
-    public async Task<IActionResult> GetById(int id)
+    public async Task<IActionResult> GetById(Guid id)
     {
         var ret = await _returnService.GetReturnByIdAsync(id);
         return Ok(ret);

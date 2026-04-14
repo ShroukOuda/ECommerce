@@ -1,10 +1,10 @@
 namespace ECommerce.Core.Entities.Product;
 
-public class ProductVariantOptionValue : BaseEntity<int>
+public class ProductVariantOptionValue : BaseEntity<Guid>
 {
     //FK
-    public int ProductVariantId { get; set; }
-    public int ProductOptionValueId { get; set; }
+    public Guid ProductVariantId { get; set; }
+    public Guid ProductOptionValueId { get; set; }
     
     //Navigation Properties
     public virtual ProductVariant? ProductVariant { get; set; }

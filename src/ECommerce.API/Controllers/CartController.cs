@@ -34,14 +34,14 @@ public class CartController : BaseController
     }
 
     [HttpDelete("remove-item/{cartItemId}")]
-    public async Task<IActionResult> RemoveItem(int cartItemId)
+    public async Task<IActionResult> RemoveItem(Guid cartItemId)
     {
         await _cartService.RemoveCartItemAsync(cartItemId);
         return Ok(new ResponseAPI(200, "Item removed from cart successfully"));
     }
 
     [HttpDelete("clear/{cartId}")]
-    public async Task<IActionResult> ClearCart(int cartId)
+    public async Task<IActionResult> ClearCart(Guid cartId)
     {
         await _cartService.ClearCartAsync(cartId);
         return Ok(new ResponseAPI(200, "Cart cleared successfully"));

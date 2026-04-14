@@ -2,7 +2,7 @@ using ECommerce.Core.Entities.Coupon;
 
 namespace ECommerce.Infrastructure.Repositories;
 
-public class CouponRepository : GenericRepository<Coupon, int>, ICouponRepository
+public class CouponRepository : GenericRepository<Coupon, Guid>, ICouponRepository
 {
     public CouponRepository(AppDbContext context) : base(context) { }
 

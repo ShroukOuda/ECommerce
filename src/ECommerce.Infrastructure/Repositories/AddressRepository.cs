@@ -2,7 +2,7 @@ using ECommerce.Core.Entities.User;
 
 namespace ECommerce.Infrastructure.Repositories;
 
-public class AddressRepository : GenericRepository<Address, int>, IAddressRepository
+public class AddressRepository : GenericRepository<Address, Guid>, IAddressRepository
 {
     public AddressRepository(AppDbContext context) : base(context) { }
 

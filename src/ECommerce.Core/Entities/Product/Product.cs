@@ -3,7 +3,7 @@ using ECommerce.Core.Enums.Product;
 
 namespace ECommerce.Core.Entities.Product;
 
-public class Product : BaseEntity<int>
+public class Product : BaseEntity<Guid>
 {
     public string Name { get; set; } = string.Empty;
     public string Slug { get; set; } = string.Empty;
@@ -29,8 +29,8 @@ public class Product : BaseEntity<int>
     
     
     //FK
-    public int CategoryId { get; set; }
-    public int BrandId { get; set; }
+    public Guid CategoryId { get; set; }
+    public Guid BrandId { get; set; }
     
     
     // Navigation Properties

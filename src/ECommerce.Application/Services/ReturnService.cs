@@ -23,7 +23,7 @@ public class ReturnService : IReturnService
         return _mapper.Map<IEnumerable<GetReturnRequestDTO>>(returns);
     }
 
-    public async Task<GetReturnRequestDTO> GetReturnByIdAsync(int id, CancellationToken ct = default)
+    public async Task<GetReturnRequestDTO> GetReturnByIdAsync(Guid id, CancellationToken ct = default)
     {
         var returnReq = await _unitOfWork.ReturnRequestRepository.GetReturnWithItemsAsync(id, ct);
         if (returnReq is null) throw new KeyNotFoundException($"Return request with ID {id} not found.");

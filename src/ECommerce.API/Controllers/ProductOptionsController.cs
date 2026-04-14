@@ -13,14 +13,14 @@ public class ProductOptionsController : BaseController
     }
 
     [HttpGet("get-by-product/{productId}")]
-    public async Task<IActionResult> GetByProduct(int productId)
+    public async Task<IActionResult> GetByProduct(Guid productId)
     {
         var options = await _productOptionService.GetOptionsByProductIdAsync(productId);
         return Ok(options);
     }
 
     [HttpGet("get-by-id/{id}")]
-    public async Task<IActionResult> GetById(int id)
+    public async Task<IActionResult> GetById(Guid id)
     {
         var option = await _productOptionService.GetOptionByIdAsync(id);
         return Ok(option);
@@ -41,7 +41,7 @@ public class ProductOptionsController : BaseController
     }
 
     [HttpDelete("delete/{id}")]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> Delete(Guid id)
     {
         await _productOptionService.DeleteOptionAsync(id);
         return Ok(new ResponseAPI(200, "Product option deleted successfully"));
@@ -55,7 +55,7 @@ public class ProductOptionsController : BaseController
     }
 
     [HttpDelete("delete-value/{id}")]
-    public async Task<IActionResult> DeleteValue(int id)
+    public async Task<IActionResult> DeleteValue(Guid id)
     {
         await _productOptionService.DeleteOptionValueAsync(id);
         return Ok(new ResponseAPI(200, "Option value deleted successfully"));

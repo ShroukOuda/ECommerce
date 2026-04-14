@@ -2,7 +2,7 @@ using ECommerce.Core.Entities.Coupon;
 
 namespace ECommerce.Core.Interfaces.Repositories;
 
-public interface ICouponUsageRepository : IGenericRepository<CouponUsage, int>
+public interface ICouponUsageRepository : IGenericRepository<CouponUsage, Guid>
 {
-    Task<int> GetUsageCountByUserAsync(int couponId, string userId, CancellationToken ct = default);
+    Task<int> GetUsageCountByUserAsync(Guid couponId, string userId, CancellationToken ct = default);
 }

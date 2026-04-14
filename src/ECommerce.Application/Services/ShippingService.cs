@@ -17,13 +17,13 @@ public class ShippingService : IShippingService
         _createValidator = createValidator;
     }
 
-    public async Task<IEnumerable<GetShippingDTO>> GetShippingsByOrderIdAsync(int orderId, CancellationToken ct = default)
+    public async Task<IEnumerable<GetShippingDTO>> GetShippingsByOrderIdAsync(Guid orderId, CancellationToken ct = default)
     {
         var shippings = await _unitOfWork.ShippingRepository.GetShippingsByOrderIdAsync(orderId, ct);
         return _mapper.Map<IEnumerable<GetShippingDTO>>(shippings);
     }
 
-    public async Task<GetShippingDTO> GetShippingByIdAsync(int id, CancellationToken ct = default)
+    public async Task<GetShippingDTO> GetShippingByIdAsync(Guid id, CancellationToken ct = default)
     {
         var shipping = await _unitOfWork.ShippingRepository.GetByIdAsync(id, ct);
         if (shipping is null) throw new KeyNotFoundException($"Shipping with ID {id} not found.");

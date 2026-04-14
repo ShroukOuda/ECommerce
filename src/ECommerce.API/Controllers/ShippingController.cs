@@ -13,14 +13,14 @@ public class ShippingController : BaseController
     }
 
     [HttpGet("get-by-order/{orderId}")]
-    public async Task<IActionResult> GetByOrder(int orderId)
+    public async Task<IActionResult> GetByOrder(Guid orderId)
     {
         var shippings = await _shippingService.GetShippingsByOrderIdAsync(orderId);
         return Ok(shippings);
     }
 
     [HttpGet("get-by-id/{id}")]
-    public async Task<IActionResult> GetById(int id)
+    public async Task<IActionResult> GetById(Guid id)
     {
         var shipping = await _shippingService.GetShippingByIdAsync(id);
         return Ok(shipping);

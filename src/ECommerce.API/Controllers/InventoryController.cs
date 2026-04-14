@@ -13,7 +13,7 @@ public class InventoryController : BaseController
     }
 
     [HttpGet("history/{productId}")]
-    public async Task<IActionResult> GetHistory(int productId)
+    public async Task<IActionResult> GetHistory(Guid productId)
     {
         var history = await _inventoryService.GetHistoryByProductIdAsync(productId);
         return Ok(history);

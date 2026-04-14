@@ -7,6 +7,6 @@ public class UpdateBrandDtoValidator : BrandBaseValidator<UpdateBrandDTO>
     public UpdateBrandDtoValidator()
     {
         RuleFor(x => x.Id)
-            .GreaterThan(0).WithMessage("Brand ID must be greater than zero.");
+            .NotEmpty().WithMessage("Brand ID is required.");
     }
 }

@@ -17,13 +17,13 @@ public class ReviewService : IReviewService
         _addValidator = addValidator;
     }
 
-    public async Task<IEnumerable<GetReviewDTO>> GetReviewsByProductIdAsync(int productId, CancellationToken ct = default)
+    public async Task<IEnumerable<GetReviewDTO>> GetReviewsByProductIdAsync(Guid productId, CancellationToken ct = default)
     {
         var reviews = await _unitOfWork.ProductReviewRepository.GetReviewsByProductIdAsync(productId, ct);
         return _mapper.Map<IEnumerable<GetReviewDTO>>(reviews);
     }
 
-    public async Task<GetReviewDTO> GetReviewByIdAsync(int id, CancellationToken ct = default)
+    public async Task<GetReviewDTO> GetReviewByIdAsync(Guid id, CancellationToken ct = default)
     {
         var review = await _unitOfWork.ProductReviewRepository.GetByIdAsync(id, ct);
         if (review is null) throw new KeyNotFoundException($"Review with ID {id} not found.");
@@ -39,7 +39,7 @@ public class ReviewService : IReviewService
         await _unitOfWork.SaveChangesAsync(ct);
     }
 
-    public async Task DeleteReviewAsync(int id, CancellationToken ct = default)
+    public async Task DeleteReviewAsync(Guid id, CancellationToken ct = default)
     {
         bool exists = await _unitOfWork.ProductReviewRepository.ExistsAsync(r => r.Id == id, ct);
         if (!exists) throw new KeyNotFoundException($"Review with ID {id} not found.");

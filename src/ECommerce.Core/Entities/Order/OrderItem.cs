@@ -1,6 +1,6 @@
 namespace ECommerce.Core.Entities.Order;
 
-public class OrderItem : BaseEntity<int>
+public class OrderItem : BaseEntity<Guid>
 {
     public string ProductName { get; set; } = string.Empty;
     public string VariantName { get; set; } = string.Empty;
@@ -10,9 +10,9 @@ public class OrderItem : BaseEntity<int>
     public decimal TotalPrice { get; set; }
     
     //FK
-    public int OrderId { get; set; }
-    public int ProductId { get; set; }
-    public int ProductVariantId { get; set; }
+    public Guid OrderId { get; set; }
+    public Guid ProductId { get; set; }
+    public Guid ProductVariantId { get; set; }
     
     //Navigation Properties
     public virtual Order? Order { get; set; }

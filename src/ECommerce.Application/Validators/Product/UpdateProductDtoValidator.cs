@@ -7,9 +7,9 @@ public class UpdateProductDtoValidator : ProductBaseValidator<UpdateProductDTO>
     public UpdateProductDtoValidator()
     {
         RuleFor(x => x.Id)
-            .GreaterThan(0).WithMessage("A valid product ID is required.");
+            .NotEmpty().WithMessage("Product ID is required.");
         
         RuleFor(x => x.CategoryId)
-            .GreaterThan(0).WithMessage("CategoryId must be greater than zero.");
+            .NotEmpty().WithMessage("CategoryId is required.");
     }
 }

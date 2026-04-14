@@ -35,14 +35,14 @@ public class ProductVariantServiceTests
     [Fact]
     public async Task GetVariantsByProductIdAsync_ShouldReturnMappedVariants()
     {
-        var variants = new List<ProductVariant> { new() { Id = 1, Sku = "VAR-001" } };
-        var variantDtos = new List<GetProductVariantDTO> { new() { Id = 1, Sku = "VAR-001" } };
+        var variants = new List<ProductVariant> { new() { Id = TestGuid.FromInt(1), Sku = "VAR-001" } };
+        var variantDtos = new List<GetProductVariantDTO> { new() { Id = TestGuid.FromInt(1), Sku = "VAR-001" } };
 
-        _unitOfWorkMock.Setup(u => u.ProductVariantRepository.GetVariantsByProductIdAsync(1, It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.ProductVariantRepository.GetVariantsByProductIdAsync(TestGuid.FromInt(1), It.IsAny<CancellationToken>()))
             .ReturnsAsync(variants);
         _mapperMock.Setup(m => m.Map<IEnumerable<GetProductVariantDTO>>(variants)).Returns(variantDtos);
 
-        var result = await _productVariantService.GetVariantsByProductIdAsync(1);
+        var result = await _productVariantService.GetVariantsByProductIdAsync(TestGuid.FromInt(1));
 
         result.Should().HaveCount(1);
         result.First().Sku.Should().Be("VAR-001");
@@ -51,14 +51,14 @@ public class ProductVariantServiceTests
     [Fact]
     public async Task GetVariantByIdAsync_WhenExists_ShouldReturnVariant()
     {
-        var variant = new ProductVariant { Id = 1, Sku = "VAR-001" };
-        var variantDto = new GetProductVariantDTO { Id = 1, Sku = "VAR-001" };
+        var variant = new ProductVariant { Id = TestGuid.FromInt(1), Sku = "VAR-001" };
+        var variantDto = new GetProductVariantDTO { Id = TestGuid.FromInt(1), Sku = "VAR-001" };
 
-        _unitOfWorkMock.Setup(u => u.ProductVariantRepository.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.ProductVariantRepository.GetByIdAsync(TestGuid.FromInt(1), It.IsAny<CancellationToken>()))
             .ReturnsAsync(variant);
         _mapperMock.Setup(m => m.Map<GetProductVariantDTO>(variant)).Returns(variantDto);
 
-        var result = await _productVariantService.GetVariantByIdAsync(1);
+        var result = await _productVariantService.GetVariantByIdAsync(TestGuid.FromInt(1));
 
         result.Should().NotBeNull();
         result.Sku.Should().Be("VAR-001");
@@ -67,10 +67,10 @@ public class ProductVariantServiceTests
     [Fact]
     public async Task GetVariantByIdAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
-        _unitOfWorkMock.Setup(u => u.ProductVariantRepository.GetByIdAsync(999, It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.ProductVariantRepository.GetByIdAsync(TestGuid.FromInt(999), It.IsAny<CancellationToken>()))
             .ReturnsAsync((ProductVariant?)null);
 
-        var act = () => _productVariantService.GetVariantByIdAsync(999);
+        var act = () => _productVariantService.GetVariantByIdAsync(TestGuid.FromInt(999));
 
         await act.Should().ThrowAsync<KeyNotFoundException>();
     }
@@ -78,7 +78,7 @@ public class ProductVariantServiceTests
     [Fact]
     public async Task AddVariantAsync_WithValidData_ShouldAddVariant()
     {
-        var dto = new AddProductVariantDTO { Sku = "VAR-001", VariantName = "Large Red", ProductId = 1, OptionValueIds = new List<int>() };
+        var dto = new AddProductVariantDTO { Sku = "VAR-001", VariantName = "Large Red", ProductId = TestGuid.FromInt(1), OptionValueIds = new List<Guid>() };
         var variant = new ProductVariant { Sku = "VAR-001" };
 
         _addValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
@@ -100,10 +100,10 @@ public class ProductVariantServiceTests
         {
             Sku = "VAR-001",
             VariantName = "Large Red",
-            ProductId = 1,
-            OptionValueIds = new List<int> { 1, 2 }
+            ProductId = TestGuid.FromInt(1),
+            OptionValueIds = new List<Guid> { TestGuid.FromInt(1), TestGuid.FromInt(2) }
         };
-        var variant = new ProductVariant { Id = 10, Sku = "VAR-001" };
+        var variant = new ProductVariant { Id = TestGuid.FromInt(10), Sku = "VAR-001" };
 
         _addValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
@@ -142,7 +142,7 @@ public class ProductVariantServiceTests
             .ReturnsAsync(true);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-        await _productVariantService.DeleteVariantAsync(1);
+        await _productVariantService.DeleteVariantAsync(TestGuid.FromInt(1));
 
         _unitOfWorkMock.Verify(u => u.ProductVariantRepository.DeleteAsync(It.IsAny<ProductVariant>(), It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -154,7 +154,7 @@ public class ProductVariantServiceTests
             It.IsAny<System.Linq.Expressions.Expression<Func<ProductVariant, bool>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
-        var act = () => _productVariantService.DeleteVariantAsync(999);
+        var act = () => _productVariantService.DeleteVariantAsync(TestGuid.FromInt(999));
 
         await act.Should().ThrowAsync<KeyNotFoundException>();
     }

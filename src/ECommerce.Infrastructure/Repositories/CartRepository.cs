@@ -2,7 +2,7 @@ using ECommerce.Core.Entities.Cart;
 
 namespace ECommerce.Infrastructure.Repositories;
 
-public class CartRepository : GenericRepository<Cart, int>, ICartRepository
+public class CartRepository : GenericRepository<Cart, Guid>, ICartRepository
 {
     private readonly AppDbContext _context;
 
@@ -11,7 +11,7 @@ public class CartRepository : GenericRepository<Cart, int>, ICartRepository
         _context = context;
     }
 
-    public async Task<Cart?> GetCartWithItemsAsync(int cartId, CancellationToken ct = default)
+    public async Task<Cart?> GetCartWithItemsAsync(Guid cartId, CancellationToken ct = default)
     {
         return await _context.Carts
             .Include(c => c.CartItems).ThenInclude(ci => ci.CartItemOptions)

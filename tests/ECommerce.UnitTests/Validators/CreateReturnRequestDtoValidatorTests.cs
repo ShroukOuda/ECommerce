@@ -13,10 +13,10 @@ public class CreateReturnRequestDtoValidatorTests
     {
         var dto = new CreateReturnRequestDTO
         {
-            OrderId = 1,
+            OrderId = TestGuid.FromInt(1),
             UserId = "user1",
             Reason = "Defective product",
-            Items = new List<CreateReturnItemDTO> { new() { OrderItemId = 1, ProductId = 1, Quantity = 1, Reason = "Broken" } }
+            Items = new List<CreateReturnItemDTO> { new() { OrderItemId = TestGuid.FromInt(1), ProductId = TestGuid.FromInt(1), Quantity = 1, Reason = "Broken" } }
         };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeTrue();
@@ -27,10 +27,10 @@ public class CreateReturnRequestDtoValidatorTests
     {
         var dto = new CreateReturnRequestDTO
         {
-            OrderId = 0,
+            OrderId = Guid.Empty,
             UserId = "user1",
             Reason = "Defective",
-            Items = new List<CreateReturnItemDTO> { new() { OrderItemId = 1, ProductId = 1, Quantity = 1, Reason = "Broken" } }
+            Items = new List<CreateReturnItemDTO> { new() { OrderItemId = TestGuid.FromInt(1), ProductId = TestGuid.FromInt(1), Quantity = 1, Reason = "Broken" } }
         };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
@@ -44,10 +44,10 @@ public class CreateReturnRequestDtoValidatorTests
     {
         var dto = new CreateReturnRequestDTO
         {
-            OrderId = 1,
+            OrderId = TestGuid.FromInt(1),
             UserId = userId!,
             Reason = "Defective",
-            Items = new List<CreateReturnItemDTO> { new() { OrderItemId = 1, ProductId = 1, Quantity = 1, Reason = "Broken" } }
+            Items = new List<CreateReturnItemDTO> { new() { OrderItemId = TestGuid.FromInt(1), ProductId = TestGuid.FromInt(1), Quantity = 1, Reason = "Broken" } }
         };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
@@ -61,10 +61,10 @@ public class CreateReturnRequestDtoValidatorTests
     {
         var dto = new CreateReturnRequestDTO
         {
-            OrderId = 1,
+            OrderId = TestGuid.FromInt(1),
             UserId = "user1",
             Reason = reason!,
-            Items = new List<CreateReturnItemDTO> { new() { OrderItemId = 1, ProductId = 1, Quantity = 1, Reason = "Broken" } }
+            Items = new List<CreateReturnItemDTO> { new() { OrderItemId = TestGuid.FromInt(1), ProductId = TestGuid.FromInt(1), Quantity = 1, Reason = "Broken" } }
         };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
@@ -76,10 +76,10 @@ public class CreateReturnRequestDtoValidatorTests
     {
         var dto = new CreateReturnRequestDTO
         {
-            OrderId = 1,
+            OrderId = TestGuid.FromInt(1),
             UserId = "user1",
             Reason = new string('A', 1001),
-            Items = new List<CreateReturnItemDTO> { new() { OrderItemId = 1, ProductId = 1, Quantity = 1, Reason = "Broken" } }
+            Items = new List<CreateReturnItemDTO> { new() { OrderItemId = TestGuid.FromInt(1), ProductId = TestGuid.FromInt(1), Quantity = 1, Reason = "Broken" } }
         };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
@@ -91,7 +91,7 @@ public class CreateReturnRequestDtoValidatorTests
     {
         var dto = new CreateReturnRequestDTO
         {
-            OrderId = 1,
+            OrderId = TestGuid.FromInt(1),
             UserId = "user1",
             Reason = "Defective",
             Items = new List<CreateReturnItemDTO>()

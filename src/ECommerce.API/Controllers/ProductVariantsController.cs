@@ -13,14 +13,14 @@ public class ProductVariantsController : BaseController
     }
 
     [HttpGet("get-by-product/{productId}")]
-    public async Task<IActionResult> GetByProduct(int productId)
+    public async Task<IActionResult> GetByProduct(Guid productId)
     {
         var variants = await _productVariantService.GetVariantsByProductIdAsync(productId);
         return Ok(variants);
     }
 
     [HttpGet("get-by-id/{id}")]
-    public async Task<IActionResult> GetById(int id)
+    public async Task<IActionResult> GetById(Guid id)
     {
         var variant = await _productVariantService.GetVariantByIdAsync(id);
         return Ok(variant);
@@ -41,7 +41,7 @@ public class ProductVariantsController : BaseController
     }
 
     [HttpDelete("delete/{id}")]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> Delete(Guid id)
     {
         await _productVariantService.DeleteVariantAsync(id);
         return Ok(new ResponseAPI(200, "Product variant deleted successfully"));

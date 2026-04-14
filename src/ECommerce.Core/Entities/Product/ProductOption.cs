@@ -3,7 +3,7 @@ using ECommerce.Core.Enums.Product;
 
 namespace ECommerce.Core.Entities.Product;
 
-public class ProductOption : BaseEntity<int>
+public class ProductOption : BaseEntity<Guid>
 {
     public string Name { get; set; } = string.Empty;
     public OptionDisplayType DisplayType { get; set; } = OptionDisplayType.Dropdown;
@@ -13,7 +13,7 @@ public class ProductOption : BaseEntity<int>
     public decimal PriceValue { get; set; }
     public int SortOrder { get; set; }
     
-    public int ProductId { get; set; } // FK
+    public Guid ProductId { get; set; } // FK
     
     //Navigation Properties
     public virtual Product? Product { get; set; }

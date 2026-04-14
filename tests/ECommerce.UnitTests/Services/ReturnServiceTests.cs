@@ -32,8 +32,8 @@ public class ReturnServiceTests
     [Fact]
     public async Task GetReturnsByUserIdAsync_ShouldReturnMappedReturns()
     {
-        var returns = new List<ReturnRequest> { new() { Id = 1, UserId = "user1" } };
-        var returnDtos = new List<GetReturnRequestDTO> { new() { Id = 1, UserId = "user1" } };
+        var returns = new List<ReturnRequest> { new() { Id = TestGuid.FromInt(1), UserId = "user1" } };
+        var returnDtos = new List<GetReturnRequestDTO> { new() { Id = TestGuid.FromInt(1), UserId = "user1" } };
 
         _unitOfWorkMock.Setup(u => u.ReturnRequestRepository.GetReturnsByUserIdAsync("user1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(returns);
@@ -47,14 +47,14 @@ public class ReturnServiceTests
     [Fact]
     public async Task GetReturnByIdAsync_WhenExists_ShouldReturnRequest()
     {
-        var returnReq = new ReturnRequest { Id = 1, ReturnNumber = "RET-001" };
-        var returnDto = new GetReturnRequestDTO { Id = 1, ReturnNumber = "RET-001" };
+        var returnReq = new ReturnRequest { Id = TestGuid.FromInt(1), ReturnNumber = "RET-001" };
+        var returnDto = new GetReturnRequestDTO { Id = TestGuid.FromInt(1), ReturnNumber = "RET-001" };
 
-        _unitOfWorkMock.Setup(u => u.ReturnRequestRepository.GetReturnWithItemsAsync(1, It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.ReturnRequestRepository.GetReturnWithItemsAsync(TestGuid.FromInt(1), It.IsAny<CancellationToken>()))
             .ReturnsAsync(returnReq);
         _mapperMock.Setup(m => m.Map<GetReturnRequestDTO>(returnReq)).Returns(returnDto);
 
-        var result = await _returnService.GetReturnByIdAsync(1);
+        var result = await _returnService.GetReturnByIdAsync(TestGuid.FromInt(1));
 
         result.Should().NotBeNull();
         result.ReturnNumber.Should().Be("RET-001");
@@ -63,10 +63,10 @@ public class ReturnServiceTests
     [Fact]
     public async Task GetReturnByIdAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
-        _unitOfWorkMock.Setup(u => u.ReturnRequestRepository.GetReturnWithItemsAsync(999, It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.ReturnRequestRepository.GetReturnWithItemsAsync(TestGuid.FromInt(999), It.IsAny<CancellationToken>()))
             .ReturnsAsync((ReturnRequest?)null);
 
-        var act = () => _returnService.GetReturnByIdAsync(999);
+        var act = () => _returnService.GetReturnByIdAsync(TestGuid.FromInt(999));
 
         await act.Should().ThrowAsync<KeyNotFoundException>();
     }
@@ -76,12 +76,12 @@ public class ReturnServiceTests
     {
         var dto = new CreateReturnRequestDTO
         {
-            OrderId = 1,
+            OrderId = TestGuid.FromInt(1),
             UserId = "user1",
             Reason = "Defective",
             Items = new List<CreateReturnItemDTO> { new() }
         };
-        var returnDto = new GetReturnRequestDTO { Id = 1 };
+        var returnDto = new GetReturnRequestDTO { Id = TestGuid.FromInt(1) };
 
         _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
@@ -99,7 +99,7 @@ public class ReturnServiceTests
     [Fact]
     public async Task CreateReturnRequestAsync_WithInvalidData_ShouldThrowValidationException()
     {
-        var dto = new CreateReturnRequestDTO { OrderId = 0 };
+        var dto = new CreateReturnRequestDTO { OrderId = Guid.Empty };
         var failures = new List<ValidationFailure> { new("OrderId", "OrderId required") };
 
         _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))

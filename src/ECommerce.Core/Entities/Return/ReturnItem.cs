@@ -2,7 +2,7 @@ using ECommerce.Core.Enums.Return;
 
 namespace ECommerce.Core.Entities.Return;
 
-public class ReturnItem : BaseEntity<int>
+public class ReturnItem : BaseEntity<Guid>
 {
     public int Quantity { get; set; }
     public string Reason { get; set; } = string.Empty;
@@ -10,9 +10,9 @@ public class ReturnItem : BaseEntity<int>
     public ReturnItemStatus Status { get; set; } = ReturnItemStatus.Pending;
     
     //FK
-    public int ReturnRequestId { get; set; }
-    public int OrderItemId { get; set; }
-    public int ProductId { get; set; }
+    public Guid ReturnRequestId { get; set; }
+    public Guid OrderItemId { get; set; }
+    public Guid ProductId { get; set; }
     
     //Navigation Properties
     public virtual ReturnRequest? ReturnRequest { get; set; }

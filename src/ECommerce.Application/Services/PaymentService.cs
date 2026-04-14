@@ -17,13 +17,13 @@ public class PaymentService : IPaymentService
         _createValidator = createValidator;
     }
 
-    public async Task<IEnumerable<GetPaymentDTO>> GetPaymentsByOrderIdAsync(int orderId, CancellationToken ct = default)
+    public async Task<IEnumerable<GetPaymentDTO>> GetPaymentsByOrderIdAsync(Guid orderId, CancellationToken ct = default)
     {
         var payments = await _unitOfWork.PaymentRepository.GetPaymentsByOrderIdAsync(orderId, ct);
         return _mapper.Map<IEnumerable<GetPaymentDTO>>(payments);
     }
 
-    public async Task<GetPaymentDTO> GetPaymentByIdAsync(int id, CancellationToken ct = default)
+    public async Task<GetPaymentDTO> GetPaymentByIdAsync(Guid id, CancellationToken ct = default)
     {
         var payment = await _unitOfWork.PaymentRepository.GetByIdAsync(id, ct);
         if (payment is null) throw new KeyNotFoundException($"Payment with ID {id} not found.");

@@ -23,7 +23,7 @@ public class ProductVariant : BaseEntity<Guid>
     public virtual Product? Product { get; set; }
     public virtual ICollection<ProductImage> ProductImages { get; set; } = new List<ProductImage>();
     public virtual ICollection<ProductVariantOptionValue> ProductVariantOptionValues { get; set; } = new List<ProductVariantOptionValue>();
-    public ICollection<Order.OrderItem> OrderItems { get; set; } = new List<Order.OrderItem>();
-    public ICollection<Cart.CartItem> CartItems { get; set; } = new List<Cart.CartItem>();
-    public ICollection<Inventory.InventoryHistory> InventoryHistories { get; set; } = new List<Inventory.InventoryHistory>();
+    public virtual ICollection<Order.OrderItem> OrderItems { get; set; } = new List<Order.OrderItem>();
+    public virtual ICollection<Cart.CartItem> CartItems { get; set; } = new List<Cart.CartItem>();
+    public virtual ICollection<Inventory.InventoryHistory> InventoryHistories { get; set; } = new List<Inventory.InventoryHistory>();
 }

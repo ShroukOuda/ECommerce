@@ -12,10 +12,12 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\ECommerce.Core\ECommerce.Core.csproj" />
+      <ProjectReference Include="..\ECommerce.Domain\ECommerce.Domain.csproj" />
+      <ProjectReference Include="..\ECommerce.Application\ECommerce.Application.csproj" />
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="libphonenumber-csharp" Version="9.0.29" />
       <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.10" />
       <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.10" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.10">
@@ -31,6 +33,8 @@
       <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.10" />
       <PackageReference Include="Microsoft.Extensions.FileProviders.Abstractions" Version="9.0.10" />
       <PackageReference Include="Microsoft.Extensions.FileProviders.Physical" Version="9.0.10" />
+      <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.17.0" />
+      <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.17.0" />
     </ItemGroup>
 
 </Project>

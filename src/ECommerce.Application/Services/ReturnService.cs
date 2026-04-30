@@ -1,6 +1,6 @@
 using ECommerce.Application.DTO.Return;
-using ECommerce.Core.Entities.Return;
-using ECommerce.Core.Interfaces.Repositories;
+using ECommerce.Domain.Entities.Return;
+using ECommerce.Domain.Interfaces.Repositories;
 
 namespace ECommerce.Application.Services;
 

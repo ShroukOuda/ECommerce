@@ -1,4 +1,4 @@
-using ECommerce.Core.Entities.User;
+using ECommerce.Domain.Entities.User;
 
 namespace ECommerce.Infrastructure.Repositories;
 

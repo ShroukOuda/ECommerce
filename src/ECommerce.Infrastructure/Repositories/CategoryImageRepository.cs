@@ -1,5 +1,5 @@
-using ECommerce.Core.Entities.Category;
-using ECommerce.Core.Interfaces.Repositories;
+using ECommerce.Domain.Entities.Category;
+using ECommerce.Domain.Interfaces.Repositories;
 
 namespace ECommerce.Infrastructure.Repositories;
 

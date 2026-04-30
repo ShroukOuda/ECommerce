@@ -1,4 +1,4 @@
-using ECommerce.Core.Entities.Order;
+using ECommerce.Domain.Entities.Order;
 
 namespace ECommerce.Infrastructure.Repositories;
 

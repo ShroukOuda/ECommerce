@@ -1,4 +1,4 @@
-using ECommerce.Core.Entities.Inventory;
+using ECommerce.Domain.Entities.Inventory;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ECommerce.Infrastructure.Persistence.Configurations.Inventory;

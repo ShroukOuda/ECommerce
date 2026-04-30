@@ -1,4 +1,4 @@
-using ECommerce.Core.Entities.Wishlist;
+using ECommerce.Domain.Entities.Wishlist;
 
 namespace ECommerce.Infrastructure.Repositories;
 

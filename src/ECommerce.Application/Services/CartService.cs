@@ -1,6 +1,6 @@
 using ECommerce.Application.DTO.Cart;
-using ECommerce.Core.Entities.Cart;
-using ECommerce.Core.Interfaces.Repositories;
+using ECommerce.Domain.Entities.Cart;
+using ECommerce.Domain.Interfaces.Repositories;
 
 namespace ECommerce.Application.Services;
 

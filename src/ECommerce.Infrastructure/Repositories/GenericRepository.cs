@@ -1,6 +1,6 @@
 using System.Linq.Expressions;
-using ECommerce.Core.Common;
-using ECommerce.Core.Interfaces.Repositories;
+using ECommerce.Domain.Common;
+using ECommerce.Domain.Interfaces.Repositories;
 
 namespace ECommerce.Infrastructure.Repositories;
 

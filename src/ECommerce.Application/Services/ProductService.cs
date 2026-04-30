@@ -1,5 +1,5 @@
-using ECommerce.Core.Entities.Product;
-using ECommerce.Core.Interfaces.Repositories;
+using ECommerce.Domain.Entities.Product;
+using ECommerce.Domain.Interfaces.Repositories;
 
 namespace ECommerce.Application.Services;
 
@@ -7,7 +7,7 @@ public class ProductService : IProductService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
-    private readonly IImageManagementService _imageManagementService;
+    private readonly IFileStorageService _fileStorageService;
     private readonly IValidator<AddProductDTO> _addProductDtoValidator;
     private readonly IValidator<UpdateProductDTO> _updateProductDtoValidator;
 
@@ -15,13 +15,13 @@ public class ProductService : IProductService
     public ProductService(
         IUnitOfWork unitOfWork,
         IMapper mapper, 
-        IImageManagementService imageManagementService,
+        IFileStorageService fileStorageService,
         IValidator<AddProductDTO> addProductDtoValidator,
         IValidator<UpdateProductDTO> updateProductDtoValidator)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
-        _imageManagementService = imageManagementService;
+        _fileStorageService = fileStorageService;
         _addProductDtoValidator = addProductDtoValidator;
         _updateProductDtoValidator = updateProductDtoValidator;
     }
@@ -98,7 +98,7 @@ public class ProductService : IProductService
             throw new KeyNotFoundException($"Product with ID {id} not found.");
 
         var folderPath = $"products/{id}";
-        await _imageManagementService.DeleteFolderAsync(folderPath, ct);
+        await _fileStorageService.DeleteFolderAsync(folderPath, ct);
         Product productStub = new Product { Id = id };
         await _unitOfWork.ProductRepository.DeleteAsync(productStub, ct);
         await _unitOfWork.SaveChangesAsync(ct);

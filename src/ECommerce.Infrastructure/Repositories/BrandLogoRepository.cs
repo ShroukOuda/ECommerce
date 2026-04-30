@@ -1,4 +1,4 @@
-using ECommerce.Core.Entities.Brand;
+using ECommerce.Domain.Entities.Brand;
 
 namespace ECommerce.Infrastructure.Repositories;
 

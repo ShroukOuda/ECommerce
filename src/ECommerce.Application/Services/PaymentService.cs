@@ -1,6 +1,6 @@
 using ECommerce.Application.DTO.Payment;
-using ECommerce.Core.Entities.Payment;
-using ECommerce.Core.Interfaces.Repositories;
+using ECommerce.Domain.Entities.Payment;
+using ECommerce.Domain.Interfaces.Repositories;
 
 namespace ECommerce.Application.Services;
 
@@ -42,8 +42,8 @@ public class PaymentService : IPaymentService
             Amount = dto.Amount,
             Currency = dto.Currency,
             TransactionId = $"TXN-{Guid.NewGuid().ToString()[..8].ToUpper()}",
-            Method = Enum.Parse<ECommerce.Core.Enums.Payment.PaymentMethod>(dto.Method),
-            Status = ECommerce.Core.Enums.Payment.PaymentStatus.Pending,
+            Method = Enum.Parse<ECommerce.Domain.Enums.Payment.PaymentMethod>(dto.Method),
+            Status = ECommerce.Domain.Enums.Payment.PaymentStatus.Pending,
             PaidAt = DateTime.UtcNow
         };
 

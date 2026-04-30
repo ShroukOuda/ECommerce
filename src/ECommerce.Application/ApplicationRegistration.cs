@@ -30,6 +30,8 @@ public static class ApplicationRegistration
         services.AddScoped<IProductOptionService, ProductOptionService>();
         services.AddScoped<IProductVariantService, ProductVariantService>();
         services.AddScoped<IUserSessionService, UserSessionService>();
+        services.AddScoped<IAuthenticationService, AuthenticationService>();
+
         
         services.AddValidatorsFromAssembly(
             typeof(ApplicationRegistration).Assembly

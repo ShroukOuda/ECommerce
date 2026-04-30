@@ -1,4 +1,4 @@
-using ECommerce.Core.Entities.Return;
+using ECommerce.Domain.Entities.Return;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ECommerce.Infrastructure.Persistence.Configurations.Return;

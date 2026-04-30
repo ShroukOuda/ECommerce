@@ -1,6 +1,6 @@
 using ECommerce.Application.DTO.Coupon;
-using ECommerce.Core.Entities.Coupon;
-using ECommerce.Core.Interfaces.Repositories;
+using ECommerce.Domain.Entities.Coupon;
+using ECommerce.Domain.Interfaces.Repositories;
 
 namespace ECommerce.Application.Services;
 

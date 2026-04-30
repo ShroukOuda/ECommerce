@@ -1,5 +1,5 @@
 using System.Text.Json.Serialization;
-using ECommerce.Core.Configuration;
+using ECommerce.Domain.Configuration;
 using ECommerce.API.Middleware;
 using ECommerce.Application;
 using ECommerce.Infrastructure;
@@ -33,6 +33,9 @@ public class Program
 
         builder.Services.Configure<FileStorageSettings>(
             builder.Configuration.GetSection(FileStorageSettings.SectionName));
+        
+        builder.Services.Configure<JwtOptions>(
+            builder.Configuration.GetSection(JwtOptions.SectionName));
         
       
         

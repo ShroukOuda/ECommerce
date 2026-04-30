@@ -1,5 +1,5 @@
 using ECommerce.Application.DTO.Wishlist;
-using ECommerce.Core.Entities.Wishlist;
+using ECommerce.Domain.Entities.Wishlist;
 
 namespace ECommerce.Application.Mapping;
 

@@ -2,10 +2,9 @@ using AutoMapper;
 using ECommerce.Application.DTO.Product;
 using ECommerce.Application.Interfaces;
 using ECommerce.Application.Services;
-using ECommerce.Core.Entities.Product;
-using ECommerce.Core.Interfaces.Repositories;
-using ECommerce.Core.Interfaces.Services;
-using ECommerce.Core.Specifications;
+using ECommerce.Domain.Entities.Product;
+using ECommerce.Domain.Interfaces.Repositories;
+using ECommerce.Domain.Specifications;
 using FluentAssertions;
 using FluentValidation;
 using FluentValidation.Results;
@@ -17,7 +16,7 @@ public class ProductServiceTests
 {
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<IMapper> _mapperMock;
-    private readonly Mock<IImageManagementService> _imageServiceMock;
+    private readonly Mock<IFileStorageService> _imageServiceMock;
     private readonly Mock<IValidator<AddProductDTO>> _addValidatorMock;
     private readonly Mock<IValidator<UpdateProductDTO>> _updateValidatorMock;
     private readonly IProductService _productService;
@@ -26,7 +25,7 @@ public class ProductServiceTests
     {
         _unitOfWorkMock = new Mock<IUnitOfWork>();
         _mapperMock = new Mock<IMapper>();
-        _imageServiceMock = new Mock<IImageManagementService>();
+        _imageServiceMock = new Mock<IFileStorageService>();
         _addValidatorMock = new Mock<IValidator<AddProductDTO>>();
         _updateValidatorMock = new Mock<IValidator<UpdateProductDTO>>();
         _productService = new ProductService(

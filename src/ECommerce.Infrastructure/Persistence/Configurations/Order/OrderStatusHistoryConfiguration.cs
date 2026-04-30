@@ -1,4 +1,4 @@
-using ECommerce.Core.Entities.Order;
+using ECommerce.Domain.Entities.Order;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ECommerce.Infrastructure.Persistence.Configurations.Order;

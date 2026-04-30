@@ -1,4 +1,4 @@
-using ECommerce.Core.Entities.Review;
+using ECommerce.Domain.Entities.Review;
 
 namespace ECommerce.Infrastructure.Repositories;
 

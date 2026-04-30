@@ -1,4 +1,4 @@
-using ECommerce.Core.Entities.Coupon;
+using ECommerce.Domain.Entities.Coupon;
 
 namespace ECommerce.Infrastructure.Repositories;
 

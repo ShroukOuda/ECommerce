@@ -1,6 +1,6 @@
 using ECommerce.Application.DTO.Review;
-using ECommerce.Core.Entities.Review;
-using ECommerce.Core.Interfaces.Repositories;
+using ECommerce.Domain.Entities.Review;
+using ECommerce.Domain.Interfaces.Repositories;
 
 namespace ECommerce.Application.Services;
 

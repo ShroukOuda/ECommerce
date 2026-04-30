@@ -1,5 +1,5 @@
 using ECommerce.Application.DTO.CategoryImages;
-using ECommerce.Core.Entities.Category;
+using ECommerce.Domain.Entities.Category;
 
 namespace ECommerce.Application.Mapping;
 

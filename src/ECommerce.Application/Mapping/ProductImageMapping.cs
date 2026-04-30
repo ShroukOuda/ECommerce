@@ -1,5 +1,5 @@
 using ECommerce.Application.DTO.ProductImages;
-using ECommerce.Core.Entities.Product;
+using ECommerce.Domain.Entities.Product;
 
 namespace ECommerce.Application.Mapping;
 

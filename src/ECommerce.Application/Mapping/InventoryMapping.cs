@@ -1,5 +1,5 @@
 using ECommerce.Application.DTO.Inventory;
-using ECommerce.Core.Entities.Inventory;
+using ECommerce.Domain.Entities.Inventory;
 
 namespace ECommerce.Application.Mapping;
 
@@ -8,7 +8,7 @@ public class InventoryMapping : Profile
     public InventoryMapping()
     {
         CreateMap<CreateInventoryHistoryDTO, InventoryHistory>()
-            .ForMember(d => d.ChangeType, o => o.MapFrom(s => Enum.Parse<ECommerce.Core.Enums.Inventory.InventoryChangeType>(s.ChangeType)));
+            .ForMember(d => d.ChangeType, o => o.MapFrom(s => Enum.Parse<ECommerce.Domain.Enums.Inventory.InventoryChangeType>(s.ChangeType)));
         CreateMap<InventoryHistory, GetInventoryHistoryDTO>()
             .ForMember(d => d.ChangeType, o => o.MapFrom(s => s.ChangeType.ToString()));
     }

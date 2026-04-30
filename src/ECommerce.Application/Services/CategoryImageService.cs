@@ -1,6 +1,6 @@
 using ECommerce.Application.DTO.CategoryImages;
-using ECommerce.Core.Entities.Category;
-using ECommerce.Core.Interfaces.Repositories;
+using ECommerce.Domain.Entities.Category;
+using ECommerce.Domain.Interfaces.Repositories;
 
 namespace ECommerce.Application.Services;
 
@@ -8,7 +8,7 @@ public class CategoryImageService : ICategoryImageService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
-    private readonly IImageManagementService _imageService;
+    private readonly IFileStorageService _imageService;
     private readonly ILogger<CategoryImageService> _logger;
     private readonly FileValidationSettings _settings;
     private readonly IValidator<UploadCategoryImageDTO> _uploadCategoryDtoValidator;
@@ -16,7 +16,7 @@ public class CategoryImageService : ICategoryImageService
     public CategoryImageService(
         IUnitOfWork unitOfWork,
         IMapper mapper,
-        IImageManagementService imageService,
+        IFileStorageService imageService,
         ILogger<CategoryImageService> logger,
         IOptions<FileValidationSettings> settings,
         IValidator<UploadCategoryImageDTO> uploadCategoryDtoValidator)

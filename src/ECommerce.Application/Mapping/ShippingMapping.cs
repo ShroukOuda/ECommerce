@@ -1,5 +1,5 @@
 using ECommerce.Application.DTO.Shipping;
-using ECommerce.Core.Entities.Shipping;
+using ECommerce.Domain.Entities.Shipping;
 
 namespace ECommerce.Application.Mapping;
 

@@ -1,6 +1,6 @@
 using ECommerce.Application.DTO.Brand;
-using ECommerce.Core.Entities.Brand;
-using ECommerce.Core.Interfaces.Repositories;
+using ECommerce.Domain.Entities.Brand;
+using ECommerce.Domain.Interfaces.Repositories;
 
 namespace ECommerce.Application.Services;
 

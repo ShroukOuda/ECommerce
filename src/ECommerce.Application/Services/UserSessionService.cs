@@ -1,6 +1,6 @@
 using ECommerce.Application.DTO.UserSession;
-using ECommerce.Core.Entities.User;
-using ECommerce.Core.Interfaces.Repositories;
+using ECommerce.Domain.Entities.User;
+using ECommerce.Domain.Interfaces.Repositories;
 
 namespace ECommerce.Application.Services;
 
@@ -15,6 +15,14 @@ public class UserSessionService : IUserSessionService
         _mapper = mapper;
     }
 
+    public async Task AddSessionAsync(AddUserSessionDTO sessionDto, CancellationToken ct = default)
+    {
+        var session = _mapper.Map<UserSession>(sessionDto);
+        session.CreatedAt = DateTime.UtcNow;
+        await _unitOfWork.UserSessionRepository.AddAsync(session, ct);
+        await _unitOfWork.SaveChangesAsync(ct);
+    }
+    
     public async Task<IEnumerable<GetUserSessionDTO>> GetSessionsByUserIdAsync(string userId, CancellationToken ct = default)
     {
         var sessions = await _unitOfWork.UserSessionRepository.GetSessionsByUserIdAsync(userId, ct);

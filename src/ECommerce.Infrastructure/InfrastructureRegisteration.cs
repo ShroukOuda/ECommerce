@@ -1,10 +1,9 @@
-using ECommerce.Core.Entities.User;
-using ECommerce.Infrastructure.Persistence.Context;
+using ECommerce.Application.Interfaces;
+using ECommerce.Domain.Entities.User;
 using ECommerce.Infrastructure.Repositories;
+using Ecommerce.Infrastructure.Services;
 using ECommerce.Infrastructure.Services;
-using ECommerce.Infrastructure.Settings;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,7 +34,16 @@ public static class InfrastructureRegisteration
         
         
         //image management service
-        services.AddScoped<IImageManagementService ,ImageManagementService>();
+        services.AddScoped<IFileStorageService ,FileStorageService>();
+        
+        //token service
+        services.AddScoped<ITokenService, TokenService>();
+        
+        //phone number service
+        services.AddScoped<IPhoneNumberService, PhoneNumberService>();
+        
+        //request context service
+        services.AddScoped<IRequestContextService, RequestContextService>();
        
         //db context
         services.AddDbContext<AppDbContext>(option =>
@@ -62,7 +70,7 @@ public static class InfrastructureRegisteration
             options.Password.RequireLowercase = true;
             options.Password.RequireUppercase = true;
             options.Password.RequireNonAlphanumeric = false;
-            options.Password.RequiredLength = 6;
+            options.Password.RequiredLength = 8;
             options.User.RequireUniqueEmail = true;
         })
         .AddEntityFrameworkStores<AppDbContext>()

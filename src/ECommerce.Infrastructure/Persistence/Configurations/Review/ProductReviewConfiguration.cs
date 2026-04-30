@@ -1,4 +1,4 @@
-using ECommerce.Core.Entities.Review;
+using ECommerce.Domain.Entities.Review;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ECommerce.Infrastructure.Persistence.Configurations.Review;

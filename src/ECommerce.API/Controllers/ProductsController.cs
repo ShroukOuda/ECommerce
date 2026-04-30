@@ -1,5 +1,5 @@
 using ECommerce.Application.DTO.ProductImages;
-using ECommerce.Core.Enums.Media;
+using ECommerce.Domain.Enums.Media;
 
 namespace ECommerce.API.Controllers;
 

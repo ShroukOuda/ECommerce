@@ -1,6 +1,6 @@
 using ECommerce.Application.DTO.Inventory;
-using ECommerce.Core.Entities.Inventory;
-using ECommerce.Core.Interfaces.Repositories;
+using ECommerce.Domain.Entities.Inventory;
+using ECommerce.Domain.Interfaces.Repositories;
 
 namespace ECommerce.Application.Services;
 

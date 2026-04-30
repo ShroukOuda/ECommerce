@@ -1,6 +1,6 @@
 using ECommerce.Application.DTO.ProductImages;
-using ECommerce.Core.Entities.Product;
-using ECommerce.Core.Interfaces.Repositories;
+using ECommerce.Domain.Entities.Product;
+using ECommerce.Domain.Interfaces.Repositories;
 
 namespace ECommerce.Application.Services;
 
@@ -8,7 +8,7 @@ public class ProductImageService : IProductImageService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
-    private readonly IImageManagementService _imageManagementService;
+    private readonly IFileStorageService _fileStorageService;
     private readonly ILogger<ProductImageService> _logger;  
     private readonly FileValidationSettings _settings;
     private readonly IValidator<UploadProductImageDTO> _uploadProductImageDtoValidator;
@@ -16,14 +16,14 @@ public class ProductImageService : IProductImageService
     public ProductImageService(
         IUnitOfWork unitOfWork,
         IMapper mapper,
-        IImageManagementService imageManagementService,
+        IFileStorageService fileStorageService,
         ILogger<ProductImageService> logger, 
         IOptions<FileValidationSettings> settings,
         IValidator<UploadProductImageDTO> uploadProductImageDtoValidator)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
-        _imageManagementService = imageManagementService;
+        _fileStorageService = fileStorageService;
         _logger = logger;
         _settings = settings.Value;
         _uploadProductImageDtoValidator = uploadProductImageDtoValidator;
@@ -57,7 +57,7 @@ public class ProductImageService : IProductImageService
 
         try
         {
-            var filePath = await _imageManagementService.SaveAsync(
+            var filePath = await _fileStorageService.SaveAsync(
                 stream, dto.File.FileName, folderPath, ct);
             
             var image = new ProductImage
@@ -147,7 +147,7 @@ public class ProductImageService : IProductImageService
             }
         }
         
-        await _imageManagementService.DeleteAsync(image.ImageUrl, ct);
+        await _fileStorageService.DeleteAsync(image.ImageUrl, ct);
         await _unitOfWork.ProductImageRepository.DeleteAsync(image, ct);
         await _unitOfWork.SaveChangesAsync(ct);
 
@@ -168,10 +168,10 @@ public class ProductImageService : IProductImageService
         if (!images.Any()) return;
 
         foreach (var image in images)
-            await _imageManagementService.DeleteAsync(image.ImageUrl, ct);
+            await _fileStorageService.DeleteAsync(image.ImageUrl, ct);
 
         var folderPath = $"products/{productId}";
-        await _imageManagementService.DeleteFolderAsync(folderPath, ct);
+        await _fileStorageService.DeleteFolderAsync(folderPath, ct);
 
         await _unitOfWork.ProductImageRepository.DeleteRangeAsync(images, ct);
         await _unitOfWork.SaveChangesAsync(ct);

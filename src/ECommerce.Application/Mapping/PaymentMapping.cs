@@ -1,5 +1,5 @@
 using ECommerce.Application.DTO.Payment;
-using ECommerce.Core.Entities.Payment;
+using ECommerce.Domain.Entities.Payment;
 
 namespace ECommerce.Application.Mapping;
 

@@ -2,9 +2,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ECommerce.Infrastructure.Persistence.Configurations.Brand;
 
-public class BrandConfiguration : IEntityTypeConfiguration<Core.Entities.Brand.Brand>
+public class BrandConfiguration : IEntityTypeConfiguration<Domain.Entities.Brand.Brand>
 {
-    public void Configure(EntityTypeBuilder<Core.Entities.Brand.Brand> builder)
+    public void Configure(EntityTypeBuilder<Domain.Entities.Brand.Brand> builder)
     {
         builder.HasKey(b => b.Id);
 

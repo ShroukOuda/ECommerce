@@ -1,5 +1,5 @@
-using ECommerce.Core.Entities.Category;
-using ECommerce.Core.Interfaces.Repositories;
+using ECommerce.Domain.Entities.Category;
+using ECommerce.Domain.Interfaces.Repositories;
 
 namespace ECommerce.Application.Services;
 
@@ -7,20 +7,20 @@ public class CategoryService : ICategoryService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
-    private readonly IImageManagementService _imageManagementService;
+    private readonly IFileStorageService _fileStorageService;
     private readonly IValidator<AddCategoryDTO> _addCategoryDtoValidator;
     private readonly IValidator<UpdateCategoryDTO> _updateCategoryDtoValidator;
 
     public CategoryService(
         IUnitOfWork unitOfWork, 
         IMapper mapper,
-        IImageManagementService imageManagementService,
+        IFileStorageService fileStorageService,
         IValidator<AddCategoryDTO> addCategoryDtoValidator,
         IValidator<UpdateCategoryDTO> updateCategoryDtoValidator)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
-        _imageManagementService = imageManagementService;
+        _fileStorageService = fileStorageService;
         _addCategoryDtoValidator = addCategoryDtoValidator;
         _updateCategoryDtoValidator = updateCategoryDtoValidator;
     }
@@ -63,7 +63,7 @@ public class CategoryService : ICategoryService
             throw new KeyNotFoundException($"Category with ID {id} not found.");
 
         var folderPath = $"categories/{id}";
-        await _imageManagementService.DeleteFolderAsync(folderPath, cancellationToken);
+        await _fileStorageService.DeleteFolderAsync(folderPath, cancellationToken);
         Category categoryStub = new Category { Id = id };
         await _unitOfWork.CategoryRepository.DeleteAsync(categoryStub, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

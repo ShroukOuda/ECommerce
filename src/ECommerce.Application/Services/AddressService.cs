@@ -1,6 +1,6 @@
 using ECommerce.Application.DTO.Address;
-using ECommerce.Core.Entities.User;
-using ECommerce.Core.Interfaces.Repositories;
+using ECommerce.Domain.Entities.User;
+using ECommerce.Domain.Interfaces.Repositories;
 
 namespace ECommerce.Application.Services;
 

@@ -2,8 +2,8 @@ using AutoMapper;
 using ECommerce.Application.DTO.UserSession;
 using ECommerce.Application.Interfaces;
 using ECommerce.Application.Services;
-using ECommerce.Core.Entities.User;
-using ECommerce.Core.Interfaces.Repositories;
+using ECommerce.Domain.Entities.User;
+using ECommerce.Domain.Interfaces.Repositories;
 using FluentAssertions;
 using Moq;
 

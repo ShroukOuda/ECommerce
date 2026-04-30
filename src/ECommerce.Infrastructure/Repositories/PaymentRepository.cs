@@ -1,4 +1,4 @@
-using ECommerce.Core.Entities.Payment;
+using ECommerce.Domain.Entities.Payment;
 
 namespace ECommerce.Infrastructure.Repositories;
 

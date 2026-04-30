@@ -1,4 +1,4 @@
-using ECommerce.Core.Entities.Cart;
+using ECommerce.Domain.Entities.Cart;
 
 namespace ECommerce.Infrastructure.Repositories;
 
@@ -26,6 +26,6 @@ public class CartRepository : GenericRepository<Cart, Guid>, ICartRepository
         return await _context.Carts
             .Include(c => c.CartItems).ThenInclude(ci => ci.Product)
             .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.UserId == userId && c.Status == ECommerce.Core.Enums.Cart.CartStatus.Active, ct);
+            .FirstOrDefaultAsync(c => c.UserId == userId && c.Status == ECommerce.Domain.Enums.Cart.CartStatus.Active, ct);
     }
 }

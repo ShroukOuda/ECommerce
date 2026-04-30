@@ -1,6 +1,6 @@
 using ECommerce.Application.DTO.Wishlist;
-using ECommerce.Core.Entities.Wishlist;
-using ECommerce.Core.Interfaces.Repositories;
+using ECommerce.Domain.Entities.Wishlist;
+using ECommerce.Domain.Interfaces.Repositories;
 
 namespace ECommerce.Application.Services;
 

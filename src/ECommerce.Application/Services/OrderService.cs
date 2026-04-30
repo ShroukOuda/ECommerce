@@ -1,6 +1,6 @@
 using ECommerce.Application.DTO.Order;
-using ECommerce.Core.Entities.Order;
-using ECommerce.Core.Interfaces.Repositories;
+using ECommerce.Domain.Entities.Order;
+using ECommerce.Domain.Interfaces.Repositories;
 
 namespace ECommerce.Application.Services;
 
@@ -60,7 +60,7 @@ public class OrderService : IOrderService
         var order = await _unitOfWork.OrderRepository.GetByIdAsync(dto.Id, ct);
         if (order is null) throw new KeyNotFoundException($"Order with ID {dto.Id} not found.");
 
-        if (Enum.TryParse<ECommerce.Core.Enums.Order.OrderStatus>(dto.OrderStatus, out var status))
+        if (Enum.TryParse<ECommerce.Domain.Enums.Order.OrderStatus>(dto.OrderStatus, out var status))
             order.OrderStatus = status;
         else
             throw new ArgumentException($"Invalid order status: {dto.OrderStatus}");

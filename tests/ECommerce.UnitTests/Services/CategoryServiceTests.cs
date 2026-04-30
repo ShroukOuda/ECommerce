@@ -2,12 +2,10 @@ using AutoMapper;
 using ECommerce.Application.DTO.Category;
 using ECommerce.Application.Interfaces;
 using ECommerce.Application.Services;
-using ECommerce.Core.Entities.Category;
-using ECommerce.Core.Interfaces.Repositories;
-using ECommerce.Core.Interfaces.Services;
+using ECommerce.Domain.Entities.Category;
+using ECommerce.Domain.Interfaces.Repositories;
 using FluentAssertions;
 using FluentValidation;
-using FluentValidation.Results;
 using Moq;
 
 namespace ECommerce.UnitTests.Services;
@@ -16,7 +14,7 @@ public class CategoryServiceTests
 {
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<IMapper> _mapperMock;
-    private readonly Mock<IImageManagementService> _imageServiceMock;
+    private readonly Mock<IFileStorageService> _imageServiceMock;
     private readonly Mock<IValidator<AddCategoryDTO>> _addValidatorMock;
     private readonly Mock<IValidator<UpdateCategoryDTO>> _updateValidatorMock;
     private readonly ICategoryService _categoryService;
@@ -25,7 +23,7 @@ public class CategoryServiceTests
     {
         _unitOfWorkMock = new Mock<IUnitOfWork>();
         _mapperMock = new Mock<IMapper>();
-        _imageServiceMock = new Mock<IImageManagementService>();
+        _imageServiceMock = new Mock<IFileStorageService>();
         _addValidatorMock = new Mock<IValidator<AddCategoryDTO>>();
         _updateValidatorMock = new Mock<IValidator<UpdateCategoryDTO>>();
         _categoryService = new CategoryService(

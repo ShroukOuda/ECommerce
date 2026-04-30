@@ -1,4 +1,4 @@
-using ECommerce.Core.Entities.Coupon;
+using ECommerce.Domain.Entities.Coupon;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ECommerce.Infrastructure.Persistence.Configurations.Coupon;

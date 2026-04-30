@@ -5,7 +5,7 @@ namespace ECommerce.ArchitectureTests;
 
 public class ArchitectureTests
 {
-    private const string CoreNamespace = "ECommerce.Core";
+    private const string CoreNamespace = "ECommerce.Domain";
     private const string ApplicationNamespace = "ECommerce.Application";
     private const string InfrastructureNamespace = "ECommerce.Infrastructure";
     private const string ApiNamespace = "ECommerce.API";
@@ -13,7 +13,7 @@ public class ArchitectureTests
     [Fact]
     public void Core_ShouldNotDependOn_Application()
     {
-        var result = Types.InAssembly(typeof(ECommerce.Core.Common.BaseEntity<>).Assembly)
+        var result = Types.InAssembly(typeof(ECommerce.Domain.Common.BaseEntity<>).Assembly)
             .ShouldNot()
             .HaveDependencyOn(ApplicationNamespace)
             .GetResult();
@@ -24,7 +24,7 @@ public class ArchitectureTests
     [Fact]
     public void Core_ShouldNotDependOn_Infrastructure()
     {
-        var result = Types.InAssembly(typeof(ECommerce.Core.Common.BaseEntity<>).Assembly)
+        var result = Types.InAssembly(typeof(ECommerce.Domain.Common.BaseEntity<>).Assembly)
             .ShouldNot()
             .HaveDependencyOn(InfrastructureNamespace)
             .GetResult();
@@ -35,7 +35,7 @@ public class ArchitectureTests
     [Fact]
     public void Core_ShouldNotDependOn_Api()
     {
-        var result = Types.InAssembly(typeof(ECommerce.Core.Common.BaseEntity<>).Assembly)
+        var result = Types.InAssembly(typeof(ECommerce.Domain.Common.BaseEntity<>).Assembly)
             .ShouldNot()
             .HaveDependencyOn(ApiNamespace)
             .GetResult();
@@ -102,7 +102,7 @@ public class ArchitectureTests
     [Fact]
     public void Interfaces_InCore_ShouldStartWithI()
     {
-        var result = Types.InAssembly(typeof(ECommerce.Core.Common.BaseEntity<>).Assembly)
+        var result = Types.InAssembly(typeof(ECommerce.Domain.Common.BaseEntity<>).Assembly)
             .That()
             .AreInterfaces()
             .Should()
@@ -115,9 +115,9 @@ public class ArchitectureTests
     [Fact]
     public void Entities_ShouldNotDependOn_Application()
     {
-        var result = Types.InAssembly(typeof(ECommerce.Core.Common.BaseEntity<>).Assembly)
+        var result = Types.InAssembly(typeof(ECommerce.Domain.Common.BaseEntity<>).Assembly)
             .That()
-            .ResideInNamespace("ECommerce.Core.Entities")
+            .ResideInNamespace("ECommerce.Domain.Entities")
             .ShouldNot()
             .HaveDependencyOn(ApplicationNamespace)
             .GetResult();

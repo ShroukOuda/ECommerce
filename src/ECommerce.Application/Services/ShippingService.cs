@@ -1,6 +1,6 @@
 using ECommerce.Application.DTO.Shipping;
-using ECommerce.Core.Entities.Shipping;
-using ECommerce.Core.Interfaces.Repositories;
+using ECommerce.Domain.Entities.Shipping;
+using ECommerce.Domain.Interfaces.Repositories;
 
 namespace ECommerce.Application.Services;
 
@@ -40,9 +40,9 @@ public class ShippingService : IShippingService
             OrderId = dto.OrderId,
             AddressId = dto.AddressId,
             Cost = dto.Cost,
-            Method = Enum.Parse<ECommerce.Core.Enums.Shipping.ShippingMethod>(dto.Method),
+            Method = Enum.Parse<ECommerce.Domain.Enums.Shipping.ShippingMethod>(dto.Method),
             TrackingNumber = $"SHP-{Guid.NewGuid().ToString()[..8].ToUpper()}",
-            Status = ECommerce.Core.Enums.Shipping.ShippingStatus.Pending
+            Status = ECommerce.Domain.Enums.Shipping.ShippingStatus.Pending
         };
 
         await _unitOfWork.ShippingRepository.AddAsync(shipping, ct);

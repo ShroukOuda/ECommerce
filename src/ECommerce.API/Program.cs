@@ -18,7 +18,13 @@ public class Program
 
         // Add services to the container.
         
+        // Add memory caching
         builder.Services.AddMemoryCache();
+        
+        // Add HttpContextAccessor for accessing HTTP context in services
+        builder.Services.AddHttpContextAccessor();
+        
+        // Configure controllers and JSON options
         builder.Services.AddControllers()
             .AddJsonOptions(options =>
             {
@@ -26,14 +32,18 @@ public class Program
             });
         
         
-       
-
+        
+        // Configure strongly typed settings
+        
+        //File validation settings
         builder.Services.Configure<FileValidationSettings>(
             builder.Configuration.GetSection(FileValidationSettings.SectionName));
-
+        
+        //File storage settings
         builder.Services.Configure<FileStorageSettings>(
             builder.Configuration.GetSection(FileStorageSettings.SectionName));
         
+        //JWT settings
         builder.Services.Configure<JwtOptions>(
             builder.Configuration.GetSection(JwtOptions.SectionName));
         
@@ -44,7 +54,37 @@ public class Program
         
         //add swagger
         builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
+        builder.Services.AddSwaggerGen(options =>
+        {
+            // Add JWT Authentication to Swagger
+            options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Name = "Authorization",
+                Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+                Scheme = "bearer",
+                BearerFormat = "JWT",
+                In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+                Description = "Enter JWT token like: Bearer {your token}"
+            });
+
+            options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+            {
+                {
+                    new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                    {
+                        Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                        {
+                            Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    new string[] {}
+                }
+            });
+            
+        });
+        
+        // Add application and infrastructure services
         builder.Services.InfrastructureConfiguratoin(builder.Configuration);
         builder.Services.AddApplicationServices(); 
         

@@ -1,4 +1,4 @@
-namespace ECommerce.Application.Interfaces;
+namespace ECommerce.Application.Interfaces.Services;
 
 public interface IFileStorageService
 {

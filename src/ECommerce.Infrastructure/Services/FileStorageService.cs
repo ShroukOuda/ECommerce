@@ -1,4 +1,4 @@
-using ECommerce.Application.Interfaces;
+using ECommerce.Application.Interfaces.Services;
 using Microsoft.Extensions.FileProviders;
 using ECommerce.Infrastructure.Settings;
 using Microsoft.Extensions.Logging;

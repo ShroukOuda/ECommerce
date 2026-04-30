@@ -1,13 +1,17 @@
-using ECommerce.Application.Interfaces;
+using System.Text;
+using ECommerce.Application.Interfaces.Services;
 using ECommerce.Domain.Entities.User;
 using ECommerce.Infrastructure.Repositories;
 using Ecommerce.Infrastructure.Services;
 using ECommerce.Infrastructure.Services;
+using ECommerce.Infrastructure.Settings;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.IdentityModel.Tokens;
 
 namespace ECommerce.Infrastructure;
 
@@ -44,6 +48,9 @@ public static class InfrastructureRegisteration
         
         //request context service
         services.AddScoped<IRequestContextService, RequestContextService>();
+        
+        //identity service
+        services.AddScoped<IIdentityService, IdentityService>();
        
         //db context
         services.AddDbContext<AppDbContext>(option =>
@@ -75,6 +82,32 @@ public static class InfrastructureRegisteration
         })
         .AddEntityFrameworkStores<AppDbContext>()
         .AddDefaultTokenProviders();
+        
+        // JWT Authentication
+        var jwtOptions = configuration.GetSection("JwtOptions").Get<JwtOptions>();
+        
+        if (jwtOptions is null || string.IsNullOrEmpty(jwtOptions.SecretKey))
+            throw new Exception("JWT configuration is missing or invalid.");
+        
+        services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = jwtOptions.Issuer,
+                ValidAudience = jwtOptions.Audience,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SecretKey)),
+                ClockSkew = TimeSpan.Zero
+            };
+        });
         
         return services;
     }

@@ -1,3 +1,4 @@
+using ECommerce.Application.Interfaces.Services;
 using ECommerce.Domain.Entities.Product;
 using ECommerce.Domain.Interfaces.Repositories;
 

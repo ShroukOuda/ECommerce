@@ -1,6 +1,7 @@
 using AutoMapper;
 using ECommerce.Application.DTO.Product;
 using ECommerce.Application.Interfaces;
+using ECommerce.Application.Interfaces.Services;
 using ECommerce.Application.Services;
 using ECommerce.Domain.Entities.Product;
 using ECommerce.Domain.Interfaces.Repositories;
@@ -16,7 +17,7 @@ public class ProductServiceTests
 {
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<IMapper> _mapperMock;
-    private readonly Mock<IFileStorageService> _imageServiceMock;
+    private readonly Mock<IFileStorageService> _fileStorageServiceMock;
     private readonly Mock<IValidator<AddProductDTO>> _addValidatorMock;
     private readonly Mock<IValidator<UpdateProductDTO>> _updateValidatorMock;
     private readonly IProductService _productService;
@@ -25,13 +26,13 @@ public class ProductServiceTests
     {
         _unitOfWorkMock = new Mock<IUnitOfWork>();
         _mapperMock = new Mock<IMapper>();
-        _imageServiceMock = new Mock<IFileStorageService>();
+        _fileStorageServiceMock = new Mock<IFileStorageService>();
         _addValidatorMock = new Mock<IValidator<AddProductDTO>>();
         _updateValidatorMock = new Mock<IValidator<UpdateProductDTO>>();
         _productService = new ProductService(
             _unitOfWorkMock.Object,
             _mapperMock.Object,
-            _imageServiceMock.Object,
+            _fileStorageServiceMock.Object,
             _addValidatorMock.Object,
             _updateValidatorMock.Object);
     }
@@ -142,7 +143,7 @@ public class ProductServiceTests
         _unitOfWorkMock.Setup(u => u.ProductRepository.ExistsAsync(
             It.IsAny<System.Linq.Expressions.Expression<Func<Product, bool>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _imageServiceMock.Setup(s => s.DeleteFolderAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        _fileStorageServiceMock.Setup(s => s.DeleteFolderAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 

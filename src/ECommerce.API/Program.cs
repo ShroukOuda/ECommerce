@@ -50,7 +50,7 @@ public class Program
                 Scheme = "bearer",
                 BearerFormat = "JWT",
                 In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-                Description = "Enter JWT token like: Bearer {your token}"
+                Description = "Paste the JWT token only (without 'Bearer '). Swagger UI will add the Bearer prefix automatically."
             });
 
             options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement

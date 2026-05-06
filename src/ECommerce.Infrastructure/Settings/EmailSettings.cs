@@ -2,7 +2,7 @@ namespace ECommerce.Infrastructure.Settings;
 
 public class EmailSettings
 {
-    public const string SectionName = "EmailS";
+    public const string SectionName = "EmailSettings";
 
     public string Provider { get; set; } = string.Empty;
     public string SenderName { get; init; } = string.Empty;

@@ -12,6 +12,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
+using ECommerce.Infrastructure.Persistence.Seed;
+using ECommerce.Application.Interfaces.Seed;
+using ECommerce.Infrastructure.Persistence.Seed.Identity;
+using ECommerce.Infrastructure.Services.Email;
 
 namespace ECommerce.Infrastructure;
 
@@ -19,6 +23,7 @@ public static class InfrastructureRegisteration
 {
     public static IServiceCollection InfrastructureConfiguratoin(this IServiceCollection services, IConfiguration configuration)
     {
+        //repositories
         services.AddScoped(typeof(IGenericRepository<,>), typeof(GenericRepository<,>));
         
         //unit of work
@@ -36,6 +41,27 @@ public static class InfrastructureRegisteration
             services.AddSingleton<IFileProvider>(new PhysicalFileProvider(wwwrootPath));
         }
         
+
+        //Settings
+
+        //jwt settings
+        services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
+
+        //File storage settings
+        services.Configure<FileStorageSettings>(configuration.GetSection(FileStorageSettings.SectionName));
+
+        //admin seed settings
+        services.Configure<AdminSeedSettings>(configuration.GetSection(AdminSeedSettings.SectionName));
+
+        //email settings
+        services.Configure<EmailSettings>(configuration.GetSection(EmailSettings.SectionName));
+
+        //app settings
+        services.Configure<AppSettings>(configuration.GetSection(AppSettings.SectionName));
+
+        //email template settings
+        services.Configure<EmailTemplateSettings>(configuration.GetSection(EmailTemplateSettings.SectionName));
+
         
         //image management service
         services.AddScoped<IFileStorageService ,FileStorageService>();
@@ -51,6 +77,42 @@ public static class InfrastructureRegisteration
         
         //identity service
         services.AddScoped<IIdentityService, IdentityService>();
+
+        //email service
+        var emailSettings = configuration.GetSection(EmailSettings.SectionName).Get<EmailSettings>();
+
+        if (emailSettings is null || string.IsNullOrEmpty(emailSettings.Provider))
+            throw new Exception("Email configuration is missing or invalid.");
+
+        switch (emailSettings.Provider.ToLower())
+        {
+            case "smtp":
+                services.AddScoped<IEmailService, SmtpEmailService>();
+                break;
+            case "sendgrid":
+                services.AddScoped<IEmailService, SendGridEmailService>();
+                break;
+            default:
+                throw new Exception($"Unsupported email provider: {emailSettings.Provider}");
+        }
+
+        services.AddScoped<INotificationEmailService, NotificationEmailService>();
+        services.AddScoped<EmailTemplateBuilder>();
+        
+        
+        //token encoder
+        services.AddScoped<ITokenEncoder, TokenEncoder>();
+
+        //url builder
+        services.AddScoped<IUrlBuilder, UrlBuilder>();
+
+        //data seeder
+        services.AddScoped<IDataSeeder, DataSeeder>();
+        services.AddScoped<AdminSeeder>();
+        services.AddScoped<RoleSeeder>();
+
+        
+
        
         //db context
         services.AddDbContext<AppDbContext>(option =>
@@ -108,7 +170,7 @@ public static class InfrastructureRegisteration
                 ClockSkew = TimeSpan.Zero
             };
         });
-        
+     
         return services;
     }
 }

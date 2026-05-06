@@ -8,6 +8,6 @@ public class UserSessionMapping : Profile
     public UserSessionMapping()
     {
         CreateMap<UserSession, GetUserSessionDTO>().ReverseMap();
-        CreateMap<AddUserSessionDTO, UserSession>().ReverseMap();
+      
     }
 }

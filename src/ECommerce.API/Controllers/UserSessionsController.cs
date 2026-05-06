@@ -1,28 +1,57 @@
 using ECommerce.Application.DTO.UserSession;
-using ECommerce.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace ECommerce.API.Controllers;
 
+
+[Authorize]
 public class UserSessionsController : BaseController
 {
-    private readonly IUserSessionService _userSessionService;
+    private readonly IUserSessionService _sessionService;
 
-    public UserSessionsController(IUserSessionService userSessionService)
-    {
-        _userSessionService = userSessionService;
-    }
+    public UserSessionsController(IUserSessionService sessionService)
+        => _sessionService = sessionService;
 
-    [HttpGet("get-by-user/{userId}")]
-    public async Task<IActionResult> GetByUser(string userId)
+    private string CurrentUserId =>
+        User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+    
+    [HttpGet("active")]
+    public async Task<IActionResult> GetActiveSessions()
     {
-        var sessions = await _userSessionService.GetSessionsByUserIdAsync(userId);
+        var sessions = await _sessionService.GetActiveSessionsAsync(CurrentUserId);
         return Ok(sessions);
     }
 
-    [HttpDelete("delete/{id}")]
-    public async Task<IActionResult> Delete(Guid id)
+    [HttpGet]
+    public async Task<IActionResult> GetAllSessions()
     {
-        await _userSessionService.DeleteSessionAsync(id);
-        return Ok(new ResponseAPI(200, "Session deleted successfully"));
+        var sessions = await _sessionService.GetAllSessionsAsync(CurrentUserId);
+        return Ok(sessions);
+    }
+
+    [HttpGet("user/{userId}")]
+    [Authorize(Roles = "Admin")]
+
+    public async Task<IActionResult> GetSessionsForUser(string userId)
+    {
+        var sessions = await _sessionService.GetAllSessionsAsync(userId);
+        return Ok(sessions);
+    }
+
+    [HttpDelete("{sessionId}")]
+    public async Task<IActionResult> RevokeSession(Guid sessionId)
+    {
+        await _sessionService.RevokeSessionAsync(sessionId, CurrentUserId);
+        return NoContent();
+    }
+
+   
+    [HttpDelete("revoke-all")]
+    public async Task<IActionResult> RevokeAll()
+    {
+        await _sessionService.RevokeAllSessionsAsync(CurrentUserId);
+        return NoContent();
     }
 }

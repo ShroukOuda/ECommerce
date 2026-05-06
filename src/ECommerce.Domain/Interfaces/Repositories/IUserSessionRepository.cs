@@ -4,5 +4,7 @@ namespace ECommerce.Domain.Interfaces.Repositories;
 
 public interface IUserSessionRepository : IGenericRepository<UserSession, Guid>
 {
-    Task<IReadOnlyList<UserSession>> GetSessionsByUserIdAsync(string userId, CancellationToken ct = default);
+    Task<UserSession?> GetByRefreshTokenAsync(string refreshToken);
+    Task<IReadOnlyList<UserSession>> GetActiveSessionsAsync(string userId);
+    Task<IReadOnlyList<UserSession>> GetAllSessionsAsync(string userId);
 }

@@ -15,25 +15,50 @@ public class UserSessionService : IUserSessionService
         _mapper = mapper;
     }
 
-    public async Task AddSessionAsync(AddUserSessionDTO sessionDto, CancellationToken ct = default)
+   public async Task<IReadOnlyList<GetUserSessionDTO>> GetActiveSessionsAsync(string userId)
     {
-        var session = _mapper.Map<UserSession>(sessionDto);
-        session.CreatedAt = DateTime.UtcNow;
-        await _unitOfWork.UserSessionRepository.AddAsync(session, ct);
-        await _unitOfWork.SaveChangesAsync(ct);
+        var sessions = await _unitOfWork.UserSessionRepository.GetActiveSessionsAsync(userId);
+        var sessionDTOs = _mapper.Map<IReadOnlyList<GetUserSessionDTO>>(sessions); 
+        return sessionDTOs;
     }
-    
-    public async Task<IEnumerable<GetUserSessionDTO>> GetSessionsByUserIdAsync(string userId, CancellationToken ct = default)
+    public async Task<IReadOnlyList<GetUserSessionDTO>> GetAllSessionsAsync(string userId)
     {
-        var sessions = await _unitOfWork.UserSessionRepository.GetSessionsByUserIdAsync(userId, ct);
-        return _mapper.Map<IEnumerable<GetUserSessionDTO>>(sessions);
+        var sessions = await _unitOfWork.UserSessionRepository.GetAllSessionsAsync(userId);
+        var sessionDTOs = _mapper.Map<IReadOnlyList<GetUserSessionDTO>>(sessions); 
+        return sessionDTOs;
     }
-
-    public async Task DeleteSessionAsync(Guid id, CancellationToken ct = default)
+ 
+    public async Task RevokeSessionAsync(Guid sessionId, string requestingUserId)
     {
-        var session = await _unitOfWork.UserSessionRepository.GetByIdAsync(id, ct);
-        if (session is null) throw new KeyNotFoundException($"Session with ID {id} not found.");
-        await _unitOfWork.UserSessionRepository.DeleteAsync(session, ct);
-        await _unitOfWork.SaveChangesAsync(ct);
+        var session = await _unitOfWork.UserSessionRepository.GetByIdAsync(sessionId)
+                      ?? throw new NotFoundException($"Session {sessionId} not found.");
+ 
+        if (session.UserId != requestingUserId)
+            throw new BadRequestException("You can only revoke your own sessions.");
+ 
+        if (!session.IsActive)
+            return; 
+ 
+        session.IsActive  = false;
+        session.RevokedAt = DateTime.UtcNow;
+        await _unitOfWork.UserSessionRepository.UpdateAsync(session);
+        await _unitOfWork.SaveChangesAsync();
     }
+ 
+    public async Task RevokeAllSessionsAsync(string userId)
+    {
+        var sessions = await _unitOfWork.UserSessionRepository.GetActiveSessionsAsync(userId);
+        var now = DateTime.UtcNow;
+ 
+        foreach (var session in sessions)
+        {
+            session.IsActive  = false;
+            session.RevokedAt = now;
+            await _unitOfWork.UserSessionRepository.UpdateAsync(session);
+        }
+ 
+        await _unitOfWork.SaveChangesAsync();
+    }
+ 
+   
 }

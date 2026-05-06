@@ -4,15 +4,15 @@ using ECommerce.API.Middleware;
 using ECommerce.Application;
 using ECommerce.Infrastructure;
 using ECommerce.Infrastructure.Persistence.Context;
-using ECommerce.Infrastructure.Settings;
 using Microsoft.EntityFrameworkCore;
+using ECommerce.Application.Interfaces.Seed;
 
 
 namespace ECommerce.API;
 
 public class Program
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
 
@@ -30,25 +30,11 @@ public class Program
             {
                 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             });
-        
-        
-        
-        // Configure strongly typed settings
-        
-        //File validation settings
+    
+        // Configure file validation settings
         builder.Services.Configure<FileValidationSettings>(
             builder.Configuration.GetSection(FileValidationSettings.SectionName));
-        
-        //File storage settings
-        builder.Services.Configure<FileStorageSettings>(
-            builder.Configuration.GetSection(FileStorageSettings.SectionName));
-        
-        //JWT settings
-        builder.Services.Configure<JwtOptions>(
-            builder.Configuration.GetSection(JwtOptions.SectionName));
-        
-      
-        
+            
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
         
@@ -104,6 +90,8 @@ public class Program
         });
 
         var app = builder.Build();
+
+           
         
         // Auto-migrate on startup when enabled
         if (builder.Configuration.GetValue<bool>("AUTO_MIGRATE", false) ||
@@ -113,6 +101,23 @@ public class Program
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             db.Database.Migrate();
         }
+
+        using (var scope = app.Services.CreateScope())
+        {
+            var seeder = scope.ServiceProvider.GetRequiredService<IDataSeeder>();
+        
+            try
+            {
+                await seeder.SeedAsync();
+            }
+            catch (Exception ex)
+            {
+                var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+                logger.LogCritical(ex, "Seeding failed — application startup aborted");
+                throw;   
+            }
+        }
+
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())

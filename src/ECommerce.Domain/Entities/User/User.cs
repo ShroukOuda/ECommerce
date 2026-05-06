@@ -15,17 +15,16 @@ public class User : IdentityUser
     [StringLength(50, MinimumLength = 3, ErrorMessage = "Last name must be between 3 and 50 characters")]
     public string LastName { get; set; } = string.Empty;
     
-    [Required]
     [DataType(DataType.Date)]
     [Column(TypeName = "date")]
-    public DateTime DateOfBirth { get; set; }
+    public DateTime? DateOfBirth { get; set; }
 
-    [Required] [StringLength(2)] 
-    public string CountryCode { get; set; } = string.Empty;
+    [StringLength(2)] 
+    public string? CountryCode { get; set; }
 
     public UserStatus Status { get; set; } = UserStatus.Active;
     public string? ProfilePictureUrl { get; set; }
-    public Gender Gender { get; set; }
+    public Gender? Gender { get; set; }
     
     [Column(TypeName = "datetime2")]
     public DateTime CreatedAt { get; set; }

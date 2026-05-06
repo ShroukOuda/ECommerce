@@ -1,4 +1,4 @@
-using ECommerce.Application.DTO.Authentication;
+using ECommerce.Application.DTO.Auth;
 using ECommerce.Domain.Entities.User;
 
 namespace Ecommerce.Application.Mapping;

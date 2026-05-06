@@ -2,6 +2,7 @@ namespace ECommerce.Application.Interfaces.Services;
 
 public interface IRequestContextService
 {
-    string GetIpAddress();
-    string GetUserAgent();
+    public string? GetUserId();
+    public string? GetIpAddress();
+    public string? GetUserAgent();
 }

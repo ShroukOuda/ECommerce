@@ -9,15 +9,42 @@ public class UserSessionConfiguration : IEntityTypeConfiguration<UserSession>
     {
         builder.HasKey(us => us.Id);
 
-        builder.Property(us => us.SessionToken)
+        builder.Property(us => us.RefreshToken)
             .IsRequired()
-            .HasMaxLength(500);
+            .HasMaxLength(1000);
 
         builder.Property(us => us.IpAddress)
+            .IsRequired()
             .HasMaxLength(45);
 
         builder.Property(us => us.UserAgent)
+            .IsRequired()
             .HasMaxLength(500);
+
+        builder.Property(us => us.DeviceInfo)
+            .IsRequired()
+            .HasMaxLength(100);
+        
+        builder.Property(us => us.CreatedAt)
+            .IsRequired();
+        
+        builder.Property(us => us.RefreshTokenExpiresAt)
+            .IsRequired();
+        
+        builder.Property(us => us.RevokedAt)
+            .IsRequired(false);
+
+        builder.Property(us => us.LastUsedAt)
+            .IsRequired(false);
+
+        builder.Property(us => us.ReplacedByToken)
+            .IsRequired(false)
+            .HasMaxLength(1000);
+
+        builder.Property(us => us.IsActive)
+            .IsRequired();
+
+        builder.HasIndex(us => us.UserId);
 
         builder.HasOne(us => us.User)
             .WithMany(u => u.UserSessions)

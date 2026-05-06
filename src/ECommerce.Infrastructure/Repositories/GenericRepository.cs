@@ -66,6 +66,24 @@ public class GenericRepository<T, TKey> : IGenericRepository<T, TKey>
         _dbSet.Update(entity);
         return Task.CompletedTask;
     }
+    
+    public virtual Task UpdateRangeAsync(
+        IEnumerable<T> entities,
+        CancellationToken ct = default)
+    {
+        var now = DateTime.UtcNow;
+        foreach (var entity in entities)
+        {
+            if (entity is BaseEntity<TKey> baseEntity)
+            {
+                baseEntity.UpdatedAt = now;
+            }
+        }
+
+        _dbSet.UpdateRange(entities);
+        return Task.CompletedTask;
+    }
+    
     public virtual Task DeleteAsync(T entity, CancellationToken ct = default)
     {
         _dbSet.Remove(entity);

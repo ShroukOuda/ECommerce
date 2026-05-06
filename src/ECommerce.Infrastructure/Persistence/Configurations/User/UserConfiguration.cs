@@ -14,9 +14,23 @@ public class UserConfiguration : IEntityTypeConfiguration<Domain.Entities.User.U
             .IsRequired()
             .HasMaxLength(50);
 
-        builder.Property(u => u.CountryCode)
+        builder.Property(u => u.Email)
             .IsRequired()
+            .HasMaxLength(255);
+
+        builder.Property(u => u.UserName)
+            .IsRequired()
+            .HasMaxLength(50);
+
+        builder.Property(u => u.DateOfBirth)
+            .HasColumnType("date");
+
+        builder.Property(u => u.CountryCode)
             .HasMaxLength(2);
+
+        builder.Property(u => u.PhoneNumber)
+            .IsRequired(false)
+            .HasMaxLength(20);
 
         builder.Property(u => u.Status)
             .HasConversion<string>();

@@ -1,7 +1,8 @@
-using ECommerce.Application.DTO.Authentication;
-using ECommerce.Application.DTO.UserSession;
+using ECommerce.Application.DTO.Auth; 
 using ECommerce.Application.Interfaces.Services;
 using ECommerce.Domain.Entities.User;
+using ECommerce.Domain.Enums.User;
+using ECommerce.Domain.Interfaces.Repositories;
 
 
 namespace ECommerce.Application.Services;
@@ -10,132 +11,227 @@ public class AuthenticationService : IAuthenticationService
 {
     private readonly IMapper _mapper;
     private readonly IIdentityService _identityService;
-    private readonly IUserSessionService _userSessionService;
     private readonly ITokenService _tokenService;
-    private readonly IRequestContextService _requestContextService;
-    private readonly IPhoneNumberService _phoneNumberService;
+    private readonly ITokenEncoder _tokenEncoder;
+    private readonly IUrlBuilder _urlBuilder;
+    private readonly IRequestContextService _requestContext;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly INotificationEmailService _notificationEmailService;
 
     public AuthenticationService(
         IMapper mapper, 
         IIdentityService identityService,
-        IUserSessionService userSessionService,
         ITokenService tokenService,
-        IRequestContextService requestContextService,
-        IPhoneNumberService phoneNumberService)
+        ITokenEncoder tokenEncoder,
+        IUrlBuilder urlBuilder,
+        IRequestContextService requestContext,
+        IUnitOfWork unitOfWork,
+        INotificationEmailService notificationEmailService)
     {
         _mapper = mapper;
         _identityService = identityService;
-        _userSessionService = userSessionService;
         _tokenService = tokenService;
-        _requestContextService = requestContextService;
-        _phoneNumberService = phoneNumberService;
+        _tokenEncoder = tokenEncoder;
+        _urlBuilder = urlBuilder;
+        _requestContext = requestContext;
+        _unitOfWork = unitOfWork;
+        _notificationEmailService = notificationEmailService;
     }
 
-    public async Task<UserResultDto> RegisterAsync(RegisterDTO registerDto)
+    public async Task<RegisterResultDTO> RegisterAsync(RegisterDTO registerDto)
     {
-        if (string.IsNullOrWhiteSpace(registerDto.CountryCode) || 
-            registerDto.CountryCode.Length != 2 || 
-            !registerDto.CountryCode.All(char.IsUpper))
-        {
-            throw new ArgumentException("Country code must be a valid ISO 3166-1 alpha-2 code (2 uppercase letters).");
-        }
-
-        bool isPhoneValid = _phoneNumberService.IsValid(registerDto.PhoneNumber, registerDto.CountryCode);
-        if (isPhoneValid == false)
-        {
-            throw new ArgumentException("Invalid phone number format for the specified country code.");
-        }
         
         var existingEmail = await _identityService.FindByEmailAsync(registerDto.Email);
 
         if (existingEmail != null)
         {
-            throw new ArgumentException("Email already exists.");
+            throw new BadRequestException("Email already exists.");
         }
 
-        var existingPhone = await _identityService.FindByPhoneNumberAsync(registerDto.PhoneNumber);
-        if (existingPhone != null)
+        var existingUsername = await _identityService.FindByUsernameAsync(registerDto.UserName);
+
+        if (existingUsername != null)
         {
-            throw new ArgumentException("Phone number already exists.");
+            throw new BadRequestException("Username already exists.");
         }
+
+        if (registerDto.ConfirmPassword != registerDto.Password)
+        {
+            throw new BadRequestException("Passwords do not match.");
+        }
+
 
         var user = new User();
         _mapper.Map(registerDto, user);
         user.CreatedAt = DateTime.UtcNow;
         user.UpdatedAt = DateTime.UtcNow;
+        user.EmailConfirmed = false;
         
         var result = await _identityService.CreateUserAsync(user, registerDto.Password);
+
         if (!result.Success)
         {
-            throw new ArgumentException(string.Join("; ", result.Errors));
+            throw new BadRequestException(string.Join("; ", result.Errors));
         }
 
-        await _identityService.AddToRoleAsync(user, "Customer");
 
-        var sessionDto = new AddUserSessionDTO
-        {
-            UserId = user.Id,
-            IpAddress = _requestContextService.GetIpAddress(),
-            UserAgent = _requestContextService.GetUserAgent(),
-            ExpiresAt = DateTime.UtcNow.AddDays(30) 
-        };
+        await _identityService.AddToRoleAsync(user, AppRoles.Customer.ToString());
 
-        await _userSessionService.AddSessionAsync(sessionDto);
-        
-        return new UserResultDto
+        await SendConfirmationEmailAsync(user);
+
+        return new RegisterResultDTO
         {
-            Success = true,
             Message = "User registered successfully.",
-            UserId = user.Id,
-            Name = $"{user.FirstName} {user.LastName}",
-            Email = user.Email,
-            Token = await _tokenService.GenerateTokenAsync(user),
-            RefreshToken = await _tokenService.GenerateRefreshTokenAsync()
         };
     }
 
-    public async Task<UserResultDto> LoginAsync(LoginDTO loginDto)
+    public async Task ConfirmEmailAsync(string userId, string token)
+    {
+        var user = await _identityService.FindByIdAsync(userId)
+                   ?? throw new NotFoundException("User not found.");
+
+        var decodedToken = _tokenEncoder.DecodeToken(token);
+ 
+        var result = await _identityService.ConfirmEmailAsync(user, decodedToken);
+
+        if (!result)
+            throw new BadRequestException("Email confirmation failed. The link may have expired.");
+    }
+
+    
+    public async Task<AuthResultDTO> LoginAsync(LoginDTO loginDto)
     {
         var user = await _identityService.FindByEmailAsync(loginDto.Email);
+
         if (user == null)
-        {
             throw new ArgumentException("Invalid email or password.");
+
+        if (!user.EmailConfirmed && !string.IsNullOrWhiteSpace(user.Email))
+        {
+            throw new BadRequestException(
+                "Please confirm your email address before logging in. " +
+                "Check your inbox for the confirmation link.");
         }
 
-        bool result = await _identityService.CheckPasswordAsync(user, loginDto.Password);
+        var valid = await _identityService.CheckPasswordAsync(user, loginDto.Password);
 
-        if (!result)        
-        {
+        if (!valid)
             throw new ArgumentException("Invalid email or password.");
-        }
 
-        var sessionDto = new AddUserSessionDTO
-        {
-            UserId = user.Id,
-            IpAddress = _requestContextService.GetIpAddress(),
-            UserAgent = _requestContextService.GetUserAgent(),
-            ExpiresAt = DateTime.UtcNow.AddDays(30)
-        };
-
-        await _userSessionService.AddSessionAsync(sessionDto);
-
-        return new UserResultDto
-        {
-            Success = true,
-            Message = "User logged in successfully.",
-            UserId = user.Id,
-            Name = $"{user.FirstName} {user.LastName}",
-            Email = user.Email,
-            Token = await _tokenService.GenerateTokenAsync(user),
-            RefreshToken = await _tokenService.GenerateRefreshTokenAsync()
-        };
+        return await CreateSessionAndBuildResultAsync(user);
     }
-
-    public async Task LogoutAsync(string userId, Guid sessionId)
+  
+    public async Task<AuthResultDTO> RefreshTokenAsync(string refreshToken)
     {
-        await _userSessionService.DeleteSessionAsync(sessionId);
+        var session = await _unitOfWork.UserSessionRepository.GetByRefreshTokenAsync(refreshToken)
+                      ?? throw new BadRequestException("Invalid refresh token.");
+ 
+        if (!session.IsValid)
+        {
+           
+            await RevokeAllAsync(session.UserId);
+            throw new BadRequestException(
+                "Refresh token has expired or been revoked. Please log in again.");
+        }
+ 
+        var user = await _identityService.FindByIdAsync(session.UserId)
+                   ?? throw new NotFoundException("User not found.");
+ 
+        var newRefreshToken = await _tokenService.GenerateRefreshTokenAsync();
+        session.IsActive        = false;
+        session.RevokedAt       = DateTime.UtcNow;
+        session.ReplacedByToken = newRefreshToken;
+        await _unitOfWork.UserSessionRepository.UpdateAsync(session);   
+ 
+
+        await _unitOfWork.SaveChangesAsync();
+ 
+        return await CreateSessionAndBuildResultAsync(user, newRefreshToken);
+    }
+    public async Task RevokeAsync(string refreshToken)
+    {
+        var session = await _unitOfWork.UserSessionRepository.GetByRefreshTokenAsync(refreshToken);
+
+        if (session is null || !session.IsActive)
+            return; 
+ 
+        session.IsActive  = false;
+        session.RevokedAt = DateTime.UtcNow;
+        await _unitOfWork.UserSessionRepository.UpdateAsync(session);
+        await _unitOfWork.SaveChangesAsync();
+    }
+    public async Task RevokeAllAsync(string userId)
+    {
+        var activeSessions = await _unitOfWork.UserSessionRepository.GetActiveSessionsAsync(userId);
+        var now = DateTime.UtcNow;
+ 
+        foreach (var session in activeSessions)
+        {
+            session.IsActive  = false;
+            session.RevokedAt = now;
+            await _unitOfWork.UserSessionRepository.UpdateAsync(session);
+        }
+ 
+        await _unitOfWork.SaveChangesAsync();
     }
 
+
+    private async Task<AuthResultDTO> CreateSessionAndBuildResultAsync(User user, string? refreshTokenOverride = null)
+    {
+        var accessToken  = await _tokenService.GenerateTokenAsync(user);
+        var refreshToken = refreshTokenOverride ?? await _tokenService.GenerateRefreshTokenAsync();
+        var roles = await _identityService.GetRolesAsync(user);
+ 
+        var session = new UserSession
+        {
+            UserId = user.Id,
+            RefreshToken = refreshToken,
+            RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(7),
+            IpAddress = _requestContext.GetIpAddress()  ?? "unknown",
+            UserAgent = _requestContext.GetUserAgent()  ?? "unknown",
+            DeviceInfo = ParseDeviceInfo(_requestContext.GetUserAgent()),
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+        };
+ 
+        await _unitOfWork.UserSessionRepository.AddAsync(session);
+        await _unitOfWork.SaveChangesAsync();  
+
+        return new AuthResultDTO
+        {
+            UserId = user.Id,
+            FullName = $"{user.FirstName} {user.LastName}",
+            PhoneNumber = user.PhoneNumber ?? string.Empty,
+            Email = user.Email ?? string.Empty,
+            AccessToken = accessToken,
+            AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(60),
+            RefreshToken = refreshToken,
+            RefreshTokenExpiresAt = session.RefreshTokenExpiresAt,
+            Roles = roles.ToList()
+        }; 
+
+    }
+
+    private async Task SendConfirmationEmailAsync(User user)
+    {
+        var rawToken = await _identityService.GenerateEmailConfirmationTokenAsync(user);
+        var encoded = _tokenEncoder.EncodeToken(rawToken);
+        var link = _urlBuilder.EmailConfirmation(user.Id, encoded);
+        await _notificationEmailService.SendEmailConfirmationAsync(user.Email!, $"{user.FirstName} {user.LastName}", link);
+    }
+
+    private static string ParseDeviceInfo(string? userAgent)
+    {
+        if (string.IsNullOrWhiteSpace(userAgent)) return "Unknown device";
+        if (userAgent.Contains("iPhone") || userAgent.Contains("iPad")) return "iOS device";
+        if (userAgent.Contains("Android"))  return "Android device";
+        if (userAgent.Contains("Windows"))  return "Windows PC";
+        if (userAgent.Contains("Macintosh")) return "Mac";
+        if (userAgent.Contains("Linux"))    return "Linux";
+        return "Unknown device";
+    }
+
+     
 
 
 }

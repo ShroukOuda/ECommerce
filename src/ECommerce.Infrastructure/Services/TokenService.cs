@@ -24,7 +24,7 @@ public class TokenService : ITokenService
         _userManager = userManager;
     }
 
-    public async Task<string> GenerateTokenAsync(User user, CancellationToken ct = default)
+    public async Task<string> GenerateTokenAsync(User user)
     {
         var jwtOptions = _jwtOptions.Value;
 
@@ -33,21 +33,17 @@ public class TokenService : ITokenService
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Email, user.Email),
             new Claim(ClaimTypes.Name, user.UserName),
-            new Claim(ClaimTypes.MobilePhone, user.PhoneNumber ?? string.Empty),
-            new Claim(ClaimTypes.Country, user.CountryCode ?? string.Empty),
-            new Claim(ClaimTypes.Role, "Customer"),
             new Claim("createdAt", user.CreatedAt.ToString("o")),
             new Claim("updatedAt", user.UpdatedAt.ToString("o")),
             new Claim(ClaimTypes.Name, user.FirstName ?? string.Empty),
             new Claim(ClaimTypes.Surname, user.LastName ?? string.Empty)
         };
         
-        var roles = await _userManager.GetRolesAsync(user);
-        foreach (var role in roles)
+        var userRoles = await _userManager.GetRolesAsync(user);
+        foreach (var role in userRoles)        
         {
             claims.Add(new Claim(ClaimTypes.Role, role));
         }
-
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SecretKey));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
@@ -62,7 +58,7 @@ public class TokenService : ITokenService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
     
-    public Task<string> GenerateRefreshTokenAsync(CancellationToken ct = default)
+    public Task<string> GenerateRefreshTokenAsync()
     {
         var randomNumber = new byte[32];
         using var rng = RandomNumberGenerator.Create();

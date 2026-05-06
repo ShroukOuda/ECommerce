@@ -1,11 +1,14 @@
-using ECommerce.Application.DTO.Authentication;
+using ECommerce.Application.DTO.Auth;
 
 namespace ECommerce.Application.Interfaces;
 
 public interface IAuthenticationService 
 {
-    public Task<UserResultDto> RegisterAsync(RegisterDTO registerDto);
-    public Task<UserResultDto> LoginAsync(LoginDTO loginDto);
-    public Task LogoutAsync(string userId, Guid sessionId);
+    public Task<RegisterResultDTO> RegisterAsync(RegisterDTO registerDto);
+    public Task ConfirmEmailAsync(string userId, string token);
+    public Task<AuthResultDTO> LoginAsync(LoginDTO loginDto);
+    public Task<AuthResultDTO> RefreshTokenAsync(string refreshToken);
+    public Task RevokeAsync(string refreshToken);
+    public Task RevokeAllAsync(string userId);
     
 }

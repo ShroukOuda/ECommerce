@@ -17,9 +17,14 @@ public class IdentityService : IIdentityService
         _signInManager = signInManager;
     }
 
+    public async Task<User?> FindByIdAsync(string userId)
+        => await _userManager.FindByIdAsync(userId);
     public async Task<User?> FindByEmailAsync(string email)
         => await _userManager.FindByEmailAsync(email);
-    
+
+    public async Task<User?> FindByUsernameAsync(string username)
+        => await _userManager.FindByNameAsync(username);
+
     public async Task<User?> FindByPhoneNumberAsync(string phoneNumber)
         => await _userManager.Users.FirstOrDefaultAsync(u => u.PhoneNumber == phoneNumber);
 
@@ -34,4 +39,18 @@ public class IdentityService : IIdentityService
 
     public async Task AddToRoleAsync(User user, string role)
         => await _userManager.AddToRoleAsync(user, role);
+
+    public async Task<IList<string>> GetRolesAsync(User user)
+        => await _userManager.GetRolesAsync(user);
+
+    public async Task<bool> ConfirmEmailAsync(User user, string token)
+    {      
+        var result = await _userManager.ConfirmEmailAsync(user, token);
+        return result.Succeeded;    
+    }
+
+    public async Task<string> GenerateEmailConfirmationTokenAsync(User user)
+    {
+        return await _userManager.GenerateEmailConfirmationTokenAsync(user);
+    }
 }

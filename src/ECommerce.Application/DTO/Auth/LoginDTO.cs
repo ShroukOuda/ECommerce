@@ -1,4 +1,4 @@
-namespace ECommerce.Application.DTO.Authentication;
+namespace ECommerce.Application.DTO.Auth;
 
 public class LoginDTO
 {

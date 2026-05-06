@@ -15,6 +15,7 @@ public interface IGenericRepository<T, TKey>
     
     
     Task UpdateAsync(T entity, CancellationToken ct = default);
+    Task UpdateRangeAsync(IEnumerable<T> entities, CancellationToken ct = default);
     Task DeleteAsync(T entity, CancellationToken ct = default);
     Task DeleteRangeAsync(IEnumerable<T> entities, CancellationToken ct = default);
     

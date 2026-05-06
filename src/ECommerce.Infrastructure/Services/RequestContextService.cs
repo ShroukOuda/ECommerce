@@ -13,6 +13,10 @@ public class RequestContextService : IRequestContextService
         _httpContextAccessor = httpContextAccessor;
     }
 
+    public string? GetUserId()
+        => _httpContextAccessor.HttpContext?.User.FindFirst(
+               System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
     public string GetIpAddress()
     {
         var context = _httpContextAccessor.HttpContext;

@@ -44,3 +44,5 @@ appsettings.Production.json
 *.pfx
 *.key
 
+# Secrets in local development (never commit)
+src/ECommerce.API/appsettings.Development.json

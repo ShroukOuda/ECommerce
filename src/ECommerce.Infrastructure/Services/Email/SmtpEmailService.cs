@@ -2,7 +2,7 @@ using System.Net;
 using System.Net.Mail;
 using Microsoft.Extensions.Options;
 using ECommerce.Infrastructure.Settings;
-using ECommerce.Application.Interfaces.Services;
+using ECommerce.Application.Interfaces.Email;
 
 namespace ECommerce.Infrastructure.Services.Email;
 public class SmtpEmailService : IEmailService

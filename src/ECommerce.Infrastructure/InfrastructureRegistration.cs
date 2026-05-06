@@ -16,10 +16,11 @@ using ECommerce.Infrastructure.Persistence.Seed;
 using ECommerce.Application.Interfaces.Seed;
 using ECommerce.Infrastructure.Persistence.Seed.Identity;
 using ECommerce.Infrastructure.Services.Email;
+using ECommerce.Application.Interfaces.Email;
 
 namespace ECommerce.Infrastructure;
 
-public static class InfrastructureRegisteration
+public static class InfrastructureRegistration
 {
     public static IServiceCollection InfrastructureConfiguratoin(this IServiceCollection services, IConfiguration configuration)
     {

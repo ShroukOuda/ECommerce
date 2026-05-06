@@ -1,4 +1,4 @@
-using ECommerce.Application.Interfaces.Services;
+using ECommerce.Application.Interfaces.Email;
 using ECommerce.Infrastructure.Settings;
 using Microsoft.Extensions.Options;
 

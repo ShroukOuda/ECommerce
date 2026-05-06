@@ -1,8 +1,8 @@
-using ECommerce.Application.Interfaces.Services;
+using ECommerce.Application.Interfaces.Email;
 using ECommerce.Infrastructure.Settings;
 using Microsoft.Extensions.Options;
 
-namespace Ecommerce.Infrastructure.Services;
+namespace ECommerce.Infrastructure.Services.Email;
 
 public class UrlBuilder : IUrlBuilder
 {

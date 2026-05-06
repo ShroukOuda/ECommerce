@@ -1,5 +1,6 @@
 using ECommerce.Application.DTO.Auth; 
 using ECommerce.Application.Interfaces.Services;
+using ECommerce.Application.Interfaces.Email;
 using ECommerce.Domain.Entities.User;
 using ECommerce.Domain.Enums.User;
 using ECommerce.Domain.Interfaces.Repositories;

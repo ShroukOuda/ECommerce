@@ -1,4 +1,4 @@
-namespace ECommerce.Application.Interfaces.Services;
+namespace ECommerce.Application.Interfaces.Email;
 
 public interface INotificationEmailService
 {

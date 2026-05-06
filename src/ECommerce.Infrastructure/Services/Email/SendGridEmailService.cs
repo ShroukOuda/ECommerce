@@ -2,7 +2,7 @@ using Microsoft.Extensions.Options;
 using SendGrid;
 using SendGrid.Helpers.Mail;
 using ECommerce.Infrastructure.Settings;
-using ECommerce.Application.Interfaces.Services;
+using ECommerce.Application.Interfaces.Email;
 
 
 namespace ECommerce.Infrastructure.Services.Email;

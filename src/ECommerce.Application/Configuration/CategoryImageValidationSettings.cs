@@ -1,4 +1,4 @@
-namespace ECommerce.Domain.Configuration;
+namespace ECommerce.Application.Configuration;
 
 public class CategoryImageValidationSettings
 {

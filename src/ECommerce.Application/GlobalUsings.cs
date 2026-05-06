@@ -5,7 +5,7 @@ global using ECommerce.Application.DTO.Category;
 global using ECommerce.Domain.Specifications;
 global using FluentValidation;
 global using ECommerce.Domain.Enums.Media;
-global using ECommerce.Domain.Configuration;
+global using ECommerce.Application.Configuration;
 global using Microsoft.Extensions.Logging;
 global using Microsoft.Extensions.Options;
 global using ECommerce.Domain.Exceptions;

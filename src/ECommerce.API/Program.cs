@@ -1,5 +1,5 @@
 using System.Text.Json.Serialization;
-using ECommerce.Domain.Configuration;
+using ECommerce.Application.Configuration;
 using ECommerce.API.Middleware;
 using ECommerce.Application;
 using ECommerce.Infrastructure;
@@ -50,7 +50,7 @@ public class Program
                 Scheme = "bearer",
                 BearerFormat = "JWT",
                 In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-                Description = "Paste the JWT token only (without 'Bearer '). Swagger UI will add the Bearer prefix automatically."
+                Description = "Enter JWT token like: Bearer {your token}"
             });
 
             options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement

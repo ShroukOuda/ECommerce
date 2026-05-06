@@ -9,13 +9,12 @@ public static class ApplicationRegistration
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
-        // Existing services
+
+        // Register application services
         services.AddScoped<IProductService, ProductService>();
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<IProductImageService, ProductImageService>();
         services.AddScoped<ICategoryImageService, CategoryImageService>();
-        
-        // New domain services
         services.AddScoped<IBrandService, BrandService>();
         services.AddScoped<IOrderService, OrderService>();
         services.AddScoped<ICartService, CartService>();

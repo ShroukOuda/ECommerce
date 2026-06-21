@@ -33,7 +33,10 @@ public class CategoryService : ICategoryService
 
     public async Task<Category> GetCategoryByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await _unitOfWork.CategoryRepository.GetByIdAsync(id, cancellationToken);
+        var category = await _unitOfWork.CategoryRepository.GetByIdAsync(id, cancellationToken);
+        if (category == null)
+            throw new KeyNotFoundException($"Category with ID {id} not found.");
+        return category;
     }
 
     public async Task AddCategoryAsync(AddCategoryDTO categoryDTO, CancellationToken cancellationToken = default)
@@ -48,6 +51,7 @@ public class CategoryService : ICategoryService
 
     public async Task UpdateCategoryAsync(UpdateCategoryDTO categoryDTO, CancellationToken cancellationToken = default)
     {
+        
         var validationResult = await _updateCategoryDtoValidator.ValidateAsync(categoryDTO);
         if (!validationResult.IsValid)
             throw new ValidationException(validationResult.Errors);

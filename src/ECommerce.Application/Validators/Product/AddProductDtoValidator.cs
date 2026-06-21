@@ -8,6 +8,8 @@ public class AddProductDtoValidator : ProductBaseValidator<AddProductDTO>
     {
         RuleFor(x => x.CategoryId)
             .NotEmpty().WithMessage("CategoryId is required.");
+        RuleFor(x => x.BrandId)
+            .NotEmpty().WithMessage("BrandId is required.");
         
     }
 }

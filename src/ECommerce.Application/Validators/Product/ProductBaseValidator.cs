@@ -15,9 +15,11 @@ public class ProductBaseValidator<T> : AbstractValidator<T> where T : ProductBas
         RuleFor(x => x.Description)
             .MaximumLength(1000).WithMessage("Description cannot exceed 1000 characters.");
 
-        RuleFor(x => x.Price)
-            .GreaterThan(0).WithMessage("Price must be greater than zero.");
+        RuleFor(x => x.BasePrice)
+            .GreaterThan(0).WithMessage("Base price must be greater than zero.");
 
+        RuleFor(x => x.SalePrice)
+            .GreaterThanOrEqualTo(x => x.BasePrice).WithMessage("Sale price cannot be less than base price.");
 
         RuleFor(x => x.StockQuantity)
             .GreaterThanOrEqualTo(0).WithMessage("Stock quantity cannot be negative.");

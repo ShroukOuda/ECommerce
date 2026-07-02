@@ -58,7 +58,7 @@ public class ProductRepository : GenericRepository<Product, Guid>, IProductRepos
           string[] searchTerms = productParams.Search.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
           query = query.Where(p => searchTerms.All(
              term => p.Name.ToLower().Contains(term.ToLower()) || 
-                     p.Description.ToLower().Contains(term.ToLower())
+                     (p.Description != null && p.Description.ToLower().Contains(term.ToLower()))
           ));
        }
 

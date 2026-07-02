@@ -1,8 +1,9 @@
 using System.Text.Json.Serialization;
+using ECommerce.Application.DTO.Pagination;
 
 namespace ECommerce.Application.DTO.Product;
 
-public class ProductParams
+public class ProductSpecParams : PaginationParams
 {
     public string? Search { get; set; }
     public Guid? CategoryId { get; set; }

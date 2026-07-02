@@ -19,6 +19,15 @@ where TKey : IEquatable<TKey>
     public bool IsPagingEnabled { get; private set; }
     public bool IsNoTrackingEnabled { get; private set; }
 
+
+    protected BaseSpecification()
+    {
+    }
+    protected BaseSpecification(Expression<Func<TEntity, bool>>? criteria = null)
+    {
+        Criteria = criteria;
+    }
+
     protected void AddCriteria(Expression<Func<TEntity, bool>> criteria)
         => Criteria = criteria;
 
@@ -31,12 +40,13 @@ where TKey : IEquatable<TKey>
     protected void AddOrderByDescending(Expression<Func<TEntity, object>> orderByDescExpression)
         => OrderByDescending = orderByDescExpression;
 
-    protected void ApplyPaging(int skip, int take)
+    protected void ApplyPaging(int PageSize, int PageNumber)
     {
-        Skip = skip;
-        Take = take;
+        Skip = PageSize * (PageNumber - 1);
+        Take = PageSize;
         IsPagingEnabled = true;
     }
+   
 
   
 }

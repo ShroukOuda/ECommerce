@@ -1,4 +1,4 @@
-using ECommerce.Domain.Entities.Cart;
+using ECommerce.Domain.Entities.Carts;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ECommerce.Infrastructure.Persistence.Configurations.Cart;

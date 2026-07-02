@@ -1,5 +1,5 @@
 using ECommerce.Application.DTO.Inventory;
-using ECommerce.Domain.Entities.Inventory;
+using ECommerce.Domain.Entities.Inventories;
 
 namespace ECommerce.Application.Mapping;
 

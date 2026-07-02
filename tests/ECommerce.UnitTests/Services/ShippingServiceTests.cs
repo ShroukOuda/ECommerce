@@ -2,7 +2,7 @@ using AutoMapper;
 using ECommerce.Application.DTO.Shipping;
 using ECommerce.Application.Interfaces;
 using ECommerce.Application.Services;
-using ECommerce.Domain.Entities.Shipping;
+using ECommerce.Domain.Entities.Shippings;
 using ECommerce.Domain.Interfaces.Repositories;
 using FluentAssertions;
 using FluentValidation;

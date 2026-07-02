@@ -1,4 +1,4 @@
-using ECommerce.Domain.Entities.User;
+using ECommerce.Domain.Entities.Users;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ECommerce.Infrastructure.Persistence.Configurations.User;

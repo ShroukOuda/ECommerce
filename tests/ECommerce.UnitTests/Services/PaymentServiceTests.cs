@@ -2,7 +2,7 @@ using AutoMapper;
 using ECommerce.Application.DTO.Payment;
 using ECommerce.Application.Interfaces;
 using ECommerce.Application.Services;
-using ECommerce.Domain.Entities.Payment;
+using ECommerce.Domain.Entities.Payments;
 using ECommerce.Domain.Interfaces.Repositories;
 using FluentAssertions;
 using FluentValidation;

@@ -2,7 +2,7 @@ using AutoMapper;
 using ECommerce.Application.DTO.Review;
 using ECommerce.Application.Interfaces;
 using ECommerce.Application.Services;
-using ECommerce.Domain.Entities.Review;
+using ECommerce.Domain.Entities.Reviews;
 using ECommerce.Domain.Interfaces.Repositories;
 using FluentAssertions;
 using FluentValidation;

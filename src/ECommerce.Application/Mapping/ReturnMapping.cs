@@ -1,5 +1,5 @@
 using ECommerce.Application.DTO.Return;
-using ECommerce.Domain.Entities.Return;
+using ECommerce.Domain.Entities.Returns;
 
 namespace ECommerce.Application.Mapping;
 

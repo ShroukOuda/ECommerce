@@ -2,9 +2,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ECommerce.Infrastructure.Persistence.Configurations.Shipping;
 
-public class ShippingConfiguration : IEntityTypeConfiguration<Domain.Entities.Shipping.Shipping>
+public class ShippingConfiguration : IEntityTypeConfiguration<Domain.Entities.Shippings.Shipping>
 {
-    public void Configure(EntityTypeBuilder<Domain.Entities.Shipping.Shipping> builder)
+    public void Configure(EntityTypeBuilder<Domain.Entities.Shippings.Shipping> builder)
     {
         builder.HasKey(s => s.Id);
 

@@ -1,6 +1,6 @@
 using ECommerce.Application.Interfaces;
 using ECommerce.Application.Interfaces.Services;
-using ECommerce.Domain.Entities.User;
+using ECommerce.Domain.Entities.Users;
 using Microsoft.AspNetCore.Identity;
 
 namespace ECommerce.Infrastructure.Services;

@@ -1,5 +1,5 @@
 using ECommerce.Application.DTO.Brand;
-using ECommerce.Domain.Entities.Brand;
+using ECommerce.Domain.Entities.Brands;
 using ECommerce.Domain.Interfaces.Repositories;
 
 namespace ECommerce.Application.Services;

@@ -3,7 +3,7 @@ using ECommerce.Application.DTO.Category;
 using ECommerce.Application.Interfaces;
 using ECommerce.Application.Interfaces.Services;
 using ECommerce.Application.Services;
-using ECommerce.Domain.Entities.Category;
+using ECommerce.Domain.Entities.Categories;
 using ECommerce.Domain.Interfaces.Repositories;
 using FluentAssertions;
 using FluentValidation;

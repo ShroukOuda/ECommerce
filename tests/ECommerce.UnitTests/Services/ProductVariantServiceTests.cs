@@ -2,7 +2,7 @@ using AutoMapper;
 using ECommerce.Application.DTO.ProductVariant;
 using ECommerce.Application.Interfaces;
 using ECommerce.Application.Services;
-using ECommerce.Domain.Entities.Product;
+using ECommerce.Domain.Entities.Products;
 using ECommerce.Domain.Interfaces.Repositories;
 using FluentAssertions;
 using FluentValidation;

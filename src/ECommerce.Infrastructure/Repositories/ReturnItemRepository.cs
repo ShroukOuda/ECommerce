@@ -1,4 +1,4 @@
-using ECommerce.Domain.Entities.Return;
+using ECommerce.Domain.Entities.Returns;
 
 namespace ECommerce.Infrastructure.Repositories;
 

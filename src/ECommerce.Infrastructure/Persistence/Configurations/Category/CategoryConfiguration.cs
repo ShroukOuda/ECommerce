@@ -2,9 +2,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ECommerce.Infrastructure.Persistence.Configurations.Category;
 
-public class CategoryConfiguration : IEntityTypeConfiguration<Domain.Entities.Category.Category>
+public class CategoryConfiguration : IEntityTypeConfiguration<Domain.Entities.Categories.Category>
 {
-    public void Configure(EntityTypeBuilder<Domain.Entities.Category.Category> builder)
+    public void Configure(EntityTypeBuilder<Domain.Entities.Categories.Category> builder)
     {
         builder.HasKey(c => c.Id);
 

@@ -1,4 +1,4 @@
-using ECommerce.Domain.Entities.Category;
+using ECommerce.Domain.Entities.Categories;
 using ECommerce.Domain.Enums.Media;
 
 namespace ECommerce.Domain.Interfaces.Repositories;

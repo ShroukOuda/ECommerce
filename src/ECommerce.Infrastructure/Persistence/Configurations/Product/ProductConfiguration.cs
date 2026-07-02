@@ -2,9 +2,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ECommerce.Infrastructure.Persistence.Configurations.Product;
 
-public class ProductConfiguration : IEntityTypeConfiguration<Domain.Entities.Product.Product>
+public class ProductConfiguration : IEntityTypeConfiguration<Domain.Entities.Products.Product>
 {
-    public void Configure(EntityTypeBuilder<Domain.Entities.Product.Product> builder)
+    public void Configure(EntityTypeBuilder<Domain.Entities.Products.Product> builder)
     {
         builder.HasKey(p => p.Id);
 

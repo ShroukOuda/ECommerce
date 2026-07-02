@@ -2,7 +2,7 @@ using AutoMapper;
 using ECommerce.Application.DTO.Coupon;
 using ECommerce.Application.Interfaces;
 using ECommerce.Application.Services;
-using ECommerce.Domain.Entities.Coupon;
+using ECommerce.Domain.Entities.Coupons;
 using ECommerce.Domain.Interfaces.Repositories;
 using FluentAssertions;
 using FluentValidation;

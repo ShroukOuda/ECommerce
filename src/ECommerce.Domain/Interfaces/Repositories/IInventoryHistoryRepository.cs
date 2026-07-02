@@ -1,4 +1,4 @@
-using ECommerce.Domain.Entities.Inventory;
+using ECommerce.Domain.Entities.Inventories;
 
 namespace ECommerce.Domain.Interfaces.Repositories;
 

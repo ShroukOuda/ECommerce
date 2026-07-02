@@ -2,9 +2,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ECommerce.Infrastructure.Persistence.Configurations.Wishlist;
 
-public class WishlistConfiguration : IEntityTypeConfiguration<Domain.Entities.Wishlist.Wishlist>
+public class WishlistConfiguration : IEntityTypeConfiguration<Domain.Entities.Wishlists.Wishlist>
 {
-    public void Configure(EntityTypeBuilder<Domain.Entities.Wishlist.Wishlist> builder)
+    public void Configure(EntityTypeBuilder<Domain.Entities.Wishlists.Wishlist> builder)
     {
         builder.HasKey(w => w.Id);
 

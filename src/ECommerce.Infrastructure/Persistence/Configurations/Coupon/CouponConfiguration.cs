@@ -2,9 +2,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ECommerce.Infrastructure.Persistence.Configurations.Coupon;
 
-public class CouponConfiguration : IEntityTypeConfiguration<Domain.Entities.Coupon.Coupon>
+public class CouponConfiguration : IEntityTypeConfiguration<Domain.Entities.Coupons.Coupon>
 {
-    public void Configure(EntityTypeBuilder<Domain.Entities.Coupon.Coupon> builder)
+    public void Configure(EntityTypeBuilder<Domain.Entities.Coupons.Coupon> builder)
     {
         builder.HasKey(c => c.Id);
 

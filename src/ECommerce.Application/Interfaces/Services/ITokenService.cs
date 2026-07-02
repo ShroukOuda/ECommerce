@@ -1,4 +1,4 @@
-using ECommerce.Domain.Entities.User;
+using ECommerce.Domain.Entities.Users;
 
 namespace ECommerce.Application.Interfaces.Services;
 

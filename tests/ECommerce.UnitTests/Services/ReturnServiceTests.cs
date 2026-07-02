@@ -2,7 +2,7 @@ using AutoMapper;
 using ECommerce.Application.DTO.Return;
 using ECommerce.Application.Interfaces;
 using ECommerce.Application.Services;
-using ECommerce.Domain.Entities.Return;
+using ECommerce.Domain.Entities.Returns;
 using ECommerce.Domain.Interfaces.Repositories;
 using FluentAssertions;
 using FluentValidation;

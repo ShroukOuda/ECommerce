@@ -2,9 +2,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ECommerce.Infrastructure.Persistence.Configurations.Cart;
 
-public class CartConfiguration : IEntityTypeConfiguration<Domain.Entities.Cart.Cart>
+public class CartConfiguration : IEntityTypeConfiguration<Domain.Entities.Carts.Cart>
 {
-    public void Configure(EntityTypeBuilder<Domain.Entities.Cart.Cart> builder)
+    public void Configure(EntityTypeBuilder<Domain.Entities.Carts.Cart> builder)
     {
         builder.HasKey(c => c.Id);
 

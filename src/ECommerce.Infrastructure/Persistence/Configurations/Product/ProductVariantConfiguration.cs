@@ -1,5 +1,5 @@
 using System.Text.Json;
-using ECommerce.Domain.Entities.Product;
+using ECommerce.Domain.Entities.Products;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

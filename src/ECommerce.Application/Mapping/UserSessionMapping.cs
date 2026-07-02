@@ -1,5 +1,5 @@
 using ECommerce.Application.DTO.UserSession;
-using ECommerce.Domain.Entities.User;
+using ECommerce.Domain.Entities.Users;
 
 namespace ECommerce.Application.Mapping;
 

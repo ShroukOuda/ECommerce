@@ -1,5 +1,5 @@
 using ECommerce.Application.DTO.Address;
-using ECommerce.Domain.Entities.User;
+using ECommerce.Domain.Entities.Users;
 
 namespace ECommerce.Application.Mapping;
 

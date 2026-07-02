@@ -1,5 +1,5 @@
 using ECommerce.Application.DTO.Order;
-using ECommerce.Domain.Entities.Order;
+using ECommerce.Domain.Entities.Orders;
 
 namespace ECommerce.Application.Mapping;
 

@@ -3,7 +3,7 @@ using ECommerce.Application.DTO.Product;
 using ECommerce.Application.Interfaces;
 using ECommerce.Application.Interfaces.Services;
 using ECommerce.Application.Services;
-using ECommerce.Domain.Entities.Product;
+using ECommerce.Domain.Entities.Products;
 using ECommerce.Domain.Interfaces.Repositories;
 using ECommerce.Domain.Specifications;
 using FluentAssertions;

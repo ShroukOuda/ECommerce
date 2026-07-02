@@ -1,5 +1,6 @@
 using ECommerce.Application.DTO.ProductImages;
 using ECommerce.Domain.Enums.Media;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ECommerce.API.Controllers;
 
@@ -31,6 +32,7 @@ public class ProductsController : BaseController
     }
 
     [HttpPost("add")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Add(AddProductDTO productDto)
     {
         await _productService.AddProductAsync(productDto);

@@ -1,4 +1,4 @@
-using ECommerce.Domain.Entities.Product;
+using ECommerce.Domain.Entities.Products;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ECommerce.Infrastructure.Persistence.Configurations.Product;

@@ -1,6 +1,6 @@
 using System.Text;
 using ECommerce.Application.Interfaces.Services;
-using ECommerce.Domain.Entities.User;
+using ECommerce.Domain.Entities.Users;
 using ECommerce.Infrastructure.Repositories;
 using Ecommerce.Infrastructure.Services;
 using ECommerce.Infrastructure.Services;

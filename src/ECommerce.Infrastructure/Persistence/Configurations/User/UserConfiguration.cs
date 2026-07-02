@@ -2,9 +2,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ECommerce.Infrastructure.Persistence.Configurations.User;
 
-public class UserConfiguration : IEntityTypeConfiguration<Domain.Entities.User.User>
+public class UserConfiguration : IEntityTypeConfiguration<Domain.Entities.Users.User>
 {
-    public void Configure(EntityTypeBuilder<Domain.Entities.User.User> builder)
+    public void Configure(EntityTypeBuilder<Domain.Entities.Users.User> builder)
     {
         builder.Property(u => u.FirstName)
             .IsRequired()

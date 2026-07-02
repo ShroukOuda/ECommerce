@@ -1,4 +1,4 @@
-using ECommerce.Domain.Entities.Shipping;
+using ECommerce.Domain.Entities.Shippings;
 
 namespace ECommerce.Infrastructure.Repositories;
 

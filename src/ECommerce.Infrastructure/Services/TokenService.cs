@@ -2,7 +2,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using ECommerce.Domain.Entities.User;
+using ECommerce.Domain.Entities.Users;
 using Microsoft.AspNetCore.Identity;
 using System.IdentityModel.Tokens.Jwt;
 using ECommerce.Application.Interfaces.Services;

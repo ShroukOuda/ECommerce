@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using ECommerce.Domain.Entities.User;
+using ECommerce.Domain.Entities.Users;
 using ECommerce.Domain.Enums.User;
 using ECommerce.Infrastructure.Settings;
 

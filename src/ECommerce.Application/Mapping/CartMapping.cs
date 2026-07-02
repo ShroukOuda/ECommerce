@@ -1,5 +1,5 @@
 using ECommerce.Application.DTO.Cart;
-using ECommerce.Domain.Entities.Cart;
+using ECommerce.Domain.Entities.Carts;
 
 namespace ECommerce.Application.Mapping;
 

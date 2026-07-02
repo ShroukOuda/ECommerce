@@ -1,4 +1,4 @@
-using ECommerce.Domain.Entities.Brand;
+using ECommerce.Domain.Entities.Brands;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ECommerce.Infrastructure.Persistence.Configurations.Brand;

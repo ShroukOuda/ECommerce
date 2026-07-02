@@ -1,4 +1,4 @@
-using ECommerce.Domain.Entities.Category;
+using ECommerce.Domain.Entities.Categories;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ECommerce.Infrastructure.Persistence.Configurations.Category;

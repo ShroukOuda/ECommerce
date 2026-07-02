@@ -2,7 +2,7 @@ using AutoMapper;
 using ECommerce.Application.DTO.Cart;
 using ECommerce.Application.Interfaces;
 using ECommerce.Application.Services;
-using ECommerce.Domain.Entities.Cart;
+using ECommerce.Domain.Entities.Carts;
 using ECommerce.Domain.Interfaces.Repositories;
 using FluentAssertions;
 using FluentValidation;

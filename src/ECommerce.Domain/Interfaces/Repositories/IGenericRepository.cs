@@ -2,29 +2,29 @@ using System.Linq.Expressions;
 
 namespace ECommerce.Domain.Interfaces.Repositories;
 
-public interface IGenericRepository<T, TKey> 
-    where T : class
+public interface IGenericRepository<TEntity, TKey> 
+    where TEntity : BaseEntity<TKey> 
     where TKey : IEquatable<TKey>
 {
-    Task<IReadOnlyList<T>> GetAllAsync(CancellationToken ct = default);
-    Task<T?> GetByIdAsync(TKey id, CancellationToken ct = default);
+    Task<IReadOnlyList<TEntity>> GetAllAsync(CancellationToken ct = default);
+    Task<TEntity?> GetByIdAsync(TKey id, CancellationToken ct = default);
     
     
-    Task AddAsync(T entity, CancellationToken ct = default);
-    Task AddRangeAsync(IEnumerable<T> entities, CancellationToken ct = default);
+    Task AddAsync(TEntity entity, CancellationToken ct = default);
+    Task AddRangeAsync(IEnumerable<TEntity> entities, CancellationToken ct = default);
     
     
-    Task UpdateAsync(T entity, CancellationToken ct = default);
-    Task UpdateRangeAsync(IEnumerable<T> entities, CancellationToken ct = default);
-    Task DeleteAsync(T entity, CancellationToken ct = default);
-    Task DeleteRangeAsync(IEnumerable<T> entities, CancellationToken ct = default);
+    void UpdateAsync(TEntity entity, CancellationToken ct = default);
+    void UpdateRangeAsync(IEnumerable<TEntity> entities, CancellationToken ct = default);
+    void DeleteAsync(TEntity entity, CancellationToken ct = default);
+    void DeleteRangeAsync(IEnumerable<TEntity> entities, CancellationToken ct = default);
     
     
     Task<bool> ExistsAsync(
-        Expression<Func<T, bool>> predicate,
+        Expression<Func<TEntity, bool>> predicate,
         CancellationToken ct = default);
     Task<int> CountAsync(
-        Expression<Func<T, bool>>? predicate = null,
+        Expression<Func<TEntity, bool>>? predicate = null,
         CancellationToken ct = default);
     
     

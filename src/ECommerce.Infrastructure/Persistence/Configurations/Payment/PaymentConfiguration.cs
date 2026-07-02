@@ -2,9 +2,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ECommerce.Infrastructure.Persistence.Configurations.Payment;
 
-public class PaymentConfiguration : IEntityTypeConfiguration<Domain.Entities.Payment.Payment>
+public class PaymentConfiguration : IEntityTypeConfiguration<Domain.Entities.Payments.Payment>
 {
-    public void Configure(EntityTypeBuilder<Domain.Entities.Payment.Payment> builder)
+    public void Configure(EntityTypeBuilder<Domain.Entities.Payments.Payment> builder)
     {
         builder.HasKey(p => p.Id);
 

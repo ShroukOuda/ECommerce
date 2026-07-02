@@ -1,5 +1,5 @@
 using ECommerce.Application.DTO.Brand;
-using ECommerce.Domain.Entities.Brand;
+using ECommerce.Domain.Entities.Brands;
 
 namespace ECommerce.Application.Mapping;
 

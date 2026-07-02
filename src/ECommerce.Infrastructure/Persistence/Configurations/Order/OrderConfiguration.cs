@@ -2,9 +2,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ECommerce.Infrastructure.Persistence.Configurations.Order;
 
-public class OrderConfigurations : IEntityTypeConfiguration<Domain.Entities.Order.Order>
+public class OrderConfigurations : IEntityTypeConfiguration<Domain.Entities.Orders.Order>
 {
-    public void Configure(EntityTypeBuilder<Domain.Entities.Order.Order> builder)
+    public void Configure(EntityTypeBuilder<Domain.Entities.Orders.Order> builder)
     {
         builder.HasKey(o => o.Id);
 

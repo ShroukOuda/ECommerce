@@ -1,4 +1,4 @@
-using ECommerce.Domain.Entities.Cart;
+using ECommerce.Domain.Entities.Carts;
 
 namespace ECommerce.Domain.Interfaces.Repositories;
 

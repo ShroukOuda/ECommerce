@@ -1,6 +1,6 @@
-# ECommerce API
+# MarketNest API
 
-> A production-ready e-commerce REST API built with ASP.NET Core 9, Clean Architecture, and SQL Server.
+> A multi-vendor marketplace API for customers and sellers, built with ASP.NET Core 9, Clean Architecture, and SQL Server.
 
 ## Quick Start
 

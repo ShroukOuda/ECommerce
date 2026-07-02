@@ -23,10 +23,10 @@ public class AuthenticationController : BaseController
     [HttpGet("confirm-email")]
     [AllowAnonymous]
     public async Task<IActionResult> ConfirmEmail(
-        [FromQuery] string userId,
+        [FromQuery] string email,
         [FromQuery] string token)
     {
-        await _authService.ConfirmEmailAsync(userId, token);
+        await _authService.ConfirmEmailAsync(email, token);
         return Ok(new ResponseAPI(200, "Email confirmed successfully"));
     }
 
@@ -40,7 +40,30 @@ public class AuthenticationController : BaseController
 
     }
 
-   
+    [HttpPost("forgot-password")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ForgotPassword([FromBody] string email)
+    {
+        await _authService.ForgotPasswordAsync(email);
+        return Ok(new ResponseAPI(200, "Password reset email sent successfully"));
+    }
+
+    [HttpPost("reset-password")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDTO dto)
+    {
+        await _authService.ResetPasswordAsync(dto);
+        return Ok(new ResponseAPI(200, "Password reset successfully"));
+    }
+
+    [HttpPost("resend-confirmation-email")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ResendConfirmationEmail([FromBody] string email)
+    {
+        await _authService.ResendConfirmationEmailAsync(email);
+        return Ok(new ResponseAPI(200, "Confirmation email resent successfully"));
+    }
+
     [HttpPost("refresh")]
     [AllowAnonymous]
     public async Task<IActionResult> Refresh([FromBody] string refreshToken)

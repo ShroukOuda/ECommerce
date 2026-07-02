@@ -82,13 +82,13 @@ public class AuthenticationService : IAuthenticationService
 
         return new RegisterResultDTO
         {
-            Message = "User registered successfully.",
+            Message = "Registration successful. Please check your email to confirm your account.",
         };
     }
 
-    public async Task ConfirmEmailAsync(string userId, string token)
+    public async Task ConfirmEmailAsync(string email, string token)
     {
-        var user = await _identityService.FindByIdAsync(userId)
+        var user = await _identityService.FindByEmailAsync(email)
                    ?? throw new NotFoundException("User not found.");
 
         var decodedToken = _tokenEncoder.DecodeToken(token);
@@ -97,6 +97,17 @@ public class AuthenticationService : IAuthenticationService
 
         if (!result)
             throw new BadRequestException("Email confirmation failed. The link may have expired.");
+    }
+
+    public async Task ResendConfirmationEmailAsync(string email)
+    {
+        var user = await _identityService.FindByEmailAsync(email)
+                   ?? throw new NotFoundException("User not found.");
+
+        if (user.EmailConfirmed)
+            throw new BadRequestException("Email is already confirmed.");
+
+        await SendConfirmationEmailAsync(user);
     }
 
     
@@ -120,6 +131,39 @@ public class AuthenticationService : IAuthenticationService
             throw new ArgumentException("Invalid email or password.");
 
         return await CreateSessionAndBuildResultAsync(user);
+    }
+
+    public async Task ForgotPasswordAsync(string email)
+    {
+        var user = await _identityService.FindByEmailAsync(email);
+
+        if (user == null)
+            throw new NotFoundException("User not found.");
+
+        var rawToken = await _identityService.GeneratePasswordResetTokenAsync(user);
+        var encoded = _tokenEncoder.EncodeToken(rawToken);
+        var link = _urlBuilder.PasswordReset(user.Email!, encoded);
+
+        await _notificationEmailService.SendPasswordResetAsync(
+            user.Email!, $"{user.FirstName} {user.LastName}", link);
+    }
+
+    public async Task ResetPasswordAsync(ResetPasswordDTO resetPasswordDTO)
+    {
+        var user = await _identityService.FindByEmailAsync(resetPasswordDTO.Email);
+
+        if (user == null)
+            throw new NotFoundException("User not found.");
+
+        var decodedToken = _tokenEncoder.DecodeToken(resetPasswordDTO.Token);
+
+        if (resetPasswordDTO.NewPassword != resetPasswordDTO.ConfirmPassword)
+            throw new BadRequestException("Passwords do not match.");
+
+        var result = await _identityService.ResetPasswordAsync(user, decodedToken, resetPasswordDTO.NewPassword);
+
+        if (!result)
+            throw new BadRequestException("Password reset failed. The link may have expired or the password does not meet the requirements.");
     }
   
     public async Task<AuthResultDTO> RefreshTokenAsync(string refreshToken)
@@ -217,9 +261,11 @@ public class AuthenticationService : IAuthenticationService
     {
         var rawToken = await _identityService.GenerateEmailConfirmationTokenAsync(user);
         var encoded = _tokenEncoder.EncodeToken(rawToken);
-        var link = _urlBuilder.EmailConfirmation(user.Id, encoded);
+        var link = _urlBuilder.EmailConfirmation(user.Email!, encoded);
         await _notificationEmailService.SendEmailConfirmationAsync(user.Email!, $"{user.FirstName} {user.LastName}", link);
     }
+
+
 
     private static string ParseDeviceInfo(string? userAgent)
     {

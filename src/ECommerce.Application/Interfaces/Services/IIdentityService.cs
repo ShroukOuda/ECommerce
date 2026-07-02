@@ -14,4 +14,6 @@ public interface IIdentityService
     Task<IList<string>> GetRolesAsync(User user);
     Task<bool> ConfirmEmailAsync(User user, string token);  
     Task<string> GenerateEmailConfirmationTokenAsync(User user);
+    Task<string> GeneratePasswordResetTokenAsync(User user);
+    Task<bool> ResetPasswordAsync(User user, string token, string newPassword);
 }

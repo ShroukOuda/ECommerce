@@ -53,4 +53,15 @@ public class IdentityService : IIdentityService
     {
         return await _userManager.GenerateEmailConfirmationTokenAsync(user);
     }
+
+    public async Task<string> GeneratePasswordResetTokenAsync(User user)
+    {
+        return await _userManager.GeneratePasswordResetTokenAsync(user);
+    }
+
+    public async Task<bool> ResetPasswordAsync(User user, string token, string newPassword)
+    {
+        var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
+        return result.Succeeded;
+    }
 }

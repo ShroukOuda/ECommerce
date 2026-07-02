@@ -11,14 +11,14 @@ public class UrlBuilder : IUrlBuilder
     public UrlBuilder(IOptions<AppSettings> appSettings)
         => _appSettings = appSettings.Value;
  
-    public string EmailConfirmation(string userId, string rawToken) =>
+    public string EmailConfirmation(string email, string rawToken) =>
         Build("/api/Authentication/confirm-email",
-            ("userId", userId),
+            ("email", email),
             ("token", rawToken));   
  
-    public string PasswordReset(string userId, string rawToken) =>
+    public string PasswordReset(string email, string rawToken) =>
         Build("/api/Authentication/reset-password",
-            ("userId", userId),
+            ("email", email),
             ("token", rawToken));
  
     public string OrderDetails(string orderId) =>

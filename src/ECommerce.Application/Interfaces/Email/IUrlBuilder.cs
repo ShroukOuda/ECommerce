@@ -2,9 +2,9 @@ namespace ECommerce.Application.Interfaces.Email;
 
 public interface IUrlBuilder
 {
-    string EmailConfirmation(string userId, string rawToken);
+    string EmailConfirmation(string email, string rawToken);
  
-    string PasswordReset(string userId, string rawToken);
+    string PasswordReset(string email, string rawToken);
  
     string OrderDetails(string orderId);
  

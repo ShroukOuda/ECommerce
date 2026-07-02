@@ -61,14 +61,15 @@ public sealed class NotificationEmailService : INotificationEmailService
         Validate(toEmail, toName);
 
         var body = $"""
-            <h2>Welcome to ECommerce, {Safe(toName)}!</h2>
+                        <h2>Welcome to MarketNest, {Safe(toName)}!</h2>
             <p>We're glad you're here. Here's what you can do right now:</p>
             <ul>
-              <li>Browse thousands of products</li>
-              <li>Save items to your wishlist</li>
-              <li>Track your orders in real time</li>
+                            <li>Discover products from trusted vendors</li>
+                            <li>Build your customer profile and wishlist</li>
+                            <li>Track orders and status updates in one place</li>
+                            <li>Manage storefronts, products, and fulfillment</li>
             </ul>
-            {_templateBuilder.Button("Start shopping", _urlBuilder.ProductList())}
+                        {_templateBuilder.Button("Explore the marketplace", _urlBuilder.ProductList())}
             """;
 
        

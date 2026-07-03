@@ -46,6 +46,11 @@ where TKey : IEquatable<TKey>
         Take = PageSize;
         IsPagingEnabled = true;
     }
+
+    protected void AsNoTracking()
+    {
+        IsNoTrackingEnabled = true;
+    }
    
 
   

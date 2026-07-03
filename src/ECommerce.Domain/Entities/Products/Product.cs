@@ -35,8 +35,8 @@ public class Product : BaseEntity<Guid>
     
     
     // Navigation Properties
-    public virtual Categories.Category? Category { get; set; } 
-    public virtual Brands.Brand? Brand { get; set; }
+    public virtual Categories.Category Category { get; set; } = null!;
+    public virtual Brands.Brand Brand { get; set; } = null!;
     public virtual ICollection<ProductImage> ProductImages { get; set; } = new List<ProductImage>();
     public virtual ICollection<ProductVariant> ProductVariants { get; set; } = new List<ProductVariant>();
     public virtual ICollection<ProductOption> ProductOptions { get; set; } = new List<ProductOption>();

@@ -7,7 +7,7 @@ public class CategoryImage : BaseImage
 {
     //FK
     public Guid CategoryId { get; set; }   
-    public ImageSubType? SubType { get; set; }
+    public ImageSubType SubType { get; set; }
     
     //Navigation Properties
     public virtual Category? Category { get; set; }

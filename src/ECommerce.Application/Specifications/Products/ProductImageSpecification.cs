@@ -10,7 +10,7 @@ public class ProductImageSpecification : BaseSpecification<ProductImage, Guid>
         : base(i => i.ProductId == productId)
     {
 
-       AddOrderByDescending(i => i.SortOrder);
+       AddOrderBy(i => i.SortOrder);
        AsNoTracking();
 
     }

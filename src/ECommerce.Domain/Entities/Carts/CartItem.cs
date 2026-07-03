@@ -13,8 +13,8 @@ public class CartItem : BaseEntity<Guid>
     public Guid VariantId { get; set; }
     
     //Navigation Properties
-    public virtual Cart? Cart { get; set; }
-    public virtual Products.Product? Product { get; set; }
-    public virtual Products.ProductVariant? ProductVariant { get; set; }
+    public virtual Cart Cart { get; set; } = null!;
+    public virtual Products.Product Product { get; set; } = null!;
+    public virtual Products.ProductVariant ProductVariant { get; set; } = null!;
     public virtual ICollection<CartItemOption> CartItemOptions { get; set; } = new List<CartItemOption>();
 }

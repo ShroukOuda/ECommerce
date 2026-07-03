@@ -14,7 +14,7 @@ public class ProductReview : BaseEntity<Guid>
     //FK
     public Guid ProductId { get; set; }
     public Guid OrderId { get; set; }
-    public string UserId { get; set; }
+    public string UserId { get; set; } = null!;
     
     //Navigation Properties
     public virtual ICollection<ReviewHelpfulVote> ReviewHelpfulVotes { get; set; } = new List<ReviewHelpfulVote>();

@@ -1,6 +1,7 @@
 using ECommerce.Application.DTO.Brand;
 using ECommerce.Domain.Entities.Brands;
 using ECommerce.Domain.Interfaces.Repositories;
+using ECommerce.Application.Specifications.Brands;
 
 namespace ECommerce.Application.Services;
 
@@ -25,13 +26,13 @@ public class BrandService : IBrandService
 
     public async Task<IEnumerable<GetBrandDTO>> GetAllBrandsAsync(CancellationToken ct = default)
     {
-        var brands = await _unitOfWork.BrandRepository.GetAllAsync(ct);
+        var brands = await _unitOfWork.GetRepository<Brand, Guid>().GetAllAsync(ct);
         return _mapper.Map<IEnumerable<GetBrandDTO>>(brands);
     }
 
     public async Task<GetBrandDTO> GetBrandByIdAsync(Guid id, CancellationToken ct = default)
     {
-        var brand = await _unitOfWork.BrandRepository.GetByIdAsync(id, ct);
+        var brand = await _unitOfWork.GetRepository<Brand, Guid>().GetByIdAsync(id, ct);
         if (brand is null) throw new KeyNotFoundException($"Brand with ID {id} not found.");
         return _mapper.Map<GetBrandDTO>(brand);
     }
@@ -42,7 +43,7 @@ public class BrandService : IBrandService
         if (!result.IsValid) throw new ValidationException(result.Errors);
         var brand = _mapper.Map<Brand>(dto);
         brand.Slug = dto.Name.ToLower().Replace(" ", "-");
-        await _unitOfWork.BrandRepository.AddAsync(brand, ct);
+        await _unitOfWork.GetRepository<Brand, Guid>().AddAsync(brand, ct);
         await _unitOfWork.SaveChangesAsync(ct);
     }
 
@@ -52,16 +53,17 @@ public class BrandService : IBrandService
         if (!result.IsValid) throw new ValidationException(result.Errors);
         var brand = _mapper.Map<Brand>(dto);
         brand.Slug = dto.Name.ToLower().Replace(" ", "-");
-        await _unitOfWork.BrandRepository.UpdateAsync(brand, ct);
+        _unitOfWork.GetRepository<Brand, Guid>().Update(brand, ct);
         await _unitOfWork.SaveChangesAsync(ct);
     }
 
     public async Task DeleteBrandAsync(Guid id, CancellationToken ct = default)
     {
-        bool exists = await _unitOfWork.BrandRepository.ExistsAsync(b => b.Id == id, ct);
+        var spec = new BrandSpecification(id);
+        bool exists = await _unitOfWork.GetRepository<Brand, Guid>().ExistsAsync(spec);
         if (!exists) throw new KeyNotFoundException($"Brand with ID {id} not found.");
         var stub = new Brand { Id = id };
-        await _unitOfWork.BrandRepository.DeleteAsync(stub, ct);
+        _unitOfWork.GetRepository<Brand, Guid>().Delete(stub, ct);
         await _unitOfWork.SaveChangesAsync(ct);
     }
 }

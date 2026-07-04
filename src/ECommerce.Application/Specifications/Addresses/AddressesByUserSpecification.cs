@@ -1,7 +1,7 @@
 using ECommerce.Domain.Specifications.Base;
 using ECommerce.Domain.Entities.Users;
 
-namespace ECommerce.Application.Specifications.Users;
+namespace ECommerce.Application.Specifications.Addresses;
 
 public class AddressesByUserSpecification : BaseSpecification<Address, Guid>
 {

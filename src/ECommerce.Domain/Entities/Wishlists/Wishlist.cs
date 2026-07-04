@@ -9,9 +9,9 @@ public class Wishlist : BaseEntity<Guid>
     
     //FK
     public Guid ProductId { get; set; }
-    public string UserId { get; set; }
+    public string UserId { get; set; } = null!;
     
     //Navigation Properties
-    public virtual Products.Product? Product { get; set; }
-    public virtual Users.User? User { get; set; }
+    public virtual Products.Product Product { get; set; } = null!;
+    public virtual Users.User User { get; set; } = null!;
 }

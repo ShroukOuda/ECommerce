@@ -20,10 +20,10 @@ public class ReturnRequest : BaseEntity<Guid>
     
     //FK
     public Guid OrderId { get; set; }
-    public string UserId { get; set; }
+    public string UserId { get; set; } = null!;
     
     //Navigation Properties
-    public virtual Orders.Order? Order { get; set; }
-    public virtual Users.User? User { get; set; }
+    public virtual Orders.Order Order { get; set; } = null!;
+    public virtual Users.User User { get; set; } = null!;
     public virtual ICollection<ReturnItem> ReturnItems { get; set; } = new List<ReturnItem>();
 }

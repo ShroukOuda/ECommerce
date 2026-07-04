@@ -15,14 +15,14 @@ public class Order : BaseEntity<Guid>
     public decimal TotalAmount { get; set; }
     
     //FK
-    public string UserId { get; set; }
+    public string UserId { get; set; } = null!;
     public Guid? ShippingAddressId { get; set; }
     public Guid? BillingAddressId { get; set; }
     
     //Navigation Properties
-    public virtual Users.User? User { get; set; }
-    public virtual Users.Address? ShippingAddress { get; set; }
-    public virtual Users.Address? BillingAddress { get; set; }
+    public virtual Users.User User { get; set; } = null!;
+    public virtual Users.Address ShippingAddress { get; set; } = null!;
+    public virtual Users.Address BillingAddress { get; set; } = null!;
     public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
     public virtual ICollection<OrderStatusHistory> OrderStatusHistories { get; set; } = new List<OrderStatusHistory>();
     public virtual ICollection<Reviews.ProductReview> ProductReviews { get; set; } = new List<Reviews.ProductReview>();

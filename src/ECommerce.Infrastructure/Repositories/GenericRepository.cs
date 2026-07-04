@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using ECommerce.Domain.Common;
+using ECommerce.Domain.Specifications.Base;
 
 namespace ECommerce.Infrastructure.Repositories;
 
@@ -22,6 +23,14 @@ public class GenericRepository<TEntity, TKey> : IGenericRepository<TEntity, TKey
             .ToListAsync(ct);
     }
 
+    public async Task<IReadOnlyList<TEntity>> GetAllAsync(BaseSpecification<TEntity, TKey> specification)
+    {
+        return await SpecificationEvaluator
+        .GetQuery(_dbSet, specification).ToListAsync();
+    }
+
+
+
     public virtual async Task<TEntity?> GetByIdAsync(
         TKey id,
         CancellationToken ct = default)
@@ -29,6 +38,11 @@ public class GenericRepository<TEntity, TKey> : IGenericRepository<TEntity, TKey
         return await _dbSet.FindAsync(new object[] { id },  ct);
     }
     
+    public async Task<TEntity?> GetFirstOrDefaultAsync(BaseSpecification<TEntity, TKey> specification)
+    {
+        return await SpecificationEvaluator.GetQuery(_dbSet, specification).FirstOrDefaultAsync();
+    }
+
     public virtual async Task AddAsync(TEntity entity, CancellationToken ct = default)
     {
         if (entity is BaseEntity<TKey> baseEntity)
@@ -96,19 +110,17 @@ public class GenericRepository<TEntity, TKey> : IGenericRepository<TEntity, TKey
     }
     
     public virtual async Task<bool> ExistsAsync(
-        Expression<Func<TEntity, bool>> predicate,
+        BaseSpecification<TEntity, TKey> specification,
         CancellationToken ct = default)
     {
-        return await _dbSet.AnyAsync(predicate, ct);
+        return await SpecificationEvaluator.GetQuery(_dbSet, specification).AnyAsync();
     }
     
     public virtual async Task<int> CountAsync(
-        Expression<Func<TEntity, bool>>? predicate = null,
+        BaseSpecification<TEntity, TKey> specification,
         CancellationToken ct = default)
     {
-        return predicate == null
-            ? await _dbSet.CountAsync(ct)
-            : await _dbSet.CountAsync(predicate, ct);
+        return await SpecificationEvaluator.GetQuery(_dbSet, specification).CountAsync();
     }
    
   

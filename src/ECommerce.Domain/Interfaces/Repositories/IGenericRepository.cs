@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using ECommerce.Domain.Specifications.Base;
 
 namespace ECommerce.Domain.Interfaces.Repositories;
 
@@ -7,8 +8,9 @@ public interface IGenericRepository<TEntity, TKey>
     where TKey : IEquatable<TKey>
 {
     Task<IReadOnlyList<TEntity>> GetAllAsync(CancellationToken ct = default);
+    Task<IReadOnlyList<TEntity>> GetAllAsync(BaseSpecification<TEntity, TKey> specification);
     Task<TEntity?> GetByIdAsync(TKey id, CancellationToken ct = default);
-    
+    Task<TEntity?> GetFirstOrDefaultAsync(BaseSpecification<TEntity, TKey> specification);
     
     Task AddAsync(TEntity entity, CancellationToken ct = default);
     Task AddRangeAsync(IEnumerable<TEntity> entities, CancellationToken ct = default);
@@ -21,10 +23,10 @@ public interface IGenericRepository<TEntity, TKey>
     
     
     Task<bool> ExistsAsync(
-        Expression<Func<TEntity, bool>> predicate,
+        BaseSpecification<TEntity, TKey> specification,
         CancellationToken ct = default);
     Task<int> CountAsync(
-        Expression<Func<TEntity, bool>>? predicate = null,
+        BaseSpecification<TEntity, TKey> specification,
         CancellationToken ct = default);
     
     

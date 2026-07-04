@@ -69,7 +69,7 @@ public class GenericRepository<TEntity, TKey> : IGenericRepository<TEntity, TKey
 
         await _dbSet.AddRangeAsync(entities, ct);
     }
-    public virtual void UpdateAsync(TEntity entity, CancellationToken ct = default)
+    public virtual void Update(TEntity entity, CancellationToken ct = default)
     {
         if (entity is BaseEntity<TKey> baseEntity)
         {
@@ -79,7 +79,7 @@ public class GenericRepository<TEntity, TKey> : IGenericRepository<TEntity, TKey
         _dbSet.Update(entity);
     }
     
-    public virtual void UpdateRangeAsync(
+    public virtual void UpdateRange(
         IEnumerable<TEntity> entities,
         CancellationToken ct = default)
     {
@@ -96,12 +96,12 @@ public class GenericRepository<TEntity, TKey> : IGenericRepository<TEntity, TKey
         
     }
     
-    public virtual void DeleteAsync(TEntity entity, CancellationToken ct = default)
+    public virtual void Delete(TEntity entity, CancellationToken ct = default)
     {
         _dbSet.Remove(entity);
        
     }
-    public virtual void DeleteRangeAsync(
+    public virtual void DeleteRange(
         IEnumerable<TEntity> entities,
         CancellationToken ct = default)
     {

@@ -16,10 +16,10 @@ public interface IGenericRepository<TEntity, TKey>
     Task AddRangeAsync(IEnumerable<TEntity> entities, CancellationToken ct = default);
     
     
-    void UpdateAsync(TEntity entity, CancellationToken ct = default);
-    void UpdateRangeAsync(IEnumerable<TEntity> entities, CancellationToken ct = default);
-    void DeleteAsync(TEntity entity, CancellationToken ct = default);
-    void DeleteRangeAsync(IEnumerable<TEntity> entities, CancellationToken ct = default);
+    void Update(TEntity entity, CancellationToken ct = default);
+    void UpdateRange(IEnumerable<TEntity> entities, CancellationToken ct = default);
+    void Delete(TEntity entity, CancellationToken ct = default);
+    void DeleteRange(IEnumerable<TEntity> entities, CancellationToken ct = default);
     
     
     Task<bool> ExistsAsync(

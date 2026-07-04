@@ -14,8 +14,8 @@ where TKey : IEquatable<TKey>
     public Expression<Func<TEntity, object>>? OrderBy { get; private set; }
     public Expression<Func<TEntity, object>>? OrderByDescending { get; private set; }
 
-    public int? Take { get; private set; }
-    public int? Skip { get; private set; }
+    public int Take { get; private set; }
+    public int Skip { get; private set; }
     public bool IsPagingEnabled { get; private set; }
     public bool IsNoTrackingEnabled { get; private set; }
 

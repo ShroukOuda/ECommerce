@@ -1,6 +1,8 @@
 using ECommerce.Application.DTO.Cart;
 using ECommerce.Domain.Entities.Carts;
 using ECommerce.Domain.Interfaces.Repositories;
+using ECommerce.Application.Specifications.Carts;
+using ECommerce.Domain.Enums.Cart;
 
 namespace ECommerce.Application.Services;
 
@@ -19,14 +21,16 @@ public class CartService : ICartService
 
     public async Task<GetCartDTO> GetCartByIdAsync(Guid id, CancellationToken ct = default)
     {
-        var cart = await _unitOfWork.CartRepository.GetCartWithItemsAsync(id, ct);
+        var spec = new CartDetailsSpecification(id);
+        var cart = await _unitOfWork.GetRepository<Cart, Guid>().GetFirstOrDefaultAsync(spec);
         if (cart is null) throw new KeyNotFoundException($"Cart with ID {id} not found.");
         return _mapper.Map<GetCartDTO>(cart);
     }
 
     public async Task<GetCartDTO?> GetActiveCartByUserIdAsync(string userId, CancellationToken ct = default)
     {
-        var cart = await _unitOfWork.CartRepository.GetActiveCartByUserIdAsync(userId, ct);
+        var activeCartSpec = new CartByUserSpecification(userId, CartStatus.Active);
+        var cart = await _unitOfWork.GetRepository<Cart, Guid>().GetFirstOrDefaultAsync(activeCartSpec);
         return cart is null ? null : _mapper.Map<GetCartDTO>(cart);
     }
 
@@ -36,33 +40,37 @@ public class CartService : ICartService
         if (!result.IsValid) throw new ValidationException(result.Errors);
 
         var item = _mapper.Map<CartItem>(dto);
-        await _unitOfWork.CartItemRepository.AddAsync(item, ct);
+        await _unitOfWork.GetRepository<CartItem, Guid>().AddAsync(item, ct);
         await _unitOfWork.SaveChangesAsync(ct);
     }
 
     public async Task UpdateCartItemAsync(UpdateCartItemDTO dto, CancellationToken ct = default)
     {
-        var item = await _unitOfWork.CartItemRepository.GetByIdAsync(dto.Id, ct);
+        var item = await _unitOfWork.GetRepository<CartItem, Guid>().GetByIdAsync(dto.Id, ct);
         if (item is null) throw new KeyNotFoundException($"Cart item with ID {dto.Id} not found.");
         item.Quantity = dto.Quantity;
-        await _unitOfWork.CartItemRepository.UpdateAsync(item, ct);
+        _unitOfWork.GetRepository<CartItem, Guid>().Update(item, ct);
         await _unitOfWork.SaveChangesAsync(ct);
     }
 
     public async Task RemoveCartItemAsync(Guid cartItemId, CancellationToken ct = default)
     {
-        var item = await _unitOfWork.CartItemRepository.GetByIdAsync(cartItemId, ct);
-        if (item is null) throw new KeyNotFoundException($"Cart item with ID {cartItemId} not found.");
-        await _unitOfWork.CartItemRepository.DeleteAsync(item, ct);
+        var spec = new CartItemSpecification(cartItemId);
+        bool exist = await _unitOfWork.GetRepository<CartItem, Guid>().ExistsAsync(spec);
+        if (!exist) throw new KeyNotFoundException($"Cart item with ID {cartItemId} not found.");
+        var stub = new CartItem { Id = cartItemId };
+        _unitOfWork.GetRepository<CartItem, Guid>().Delete(stub, ct);
         await _unitOfWork.SaveChangesAsync(ct);
     }
 
     public async Task ClearCartAsync(Guid cartId, CancellationToken ct = default)
     {
-        var items = await _unitOfWork.CartItemRepository.GetItemsByCartIdAsync(cartId, ct);
+        var spec = new CartItemsByCartSpecification(cartId);
+        var items = await _unitOfWork.GetRepository<CartItem, Guid>().GetAllAsync(spec);
+
         if (items.Any())
         {
-            await _unitOfWork.CartItemRepository.DeleteRangeAsync(items, ct);
+            _unitOfWork.GetRepository<CartItem, Guid>().DeleteRange(items, ct);
             await _unitOfWork.SaveChangesAsync(ct);
         }
     }

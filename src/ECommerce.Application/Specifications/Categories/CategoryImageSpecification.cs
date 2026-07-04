@@ -5,6 +5,12 @@ namespace ECommerce.Application.Specifications.Categories;
 
 public class CategoryImageSpecification : BaseSpecification<CategoryImage, Guid>
 {
+
+    public CategoryImageSpecification(Guid categoryId, Guid imageId)
+        : base(ci => ci.CategoryId == categoryId && ci.Id == imageId)
+    {
+        AsNoTracking();
+    }
     public CategoryImageSpecification(Guid categoryId)
         : base(ci => ci.CategoryId == categoryId)
     {

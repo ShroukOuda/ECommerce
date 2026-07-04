@@ -10,7 +10,6 @@ public class CartByUserSpecification : BaseSpecification<Cart, Guid>
         : base(c => c.UserId == userId)
     {
         AddInclude(c => c.CartItems);
-        AddOrderByDescending(c => c.CreatedAt);
         AsNoTracking();
     }
 
@@ -18,7 +17,6 @@ public class CartByUserSpecification : BaseSpecification<Cart, Guid>
         : base(c => c.UserId == userId && c.Status == status)
     {
         AddInclude(c => c.CartItems);
-        AddOrderByDescending(c => c.CreatedAt);
         AsNoTracking();
     }
 

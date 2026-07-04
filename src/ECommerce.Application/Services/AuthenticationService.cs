@@ -4,6 +4,7 @@ using ECommerce.Application.Interfaces.Email;
 using ECommerce.Domain.Entities.Users;
 using ECommerce.Domain.Enums.User;
 using ECommerce.Domain.Interfaces.Repositories;
+using ECommerce.Application.Specifications.UserSessions;
 
 
 namespace ECommerce.Application.Services;
@@ -168,7 +169,8 @@ public class AuthenticationService : IAuthenticationService
   
     public async Task<AuthResultDTO> RefreshTokenAsync(string refreshToken)
     {
-        var session = await _unitOfWork.UserSessionRepository.GetByRefreshTokenAsync(refreshToken)
+        var spec = new SessionByRefreshTokenSpecification(refreshToken);
+        var session = await _unitOfWork.GetRepository<UserSession, Guid>().GetFirstOrDefaultAsync(spec)
                       ?? throw new BadRequestException("Invalid refresh token.");
  
         if (!session.IsValid)
@@ -183,10 +185,13 @@ public class AuthenticationService : IAuthenticationService
                    ?? throw new NotFoundException("User not found.");
  
         var newRefreshToken = await _tokenService.GenerateRefreshTokenAsync();
-        session.IsActive        = false;
-        session.RevokedAt       = DateTime.UtcNow;
+
+
+        session.IsActive = false;
+        session.RevokedAt = DateTime.UtcNow;
         session.ReplacedByToken = newRefreshToken;
-        await _unitOfWork.UserSessionRepository.UpdateAsync(session);   
+
+        _unitOfWork.GetRepository<UserSession, Guid>().Update(session); 
  
 
         await _unitOfWork.SaveChangesAsync();
@@ -195,26 +200,28 @@ public class AuthenticationService : IAuthenticationService
     }
     public async Task RevokeAsync(string refreshToken)
     {
-        var session = await _unitOfWork.UserSessionRepository.GetByRefreshTokenAsync(refreshToken);
+        var spec = new SessionByRefreshTokenSpecification(refreshToken);
+        var session = await _unitOfWork.GetRepository<UserSession, Guid>().GetFirstOrDefaultAsync(spec);
 
         if (session is null || !session.IsActive)
             return; 
  
         session.IsActive  = false;
         session.RevokedAt = DateTime.UtcNow;
-        await _unitOfWork.UserSessionRepository.UpdateAsync(session);
+        _unitOfWork.GetRepository<UserSession, Guid>().Update(session);
         await _unitOfWork.SaveChangesAsync();
     }
     public async Task RevokeAllAsync(string userId)
     {
-        var activeSessions = await _unitOfWork.UserSessionRepository.GetActiveSessionsAsync(userId);
+        var activeSessionsSpec = new SessionsByUserSpecification(userId, true);
+        var activeSessions = await _unitOfWork.GetRepository<UserSession, Guid>().GetAllAsync(activeSessionsSpec);
         var now = DateTime.UtcNow;
  
         foreach (var session in activeSessions)
         {
             session.IsActive  = false;
             session.RevokedAt = now;
-            await _unitOfWork.UserSessionRepository.UpdateAsync(session);
+            _unitOfWork.GetRepository<UserSession, Guid>().Update(session);
         }
  
         await _unitOfWork.SaveChangesAsync();
@@ -239,7 +246,7 @@ public class AuthenticationService : IAuthenticationService
             CreatedAt = DateTime.UtcNow,
         };
  
-        await _unitOfWork.UserSessionRepository.AddAsync(session);
+        await _unitOfWork.GetRepository<UserSession, Guid>().AddAsync(session);
         await _unitOfWork.SaveChangesAsync();  
 
         return new AuthResultDTO

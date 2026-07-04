@@ -2,6 +2,7 @@ using ECommerce.Application.DTO.CategoryImages;
 using ECommerce.Application.Interfaces.Services;
 using ECommerce.Domain.Entities.Categories;
 using ECommerce.Domain.Interfaces.Repositories;
+using ECommerce.Application.Specifications.Categories;
 
 namespace ECommerce.Application.Services;
 
@@ -34,14 +35,17 @@ public class CategoryImageService : ICategoryImageService
         UploadCategoryImageDTO dto,
         CancellationToken ct = default)
     {
-    
-        if (!await _unitOfWork.CategoryRepository.ExistsAsync(c => c.Id == dto.CategoryId, ct))
+        var categorySpec = new CategorySpecification(dto.CategoryId);
+
+        var exist = await _unitOfWork.GetRepository<Category, Guid>().ExistsAsync(categorySpec);
+        if (!exist)
             throw new NotFoundException($"Category {dto.CategoryId} not found");
         
-        var existingPhoto = await _unitOfWork.CategoryImageRepository
-            .GetCategoryImageBySubTypeAsync(dto.CategoryId, dto.SubType, ct);
+        var categoryImageSpec = new CategoryImageSpecification(dto.CategoryId, dto.SubType);
+        var existingPhoto = await _unitOfWork.GetRepository<CategoryImage, Guid>()
+            .ExistsAsync(categoryImageSpec);
 
-        if (existingPhoto != null)
+        if (existingPhoto)
         {
             throw new Exception($"{dto.SubType} already exists for Category {dto.CategoryId} " +
                                 $"If you want to replace it, please delete the existing one first.");
@@ -69,7 +73,7 @@ public class CategoryImageService : ICategoryImageService
                 UploadedAt = DateTime.UtcNow
             };
 
-            await _unitOfWork.CategoryImageRepository.AddAsync(image, ct);
+            await _unitOfWork.GetRepository<CategoryImage, Guid>().AddAsync(image, ct);
             await _unitOfWork.SaveChangesAsync(ct);
 
             _logger.LogInformation("{SubType} uploaded for Category {CategoryId}",
@@ -88,8 +92,9 @@ public class CategoryImageService : ICategoryImageService
         Guid categoryId,
         CancellationToken ct = default)
     {
-        var image = await _unitOfWork.CategoryImageRepository
-            .GetImagesByCategoryIdAsync(categoryId, ct);
+        var spec = new CategoryImageSpecification(categoryId);
+        var image = await _unitOfWork.GetRepository<CategoryImage, Guid>()
+            .GetAllAsync(spec);
         return _mapper.Map<IReadOnlyList<CategoryImageDTO>>(image);
     }
     
@@ -98,8 +103,9 @@ public class CategoryImageService : ICategoryImageService
         ImageSubType subType,
         CancellationToken ct = default)
     {
-        var image = await _unitOfWork.CategoryImageRepository
-            .GetCategoryImageBySubTypeAsync(categoryId, subType, ct);
+        var spec = new CategoryImageSpecification(categoryId, subType);
+        var image = await _unitOfWork.GetRepository<CategoryImage, Guid>()
+            .GetFirstOrDefaultAsync(spec);
         return image == null ? null : _mapper.Map<CategoryImageDTO>(image);
     }
     
@@ -108,12 +114,17 @@ public class CategoryImageService : ICategoryImageService
         Guid imageId,
         CancellationToken ct = default)
     {
-        var image = await _unitOfWork.CategoryImageRepository.GetByIdAsync(imageId, ct);
-        if (image == null || image.CategoryId != categoryId)
+        var spec = new CategoryImageSpecification(categoryId, imageId);
+        var exist = await _unitOfWork.GetRepository<CategoryImage, Guid>().ExistsAsync(spec);
+        if (!exist)
             throw new NotFoundException($"Image {imageId} not found for category {categoryId}");
+
+        var image = await _unitOfWork.GetRepository<CategoryImage, Guid>().GetByIdAsync(imageId, ct) 
+        ?? throw new NotFoundException($"Image {imageId} not found for category {categoryId}");
+
         
         await _imageService.DeleteAsync(image.ImageUrl, ct);
-        await _unitOfWork.CategoryImageRepository.DeleteAsync(image, ct);
+        _unitOfWork.GetRepository<CategoryImage, Guid>().Delete(image, ct);
         await _unitOfWork.SaveChangesAsync(ct);
 
         _logger.LogInformation("Category Image {ImageId} deleted from category {CategoryId}", 
@@ -124,8 +135,9 @@ public class CategoryImageService : ICategoryImageService
         Guid categoryId,
         CancellationToken ct = default)
     {
-        var images = await _unitOfWork.CategoryImageRepository
-            .GetImagesByCategoryIdAsync(categoryId, ct);
+        var spec = new CategoryImageSpecification(categoryId);
+        var images = await _unitOfWork.GetRepository<CategoryImage, Guid>()
+            .GetAllAsync(spec);
         
         if (!images.Any()) return;
 
@@ -135,7 +147,7 @@ public class CategoryImageService : ICategoryImageService
         var folderPath = $"categories/{categoryId}";
         await _imageService.DeleteFolderAsync(folderPath, ct);
 
-        await _unitOfWork.CategoryImageRepository.DeleteRangeAsync(images, ct);
+        _unitOfWork.GetRepository<CategoryImage, Guid>().DeleteRange(images, ct);
         await _unitOfWork.SaveChangesAsync(ct);
 
         _logger.LogInformation("All {Count} photos deleted for Category {CategoryId}", 
@@ -146,7 +158,7 @@ public class CategoryImageService : ICategoryImageService
         Guid imageId,
         CancellationToken ct = default)
     {
-        var image = await _unitOfWork.CategoryImageRepository.GetByIdAsync(imageId, ct);
+        var image = await _unitOfWork.GetRepository<CategoryImage, Guid>().GetByIdAsync(imageId, ct);
         if (image == null) return null;
         return _mapper.Map<CategoryImageDTO>(image);
     }

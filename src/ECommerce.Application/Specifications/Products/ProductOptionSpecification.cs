@@ -6,13 +6,10 @@ namespace ECommerce.Application.Specifications.Products;
 
 public class ProductOptionSpecification : BaseSpecification<ProductOption, Guid>
 {
-    public ProductOptionSpecification(Guid productId)
-        : base(po => po.ProductId == productId)
+    public ProductOptionSpecification(Guid productOptionId)
+        : base(po => po.Id == productOptionId)
     {
-        AddInclude(po => po.ProductOptionValues);
-        AddOrderBy(po => po.SortOrder);
         AsNoTracking();
     }
-
     
 }

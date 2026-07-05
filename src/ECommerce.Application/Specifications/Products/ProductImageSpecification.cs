@@ -15,6 +15,12 @@ public class ProductImageSpecification : BaseSpecification<ProductImage, Guid>
 
     }
 
+    public ProductImageSpecification(Guid productId, Guid imageId)
+        : base(i => i.ProductId == productId && i.Id == imageId)
+    {
+        AsNoTracking();
+    }
+
     public ProductImageSpecification(Guid productId, bool isMain)
         : base(i => i.ProductId == productId && i.IsMain == isMain)
     {

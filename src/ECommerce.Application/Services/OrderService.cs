@@ -1,6 +1,8 @@
 using ECommerce.Application.DTO.Order;
 using ECommerce.Domain.Entities.Orders;
 using ECommerce.Domain.Interfaces.Repositories;
+using ECommerce.Application.Specifications.Orders;
+using ECommerce.Domain.Enums.Order;
 
 namespace ECommerce.Application.Services;
 
@@ -19,20 +21,22 @@ public class OrderService : IOrderService
 
     public async Task<IEnumerable<GetOrderDTO>> GetAllOrdersAsync(CancellationToken ct = default)
     {
-        var orders = await _unitOfWork.OrderRepository.GetAllAsync(ct);
+        var orders = await _unitOfWork.GetRepository<Order, Guid>().GetAllAsync(ct);
         return _mapper.Map<IEnumerable<GetOrderDTO>>(orders);
     }
 
     public async Task<GetOrderDTO> GetOrderByIdAsync(Guid id, CancellationToken ct = default)
     {
-        var order = await _unitOfWork.OrderRepository.GetOrderWithDetailsAsync(id, ct);
+        var spec = new OrderDetailsSpecification(id);
+        var order = await _unitOfWork.GetRepository<Order, Guid>().GetFirstOrDefaultAsync(spec);
         if (order is null) throw new KeyNotFoundException($"Order with ID {id} not found.");
         return _mapper.Map<GetOrderDTO>(order);
     }
 
     public async Task<IEnumerable<GetOrderDTO>> GetOrdersByUserIdAsync(string userId, CancellationToken ct = default)
     {
-        var orders = await _unitOfWork.OrderRepository.GetOrdersByUserIdAsync(userId, ct);
+        var spec = new OrdersByUserSpecification(userId);
+        var orders = await _unitOfWork.GetRepository<Order, Guid>().GetAllAsync(spec);
         return _mapper.Map<IEnumerable<GetOrderDTO>>(orders);
     }
 
@@ -50,31 +54,32 @@ public class OrderService : IOrderService
             BillingAddressId = dto.BillingAddressId
         };
 
-        await _unitOfWork.OrderRepository.AddAsync(order, ct);
+        await _unitOfWork.GetRepository<Order, Guid>().AddAsync(order, ct);
         await _unitOfWork.SaveChangesAsync(ct);
         return _mapper.Map<GetOrderDTO>(order);
     }
 
     public async Task UpdateOrderStatusAsync(UpdateOrderStatusDTO dto, CancellationToken ct = default)
     {
-        var order = await _unitOfWork.OrderRepository.GetByIdAsync(dto.Id, ct);
+        var order = await _unitOfWork.GetRepository<Order, Guid>().GetByIdAsync(dto.Id, ct);
         if (order is null) throw new KeyNotFoundException($"Order with ID {dto.Id} not found.");
 
-        if (Enum.TryParse<ECommerce.Domain.Enums.Orders.OrderStatus>(dto.OrderStatus, out var status))
+        if (Enum.TryParse<OrderStatus>(dto.OrderStatus, out var status))
             order.OrderStatus = status;
         else
             throw new ArgumentException($"Invalid order status: {dto.OrderStatus}");
 
-        await _unitOfWork.OrderRepository.UpdateAsync(order, ct);
+        _unitOfWork.GetRepository<Order, Guid>().Update(order, ct);
         await _unitOfWork.SaveChangesAsync(ct);
     }
 
     public async Task DeleteOrderAsync(Guid id, CancellationToken ct = default)
     {
-        bool exists = await _unitOfWork.OrderRepository.ExistsAsync(o => o.Id == id, ct);
+        var spec = new OrderSpecification(id);
+        bool exists = await _unitOfWork.GetRepository<Order, Guid>().ExistsAsync(spec);
         if (!exists) throw new KeyNotFoundException($"Order with ID {id} not found.");
         var stub = new Order { Id = id };
-        await _unitOfWork.OrderRepository.DeleteAsync(stub, ct);
+        _unitOfWork.GetRepository<Order, Guid>().Delete(stub, ct);
         await _unitOfWork.SaveChangesAsync(ct);
     }
 }

@@ -1,6 +1,7 @@
 using ECommerce.Application.Interfaces.Services;
 using ECommerce.Domain.Entities.Products;
 using ECommerce.Domain.Interfaces.Repositories;
+using ECommerce.Application.Specifications.Products;
 
 namespace ECommerce.Application.Services;
 
@@ -28,21 +29,24 @@ public class ProductService : IProductService
     }
     
     
-    public async Task<(IEnumerable<GetProductDTO> Products, int TotalCount)> GetAllProductsAsync(
-        ProductParams productParams,
+    public async Task<PaginatedResult<GetProductDTO>> GetAllProductsAsync(
+        ProductSpecParams productSpecParams,
         CancellationToken ct = default)
     {
-        var products = await _unitOfWork.ProductRepository.GetAllAsync(productParams, ct);
-        if (products.Products is null)
+        var productSpec = new ProductSpecification(productSpecParams);
+        var products = await _unitOfWork.GetRepository<Product, Guid>().GetAllAsync(productSpec);
+        if (products is null)
             throw new KeyNotFoundException("Products not found");
         
-        var mapProducts = _mapper.Map<IEnumerable<GetProductDTO>>(products.Products);
-        return (mapProducts, products.TotalCount);
+        var productCountSpec = new ProductCountSpecification(productSpecParams);
+        var totalItems = await _unitOfWork.GetRepository<Product, Guid>().CountAsync(productCountSpec);
+        var mapProducts = _mapper.Map<IReadOnlyList<GetProductDTO>>(products);
+        return new PaginatedResult<GetProductDTO>(mapProducts, totalItems, productSpecParams.PageNumber, productSpecParams.PageSize);
     }
 
     public async Task<GetProductDTO> GetProductByIdAsync(Guid id, CancellationToken ct = default)
     {
-        var product = await _unitOfWork.ProductRepository.GetByIdAsync(id, ct);
+        var product = await _unitOfWork.GetRepository<Product, Guid>().GetByIdAsync(id, ct);
         if (product is null)
             throw new KeyNotFoundException($"Product with ID {id} not found");
         return _mapper.Map<GetProductDTO>(product);
@@ -57,7 +61,7 @@ public class ProductService : IProductService
         try
         {
             product = _mapper.Map<Product>(productDTO);
-            await _unitOfWork.ProductRepository.AddAsync(product);
+            await _unitOfWork.GetRepository<Product, Guid>().AddAsync(product);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             
         }
@@ -76,13 +80,14 @@ public class ProductService : IProductService
         
         try
         {
-            bool exists = await _unitOfWork.ProductRepository.ExistsAsync(p => p.Id == productDto.Id, ct);
+            var spec = new ProductSpecification(productDto.Id);
+            bool exists = await _unitOfWork.GetRepository<Product, Guid>().ExistsAsync(spec);
             
             if (!exists)
                 throw new KeyNotFoundException($"Product with ID {productDto.Id} not found.");
 
             var product = _mapper.Map<Product>(productDto);
-            await _unitOfWork.ProductRepository.UpdateAsync(product, ct);
+            _unitOfWork.GetRepository<Product, Guid>().Update(product, ct);
             await _unitOfWork.SaveChangesAsync(ct);
             
         }
@@ -94,21 +99,23 @@ public class ProductService : IProductService
     }
     public async Task DeleteProductAsync(Guid id, CancellationToken ct = default)
     {
-        bool exists = await _unitOfWork.ProductRepository.ExistsAsync(p => p.Id == id, ct);
+        var spec = new ProductSpecification(id);
+        bool exists = await _unitOfWork.GetRepository<Product, Guid>().ExistsAsync(spec);
         if (!exists)
             throw new KeyNotFoundException($"Product with ID {id} not found.");
 
         var folderPath = $"products/{id}";
         await _fileStorageService.DeleteFolderAsync(folderPath, ct);
         Product productStub = new Product { Id = id };
-        await _unitOfWork.ProductRepository.DeleteAsync(productStub, ct);
+        _unitOfWork.GetRepository<Product, Guid>().Delete(productStub, ct);
         await _unitOfWork.SaveChangesAsync(ct);
     
     }
     
     public async Task<int> GetTotalCountAsync()
     {
-        int totalCount = await _unitOfWork.ProductRepository.CountAsync();
+        var spec = new ProductCountSpecification();
+        int totalCount = await _unitOfWork.GetRepository<Product, Guid>().CountAsync(spec);
         return totalCount;
     }
     

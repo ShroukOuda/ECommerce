@@ -1,6 +1,7 @@
 using ECommerce.Application.Interfaces.Services;
 using ECommerce.Domain.Entities.Categories;
 using ECommerce.Domain.Interfaces.Repositories;
+using ECommerce.Application.Specifications.Categories;
 
 namespace ECommerce.Application.Services;
 
@@ -28,12 +29,12 @@ public class CategoryService : ICategoryService
 
     public async Task<IEnumerable<Category>> GetAllCategoriesAsync()
     {
-        return await _unitOfWork.CategoryRepository.GetAllAsync();
+        return await _unitOfWork.GetRepository<Category, Guid>().GetAllAsync();
     }
 
     public async Task<Category> GetCategoryByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var category = await _unitOfWork.CategoryRepository.GetByIdAsync(id, cancellationToken);
+        var category = await _unitOfWork.GetRepository<Category, Guid>().GetByIdAsync(id, cancellationToken);
         if (category == null)
             throw new KeyNotFoundException($"Category with ID {id} not found.");
         return category;
@@ -45,7 +46,7 @@ public class CategoryService : ICategoryService
         if (!validationResult.IsValid)
             throw new ValidationException(validationResult.Errors);
         var category = _mapper.Map<Category>(categoryDTO);
-        await _unitOfWork.CategoryRepository.AddAsync(category);
+        await _unitOfWork.GetRepository<Category, Guid>().AddAsync(category);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
@@ -57,20 +58,21 @@ public class CategoryService : ICategoryService
             throw new ValidationException(validationResult.Errors);
         
         var category = _mapper.Map<Category>(categoryDTO);
-        await _unitOfWork.CategoryRepository.UpdateAsync(category);
+        _unitOfWork.GetRepository<Category, Guid>().Update(category);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
     public async Task DeleteCategoryAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        bool exist = await _unitOfWork.CategoryRepository.ExistsAsync(c => c.Id == id, cancellationToken);
+        var spec = new CategorySpecification(id);
+        bool exist = await _unitOfWork.GetRepository<Category, Guid>().ExistsAsync(spec);
         if (!exist)
             throw new KeyNotFoundException($"Category with ID {id} not found.");
 
         var folderPath = $"categories/{id}";
         await _fileStorageService.DeleteFolderAsync(folderPath, cancellationToken);
         Category categoryStub = new Category { Id = id };
-        await _unitOfWork.CategoryRepository.DeleteAsync(categoryStub, cancellationToken);
+        _unitOfWork.GetRepository<Category, Guid>().Delete(categoryStub, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

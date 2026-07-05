@@ -1,6 +1,9 @@
 using ECommerce.Application.DTO.Payment;
 using ECommerce.Domain.Entities.Payments;
 using ECommerce.Domain.Interfaces.Repositories;
+using ECommerce.Application.Specifications.Payments;
+using ECommerce.Domain.Enums.Payment;
+
 
 namespace ECommerce.Application.Services;
 
@@ -19,13 +22,14 @@ public class PaymentService : IPaymentService
 
     public async Task<IEnumerable<GetPaymentDTO>> GetPaymentsByOrderIdAsync(Guid orderId, CancellationToken ct = default)
     {
-        var payments = await _unitOfWork.PaymentRepository.GetPaymentsByOrderIdAsync(orderId, ct);
+        var spec = new PaymentsByOrderSpecification(orderId);
+        var payments = await _unitOfWork.GetRepository<Payment, Guid>().GetAllAsync(spec);
         return _mapper.Map<IEnumerable<GetPaymentDTO>>(payments);
     }
 
     public async Task<GetPaymentDTO> GetPaymentByIdAsync(Guid id, CancellationToken ct = default)
     {
-        var payment = await _unitOfWork.PaymentRepository.GetByIdAsync(id, ct);
+        var payment = await _unitOfWork.GetRepository<Payment, Guid>().GetByIdAsync(id, ct);
         if (payment is null) throw new KeyNotFoundException($"Payment with ID {id} not found.");
         return _mapper.Map<GetPaymentDTO>(payment);
     }
@@ -42,12 +46,12 @@ public class PaymentService : IPaymentService
             Amount = dto.Amount,
             Currency = dto.Currency,
             TransactionId = $"TXN-{Guid.NewGuid().ToString()[..8].ToUpper()}",
-            Method = Enum.Parse<ECommerce.Domain.Enums.Payments.PaymentMethod>(dto.Method),
-            Status = ECommerce.Domain.Enums.Payments.PaymentStatus.Pending,
+            Method = Enum.Parse<PaymentMethod>(dto.Method),
+            Status = PaymentStatus.Pending,
             PaidAt = DateTime.UtcNow
         };
 
-        await _unitOfWork.PaymentRepository.AddAsync(payment, ct);
+        await _unitOfWork.GetRepository<Payment, Guid>().AddAsync(payment, ct);
         await _unitOfWork.SaveChangesAsync(ct);
         return _mapper.Map<GetPaymentDTO>(payment);
     }

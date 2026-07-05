@@ -1,6 +1,7 @@
 using ECommerce.Application.DTO.Inventory;
 using ECommerce.Domain.Entities.Inventories;
 using ECommerce.Domain.Interfaces.Repositories;
+using ECommerce.Application.Specifications.Inventories;
 
 namespace ECommerce.Application.Services;
 
@@ -19,7 +20,8 @@ public class InventoryService : IInventoryService
 
     public async Task<IEnumerable<GetInventoryHistoryDTO>> GetHistoryByProductIdAsync(Guid productId, CancellationToken ct = default)
     {
-        var history = await _unitOfWork.InventoryHistoryRepository.GetHistoryByProductIdAsync(productId, ct);
+        var spec = new InventoryHistoryByProductSpecification(productId);
+        var history = await _unitOfWork.GetRepository<InventoryHistory, Guid>().GetAllAsync(spec);
         return _mapper.Map<IEnumerable<GetInventoryHistoryDTO>>(history);
     }
 
@@ -28,7 +30,7 @@ public class InventoryService : IInventoryService
         var result = await _createValidator.ValidateAsync(dto, ct);
         if (!result.IsValid) throw new ValidationException(result.Errors);
         var history = _mapper.Map<InventoryHistory>(dto);
-        await _unitOfWork.InventoryHistoryRepository.AddAsync(history, ct);
+        await _unitOfWork.GetRepository<InventoryHistory, Guid>().AddAsync(history, ct);
         await _unitOfWork.SaveChangesAsync(ct);
     }
 }

@@ -46,5 +46,10 @@ public class ProductSpecification : BaseSpecification<Product, Guid>
 
     }
 
+    public ProductSpecification(Guid productId) : base(p => p.Id == productId)
+    {
+        AsNoTracking();
+    }
+
     
 }

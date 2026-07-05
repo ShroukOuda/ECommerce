@@ -2,6 +2,7 @@ global using AutoMapper;
 global using ECommerce.Application.Interfaces;
 global using ECommerce.Application.DTO.Product;
 global using ECommerce.Application.DTO.Category;
+global using ECommerce.Application.DTO.Pagination;
 global using ECommerce.Domain.Specifications;
 global using FluentValidation;
 global using ECommerce.Domain.Enums.Media;

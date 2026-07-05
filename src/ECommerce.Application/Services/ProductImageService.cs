@@ -2,6 +2,7 @@ using ECommerce.Application.DTO.ProductImages;
 using ECommerce.Application.Interfaces.Services;
 using ECommerce.Domain.Entities.Products;
 using ECommerce.Domain.Interfaces.Repositories;
+using ECommerce.Application.Specifications.Products;
 
 namespace ECommerce.Application.Services;
 
@@ -34,10 +35,14 @@ public class ProductImageService : IProductImageService
         UploadProductImageDTO dto,
         CancellationToken ct = default)
     {
-        if (!await _unitOfWork.ProductRepository.ExistsAsync(p => p.Id == dto.ProductId, ct))
+        var productSpec = new ProductSpecification(dto.ProductId);
+        bool exist = await _unitOfWork.GetRepository<Product, Guid>().ExistsAsync(productSpec);
+        if (!exist)
             throw new NotFoundException($"Product with ID {dto.ProductId} not found");
+        
+        var productImageSpec = new ProductImageSpecification(dto.ProductId);
+        var count = await _unitOfWork.GetRepository<ProductImage, Guid>().CountAsync(productImageSpec);
 
-        var count = await _unitOfWork.ProductImageRepository.CountProductImagesAsync(dto.ProductId, ct);
         if (count >= _settings.ProductImage.MaxTotalPhotos)
         {
             throw new BadRequestException(
@@ -70,7 +75,7 @@ public class ProductImageService : IProductImageService
                 UploadedAt = DateTime.Now
             };
             
-            await _unitOfWork.ProductImageRepository.AddAsync(image, ct);
+            await _unitOfWork.GetRepository<ProductImage, Guid>().AddAsync(image, ct);
             await _unitOfWork.SaveChangesAsync(ct);
             
             _logger.LogInformation(
@@ -90,8 +95,9 @@ public class ProductImageService : IProductImageService
         Guid productId,
         CancellationToken ct = default)
     {
-        var images = await _unitOfWork.ProductImageRepository
-            .GetImagesByProductIdAsync(productId, ct);
+        var spec = new ProductImageSpecification(productId);
+        var images = await _unitOfWork.GetRepository<ProductImage, Guid>()
+            .GetAllAsync(spec);
         return _mapper.Map<IReadOnlyList<ProductImageDTO>>(images);
     }
     
@@ -101,24 +107,25 @@ public class ProductImageService : IProductImageService
         Guid imageId, 
         CancellationToken ct = default)
     {
-        var photo = await _unitOfWork.ProductImageRepository.GetByIdAsync(imageId, ct);
+        var photo = await _unitOfWork.GetRepository<ProductImage, Guid>().GetByIdAsync(imageId, ct);
         
         if (photo == null || photo.ProductId != productId)
             throw new NotFoundException($"Photo {imageId} not found for product {productId}");
 
         if (photo.IsMain) return;
         
-        var existingMain = await _unitOfWork.ProductImageRepository
-            .GetProductMainImageAsync(productId, ct);
+        var mainImageSpec = new ProductImageSpecification(productId, true);
+        var existingMain = await _unitOfWork.GetRepository<ProductImage, Guid>()
+            .GetFirstOrDefaultAsync(mainImageSpec);
             
         if (existingMain != null && existingMain.Id != imageId)
         {
             existingMain.IsMain = false;
-            await _unitOfWork.ProductImageRepository.UpdateAsync(existingMain, ct);
+            _unitOfWork.GetRepository<ProductImage, Guid>().Update(existingMain, ct);
         }
         
         photo.IsMain = true;
-        await _unitOfWork.ProductImageRepository.UpdateAsync(photo, ct);
+        _unitOfWork.GetRepository<ProductImage, Guid>().Update(photo, ct);
         await _unitOfWork.SaveChangesAsync(ct);
 
         _logger.LogInformation(
@@ -131,25 +138,25 @@ public class ProductImageService : IProductImageService
         Guid imageId, 
         CancellationToken ct = default)
     {
-        var image = await _unitOfWork.ProductImageRepository.GetByIdAsync(imageId, ct);
+        var image = await _unitOfWork.GetRepository<ProductImage, Guid>().GetByIdAsync(imageId, ct);
         if (image == null || image.ProductId != productId)
             throw new NotFoundException($"Photo {imageId} not found for product {productId}");
         
         if (image.IsMain)
         {
-            var otherPhotos = await _unitOfWork.ProductImageRepository
-                .GetImagesByProductIdAsync(productId, ct);
+            var spec = new ProductImageSpecification(productId);
+            var otherPhotosCount = await _unitOfWork.GetRepository<ProductImage, Guid>()
+                .CountAsync(spec);
                 
-            if (otherPhotos.Count() > 1)
+            if (otherPhotosCount > 1)
             {
-                var alternative = otherPhotos.First(p => !p.IsMain);
                 throw new BadRequestException(
-                    $"Cannot delete main photo. Set photo {alternative.Id} as main first.");
+                    $"Cannot delete main photo. Set any photo as main first.");
             }
         }
         
         await _fileStorageService.DeleteAsync(image.ImageUrl, ct);
-        await _unitOfWork.ProductImageRepository.DeleteAsync(image, ct);
+        _unitOfWork.GetRepository<ProductImage, Guid>().Delete(image, ct);
         await _unitOfWork.SaveChangesAsync(ct);
 
         _logger.LogInformation("Product photo {ImageId} deleted from product {ProductId}", imageId, productId);
@@ -160,11 +167,14 @@ public class ProductImageService : IProductImageService
         Guid productId, 
         CancellationToken ct = default)
     {
-        if (!await _unitOfWork.ProductRepository.ExistsAsync(p => p.Id == productId, ct))
+        var productSpec = new ProductSpecification(productId);
+        var exist = await _unitOfWork.GetRepository<Product, Guid>().ExistsAsync(productSpec);
+        if (!exist)
             throw new NotFoundException($"Product with ID {productId} not found");
 
-        var images = await _unitOfWork.ProductImageRepository
-            .GetImagesByProductIdAsync(productId, ct);
+        var productImageSpec = new ProductImageSpecification(productId);
+        var images = await _unitOfWork.GetRepository<ProductImage, Guid>()
+            .GetAllAsync(productImageSpec);
         
         if (!images.Any()) return;
 
@@ -174,7 +184,7 @@ public class ProductImageService : IProductImageService
         var folderPath = $"products/{productId}";
         await _fileStorageService.DeleteFolderAsync(folderPath, ct);
 
-        await _unitOfWork.ProductImageRepository.DeleteRangeAsync(images, ct);
+        _unitOfWork.GetRepository<ProductImage, Guid>().DeleteRange(images, ct);
         await _unitOfWork.SaveChangesAsync(ct);
 
         _logger.LogInformation(
@@ -186,7 +196,7 @@ public class ProductImageService : IProductImageService
         Guid imageId, 
         CancellationToken ct = default)
     {
-        var image = await _unitOfWork.ProductImageRepository.GetByIdAsync(imageId, ct);
+        var image = await _unitOfWork.GetRepository<ProductImage, Guid>().GetByIdAsync(imageId, ct);
         if (image == null) return null;
         return _mapper.Map<ProductImageDTO>(image);
     }
@@ -195,8 +205,9 @@ public class ProductImageService : IProductImageService
         Guid productId,
         CancellationToken ct = default)
     {
-        var image = await _unitOfWork.ProductImageRepository
-            .GetProductMainImageAsync(productId, ct);
+        var spec = new ProductImageSpecification(productId, true);
+        var image = await _unitOfWork.GetRepository<ProductImage, Guid>()
+            .GetFirstOrDefaultAsync(spec);
         return image == null ? null : _mapper.Map<ProductImageDTO>(image);
     }
     
@@ -205,14 +216,15 @@ public class ProductImageService : IProductImageService
         Guid productId, 
         CancellationToken ct)
     {
-        var existingMain = await _unitOfWork.ProductImageRepository
-            .GetProductMainImageAsync(productId, ct);
+        var spec = new ProductImageSpecification(productId, true);
+        var existingMain = await _unitOfWork.GetRepository<ProductImage, Guid>()
+            .GetFirstOrDefaultAsync(spec);
 
         if (existingMain != null)
         {
             existingMain.IsMain = false;
             existingMain.UploadedAt = DateTime.UtcNow; 
-            await _unitOfWork.ProductImageRepository.UpdateAsync(existingMain, ct);
+            _unitOfWork.GetRepository<ProductImage, Guid>().Update(existingMain, ct);
         }
     }
 }

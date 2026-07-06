@@ -3,6 +3,7 @@ using ECommerce.Application.DTO.Category;
 using ECommerce.Application.Interfaces;
 using ECommerce.Application.Interfaces.Services;
 using ECommerce.Application.Services;
+using ECommerce.Application.Specifications.Categories;
 using ECommerce.Domain.Entities.Categories;
 using ECommerce.Domain.Interfaces.Repositories;
 using FluentAssertions;
@@ -41,7 +42,7 @@ public class CategoryServiceTests
         // Arrange
         var categories = new List<Category> { new() { Id = TestGuid.FromInt(1), Name = "Electronics" } };
 
-        _unitOfWorkMock.Setup(u => u.CategoryRepository.GetAllAsync(It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Category, Guid>().GetAllAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(categories);
 
         // Act
@@ -56,7 +57,7 @@ public class CategoryServiceTests
     public async Task GetCategoryByIdAsync_WhenNotFound_ShouldReturnNull()
     {
         // Arrange
-        _unitOfWorkMock.Setup(u => u.CategoryRepository.GetByIdAsync(TestGuid.FromInt(999), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Category, Guid>().GetByIdAsync(TestGuid.FromInt(999), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Category?)null);
 
         // Act

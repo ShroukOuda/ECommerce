@@ -1,6 +1,7 @@
 using ECommerce.Application.DTO.Return;
 using ECommerce.Domain.Entities.Returns;
 using ECommerce.Domain.Interfaces.Repositories;
+using ECommerce.Application.Specifications.Returns;
 
 namespace ECommerce.Application.Services;
 
@@ -19,13 +20,15 @@ public class ReturnService : IReturnService
 
     public async Task<IEnumerable<GetReturnRequestDTO>> GetReturnsByUserIdAsync(string userId, CancellationToken ct = default)
     {
-        var returns = await _unitOfWork.ReturnRequestRepository.GetReturnsByUserIdAsync(userId, ct);
+        var spec = new ReturnsByUserSpecification(userId);
+        var returns = await _unitOfWork.GetRepository<ReturnRequest, Guid>().GetAllAsync(spec);
         return _mapper.Map<IEnumerable<GetReturnRequestDTO>>(returns);
     }
 
     public async Task<GetReturnRequestDTO> GetReturnByIdAsync(Guid id, CancellationToken ct = default)
     {
-        var returnReq = await _unitOfWork.ReturnRequestRepository.GetReturnWithItemsAsync(id, ct);
+        var spec = new ReturnDetailsSpecification(id);
+        var returnReq = await _unitOfWork.GetRepository<ReturnRequest, Guid>().GetFirstOrDefaultAsync(spec);
         if (returnReq is null) throw new KeyNotFoundException($"Return request with ID {id} not found.");
         return _mapper.Map<GetReturnRequestDTO>(returnReq);
     }
@@ -45,7 +48,7 @@ public class ReturnService : IReturnService
             RequestedDate = DateTime.UtcNow
         };
 
-        await _unitOfWork.ReturnRequestRepository.AddAsync(returnReq, ct);
+        await _unitOfWork.GetRepository<ReturnRequest, Guid>().AddAsync(returnReq, ct);
         await _unitOfWork.SaveChangesAsync(ct);
         return _mapper.Map<GetReturnRequestDTO>(returnReq);
     }

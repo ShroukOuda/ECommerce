@@ -2,6 +2,7 @@ using AutoMapper;
 using ECommerce.Application.DTO.Inventory;
 using ECommerce.Application.Interfaces;
 using ECommerce.Application.Services;
+using ECommerce.Application.Specifications.Inventories;
 using ECommerce.Domain.Entities.Inventories;
 using ECommerce.Domain.Interfaces.Repositories;
 using FluentAssertions;
@@ -35,7 +36,7 @@ public class InventoryServiceTests
         var history = new List<InventoryHistory> { new() { Id = TestGuid.FromInt(1), ProductId = TestGuid.FromInt(1) } };
         var historyDtos = new List<GetInventoryHistoryDTO> { new() { Id = TestGuid.FromInt(1), ProductId = TestGuid.FromInt(1) } };
 
-        _unitOfWorkMock.Setup(u => u.InventoryHistoryRepository.GetHistoryByProductIdAsync(TestGuid.FromInt(1), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<InventoryHistory, Guid>().GetAllAsync(new InventoryHistoryByProductSpecification(TestGuid.FromInt(1))))
             .ReturnsAsync(history);
         _mapperMock.Setup(m => m.Map<IEnumerable<GetInventoryHistoryDTO>>(history)).Returns(historyDtos);
 
@@ -53,13 +54,13 @@ public class InventoryServiceTests
         _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
         _mapperMock.Setup(m => m.Map<InventoryHistory>(dto)).Returns(history);
-        _unitOfWorkMock.Setup(u => u.InventoryHistoryRepository.AddAsync(It.IsAny<InventoryHistory>(), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<InventoryHistory, Guid>().AddAsync(It.IsAny<InventoryHistory>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
         await _inventoryService.AddInventoryHistoryAsync(dto);
 
-        _unitOfWorkMock.Verify(u => u.InventoryHistoryRepository.AddAsync(history, It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.GetRepository<InventoryHistory, Guid>().AddAsync(history, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

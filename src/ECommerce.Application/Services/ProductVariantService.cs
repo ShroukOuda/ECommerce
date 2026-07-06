@@ -1,6 +1,7 @@
 using ECommerce.Application.DTO.ProductVariant;
 using ECommerce.Domain.Entities.Products;
 using ECommerce.Domain.Interfaces.Repositories;
+using ECommerce.Application.Specifications.Products;
 
 namespace ECommerce.Application.Services;
 
@@ -23,13 +24,14 @@ public class ProductVariantService : IProductVariantService
 
     public async Task<IEnumerable<GetProductVariantDTO>> GetVariantsByProductIdAsync(Guid productId, CancellationToken ct = default)
     {
-        var variants = await _unitOfWork.ProductVariantRepository.GetVariantsByProductIdAsync(productId, ct);
+        var spec = new ProductVariantsByProductSpecification(productId);
+        var variants = await _unitOfWork.GetRepository<ProductVariant, Guid>().GetAllAsync(spec);
         return _mapper.Map<IEnumerable<GetProductVariantDTO>>(variants);
     }
 
     public async Task<GetProductVariantDTO> GetVariantByIdAsync(Guid id, CancellationToken ct = default)
     {
-        var variant = await _unitOfWork.ProductVariantRepository.GetByIdAsync(id, ct);
+        var variant = await _unitOfWork.GetRepository<ProductVariant, Guid>().GetByIdAsync(id, ct);
         if (variant is null) throw new KeyNotFoundException($"Product variant with ID {id} not found.");
         return _mapper.Map<GetProductVariantDTO>(variant);
     }
@@ -40,7 +42,7 @@ public class ProductVariantService : IProductVariantService
         if (!result.IsValid) throw new ValidationException(result.Errors);
 
         var variant = _mapper.Map<ProductVariant>(dto);
-        await _unitOfWork.ProductVariantRepository.AddAsync(variant, ct);
+        await _unitOfWork.GetRepository<ProductVariant, Guid>().AddAsync(variant, ct);
         await _unitOfWork.SaveChangesAsync(ct);
 
         if (dto.OptionValueIds.Count > 0)
@@ -52,7 +54,7 @@ public class ProductVariantService : IProductVariantService
                     ProductVariantId = variant.Id,
                     ProductOptionValueId = optionValueId
                 };
-                await _unitOfWork.ProductVariantOptionValueRepository.AddAsync(pvov, ct);
+                await _unitOfWork.GetRepository<ProductVariantOptionValue, Guid>().AddAsync(pvov, ct);
             }
             await _unitOfWork.SaveChangesAsync(ct);
         }
@@ -63,16 +65,17 @@ public class ProductVariantService : IProductVariantService
         var result = await _updateValidator.ValidateAsync(dto, ct);
         if (!result.IsValid) throw new ValidationException(result.Errors);
         var variant = _mapper.Map<ProductVariant>(dto);
-        await _unitOfWork.ProductVariantRepository.UpdateAsync(variant, ct);
+        _unitOfWork.GetRepository<ProductVariant, Guid>().Update(variant, ct);
         await _unitOfWork.SaveChangesAsync(ct);
     }
 
     public async Task DeleteVariantAsync(Guid id, CancellationToken ct = default)
     {
-        bool exists = await _unitOfWork.ProductVariantRepository.ExistsAsync(v => v.Id == id, ct);
+        var spec = new ProductVariantSpecification(id);
+        bool exists = await _unitOfWork.GetRepository<ProductVariant, Guid>().ExistsAsync(spec);
         if (!exists) throw new KeyNotFoundException($"Product variant with ID {id} not found.");
         var stub = new ProductVariant { Id = id };
-        await _unitOfWork.ProductVariantRepository.DeleteAsync(stub, ct);
+        _unitOfWork.GetRepository<ProductVariant, Guid>().Delete(stub, ct);
         await _unitOfWork.SaveChangesAsync(ct);
     }
 }

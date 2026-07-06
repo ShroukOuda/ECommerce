@@ -2,6 +2,7 @@ using AutoMapper;
 using ECommerce.Application.DTO.Brand;
 using ECommerce.Application.Interfaces;
 using ECommerce.Application.Services;
+using ECommerce.Application.Specifications.Brands;
 using ECommerce.Domain.Entities.Brands;
 using ECommerce.Domain.Interfaces.Repositories;
 using FluentAssertions;
@@ -39,7 +40,7 @@ public class BrandServiceTests
         var brands = new List<Brand> { new() { Id = TestGuid.FromInt(1), Name = "Nike" } };
         var brandDtos = new List<GetBrandDTO> { new() { Id = TestGuid.FromInt(1), Name = "Nike" } };
 
-        _unitOfWorkMock.Setup(u => u.BrandRepository.GetAllAsync(It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Brand, Guid>().GetAllAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(brands);
         _mapperMock.Setup(m => m.Map<IEnumerable<GetBrandDTO>>(brands))
             .Returns(brandDtos);
@@ -59,7 +60,7 @@ public class BrandServiceTests
         var brand = new Brand { Id = TestGuid.FromInt(1), Name = "Nike" };
         var brandDto = new GetBrandDTO { Id = TestGuid.FromInt(1), Name = "Nike" };
 
-        _unitOfWorkMock.Setup(u => u.BrandRepository.GetByIdAsync(TestGuid.FromInt(1), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Brand, Guid>().GetByIdAsync(TestGuid.FromInt(1), It.IsAny<CancellationToken>()))
             .ReturnsAsync(brand);
         _mapperMock.Setup(m => m.Map<GetBrandDTO>(brand))
             .Returns(brandDto);
@@ -76,7 +77,7 @@ public class BrandServiceTests
     public async Task GetBrandByIdAsync_WhenBrandNotFound_ShouldThrowKeyNotFoundException()
     {
         // Arrange
-        _unitOfWorkMock.Setup(u => u.BrandRepository.GetByIdAsync(TestGuid.FromInt(999), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Brand, Guid>().GetByIdAsync(TestGuid.FromInt(999), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Brand?)null);
 
         // Act
@@ -97,7 +98,7 @@ public class BrandServiceTests
             .ReturnsAsync(new ValidationResult());
         _mapperMock.Setup(m => m.Map<Brand>(dto))
             .Returns(brand);
-        _unitOfWorkMock.Setup(u => u.BrandRepository.AddAsync(It.IsAny<Brand>(), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Brand, Guid>().AddAsync(It.IsAny<Brand>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(1);
@@ -106,7 +107,7 @@ public class BrandServiceTests
         await _brandService.AddBrandAsync(dto);
 
         // Assert
-        _unitOfWorkMock.Verify(u => u.BrandRepository.AddAsync(brand, It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.GetRepository<Brand, Guid>().AddAsync(brand, It.IsAny<CancellationToken>()), Times.Once);
         _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -131,15 +132,15 @@ public class BrandServiceTests
     public async Task DeleteBrandAsync_WhenBrandExists_ShouldDeleteBrand()
     {
         // Arrange
-        _unitOfWorkMock.Setup(u => u.BrandRepository.ExistsAsync(
-            It.IsAny<System.Linq.Expressions.Expression<Func<Brand, bool>>>(), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Brand, Guid>().ExistsAsync(
+            new BrandSpecification(TestGuid.FromInt(1)), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         // Act
         await _brandService.DeleteBrandAsync(TestGuid.FromInt(1));
 
         // Assert
-        _unitOfWorkMock.Verify(u => u.BrandRepository.DeleteAsync(It.IsAny<Brand>(), It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.GetRepository<Brand, Guid>().Delete(It.IsAny<Brand>(), It.IsAny<CancellationToken>()), Times.Once);
         _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -147,8 +148,8 @@ public class BrandServiceTests
     public async Task DeleteBrandAsync_WhenBrandNotFound_ShouldThrowKeyNotFoundException()
     {
         // Arrange
-        _unitOfWorkMock.Setup(u => u.BrandRepository.ExistsAsync(
-            It.IsAny<System.Linq.Expressions.Expression<Func<Brand, bool>>>(), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Brand, Guid>().ExistsAsync(
+            new BrandSpecification(TestGuid.FromInt(1)), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
         // Act

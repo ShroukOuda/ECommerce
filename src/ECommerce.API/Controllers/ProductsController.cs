@@ -1,3 +1,4 @@
+using ECommerce.Application.DTO.Pagination;
 using ECommerce.Application.DTO.ProductImages;
 using ECommerce.Domain.Enums.Media;
 using Microsoft.AspNetCore.Authorization;
@@ -17,11 +18,10 @@ public class ProductsController : BaseController
     }
 
     [HttpGet("get-all")]
-    public async Task<IActionResult> GetAll([FromQuery] ProductParams productParams)
+    public async Task<ActionResult<PaginatedResult<GetProductDTO>>> GetAll([FromQuery] ProductSpecParams productParams)
     {
         var products = await _productService.GetAllProductsAsync(productParams);
-        var pagination = new Pagination<GetProductDTO>(productParams.PageNumber, productParams.PageSize, products.TotalCount, products.Products);
-        return Ok(pagination);
+        return Ok(products);
     }
 
     [HttpGet("get-by-id/{id}")]

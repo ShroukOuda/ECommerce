@@ -6,12 +6,10 @@ namespace ECommerce.Application.Specifications.Products;
 
 public class ProductVariantSpecification : BaseSpecification<ProductVariant, Guid>
 {
-    public ProductVariantSpecification(Guid productId)
-        : base(pv => pv.ProductId == productId)
+    public ProductVariantSpecification(Guid productVariantId)
+        : base(pv => pv.Id == productVariantId)
     {
-        AddInclude(pv => pv.ProductImages);
-        AddInclude(pv => pv.ProductVariantOptionValues);
-        AsNoTracking();
+        
     }
 
     

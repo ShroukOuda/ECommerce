@@ -1,6 +1,7 @@
 using ECommerce.Application.DTO.Wishlist;
 using ECommerce.Domain.Entities.Wishlists;
 using ECommerce.Domain.Interfaces.Repositories;
+using ECommerce.Application.Specifications.Wishlists;
 
 namespace ECommerce.Application.Services;
 
@@ -19,7 +20,8 @@ public class WishlistService : IWishlistService
 
     public async Task<IEnumerable<GetWishlistDTO>> GetWishlistByUserIdAsync(string userId, CancellationToken ct = default)
     {
-        var items = await _unitOfWork.WishlistRepository.GetWishlistByUserIdAsync(userId, ct);
+        var spec = new WishlistsByUserSpecification(userId);
+        var items = await _unitOfWork.GetRepository<Wishlist, Guid>().GetAllAsync(spec);
         return _mapper.Map<IEnumerable<GetWishlistDTO>>(items);
     }
 
@@ -28,20 +30,24 @@ public class WishlistService : IWishlistService
         var result = await _addValidator.ValidateAsync(dto, ct);
         if (!result.IsValid) throw new ValidationException(result.Errors);
         
-        bool exists = await _unitOfWork.WishlistRepository.ExistsAsync(
-            w => w.ProductId == dto.ProductId && w.UserId == dto.UserId, ct);
+        var spec = new WishlistSpecification(dto.ProductId, dto.UserId);
+        bool exists = await _unitOfWork.GetRepository<Wishlist, Guid>().ExistsAsync(spec);
         if (exists) throw new InvalidOperationException("Product already in wishlist.");
         
         var wishlist = _mapper.Map<Wishlist>(dto);
-        await _unitOfWork.WishlistRepository.AddAsync(wishlist, ct);
+        await _unitOfWork.GetRepository<Wishlist, Guid>().AddAsync(wishlist, ct);
         await _unitOfWork.SaveChangesAsync(ct);
     }
 
     public async Task RemoveFromWishlistAsync(Guid id, CancellationToken ct = default)
     {
-        var item = await _unitOfWork.WishlistRepository.GetByIdAsync(id, ct);
-        if (item is null) throw new KeyNotFoundException($"Wishlist item with ID {id} not found.");
-        await _unitOfWork.WishlistRepository.DeleteAsync(item, ct);
+        var spec = new WishlistSpecification(id);
+        var exist = await _unitOfWork.GetRepository<Wishlist, Guid>().ExistsAsync(spec);
+        
+        if (!exist) throw new KeyNotFoundException($"Wishlist item with ID {id} not found.");
+
+        var stub = new Wishlist { Id = id};
+        _unitOfWork.GetRepository<Wishlist, Guid>().Delete(stub, ct);
         await _unitOfWork.SaveChangesAsync(ct);
     }
 }

@@ -1,6 +1,8 @@
 using ECommerce.Application.DTO.Shipping;
 using ECommerce.Domain.Entities.Shippings;
+using ECommerce.Domain.Enums.Shipping;
 using ECommerce.Domain.Interfaces.Repositories;
+using ECommerce.Application.Specifications.Shippings;
 
 namespace ECommerce.Application.Services;
 
@@ -19,13 +21,14 @@ public class ShippingService : IShippingService
 
     public async Task<IEnumerable<GetShippingDTO>> GetShippingsByOrderIdAsync(Guid orderId, CancellationToken ct = default)
     {
-        var shippings = await _unitOfWork.ShippingRepository.GetShippingsByOrderIdAsync(orderId, ct);
+        var spec = new ShippingsByOrderSpecification(orderId);
+        var shippings = await _unitOfWork.GetRepository<Shipping, Guid>().GetAllAsync(spec);
         return _mapper.Map<IEnumerable<GetShippingDTO>>(shippings);
     }
 
     public async Task<GetShippingDTO> GetShippingByIdAsync(Guid id, CancellationToken ct = default)
     {
-        var shipping = await _unitOfWork.ShippingRepository.GetByIdAsync(id, ct);
+        var shipping = await _unitOfWork.GetRepository<Shipping, Guid>().GetByIdAsync(id, ct);
         if (shipping is null) throw new KeyNotFoundException($"Shipping with ID {id} not found.");
         return _mapper.Map<GetShippingDTO>(shipping);
     }
@@ -40,12 +43,12 @@ public class ShippingService : IShippingService
             OrderId = dto.OrderId,
             AddressId = dto.AddressId,
             Cost = dto.Cost,
-            Method = Enum.Parse<ECommerce.Domain.Enums.Shippings.ShippingMethod>(dto.Method),
+            Method = Enum.Parse<ShippingMethod>(dto.Method),
             TrackingNumber = $"SHP-{Guid.NewGuid().ToString()[..8].ToUpper()}",
-            Status = ECommerce.Domain.Enums.Shippings.ShippingStatus.Pending
+            Status = ShippingStatus.Pending
         };
 
-        await _unitOfWork.ShippingRepository.AddAsync(shipping, ct);
+        await _unitOfWork.GetRepository<Shipping, Guid>().AddAsync(shipping, ct);
         await _unitOfWork.SaveChangesAsync(ct);
         return _mapper.Map<GetShippingDTO>(shipping);
     }

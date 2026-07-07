@@ -2,6 +2,7 @@ using AutoMapper;
 using ECommerce.Application.DTO.Shipping;
 using ECommerce.Application.Interfaces;
 using ECommerce.Application.Services;
+using ECommerce.Application.Specifications.Shippings;
 using ECommerce.Domain.Entities.Shippings;
 using ECommerce.Domain.Interfaces.Repositories;
 using FluentAssertions;
@@ -35,7 +36,7 @@ public class ShippingServiceTests
         var shippings = new List<Shipping> { new() { Id = TestGuid.FromInt(1), OrderId = TestGuid.FromInt(1) } };
         var shippingDtos = new List<GetShippingDTO> { new() { Id = TestGuid.FromInt(1), OrderId = TestGuid.FromInt(1) } };
 
-        _unitOfWorkMock.Setup(u => u.ShippingRepository.GetShippingsByOrderIdAsync(TestGuid.FromInt(1), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Shipping, Guid>().GetAllAsync(new ShippingsByOrderSpecification(TestGuid.FromInt(1))))
             .ReturnsAsync(shippings);
         _mapperMock.Setup(m => m.Map<IEnumerable<GetShippingDTO>>(shippings)).Returns(shippingDtos);
 
@@ -50,7 +51,7 @@ public class ShippingServiceTests
         var shipping = new Shipping { Id = TestGuid.FromInt(1), TrackingNumber = "SHP-001" };
         var shippingDto = new GetShippingDTO { Id = TestGuid.FromInt(1), TrackingNumber = "SHP-001" };
 
-        _unitOfWorkMock.Setup(u => u.ShippingRepository.GetByIdAsync(TestGuid.FromInt(1), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Shipping, Guid>().GetByIdAsync(TestGuid.FromInt(1), It.IsAny<CancellationToken>()))
             .ReturnsAsync(shipping);
         _mapperMock.Setup(m => m.Map<GetShippingDTO>(shipping)).Returns(shippingDto);
 
@@ -63,7 +64,7 @@ public class ShippingServiceTests
     [Fact]
     public async Task GetShippingByIdAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
-        _unitOfWorkMock.Setup(u => u.ShippingRepository.GetByIdAsync(TestGuid.FromInt(999), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Shipping, Guid>().GetByIdAsync(TestGuid.FromInt(999), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Shipping?)null);
 
         var act = () => _shippingService.GetShippingByIdAsync(TestGuid.FromInt(999));
@@ -79,7 +80,7 @@ public class ShippingServiceTests
 
         _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
-        _unitOfWorkMock.Setup(u => u.ShippingRepository.AddAsync(It.IsAny<Shipping>(), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Shipping, Guid>().AddAsync(It.IsAny<Shipping>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
         _mapperMock.Setup(m => m.Map<GetShippingDTO>(It.IsAny<Shipping>())).Returns(shippingDto);
@@ -87,7 +88,7 @@ public class ShippingServiceTests
         var result = await _shippingService.CreateShippingAsync(dto);
 
         result.Should().NotBeNull();
-        _unitOfWorkMock.Verify(u => u.ShippingRepository.AddAsync(It.IsAny<Shipping>(), It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.GetRepository<Shipping, Guid>().AddAsync(It.IsAny<Shipping>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

@@ -149,7 +149,7 @@ public class BrandServiceTests
     {
         // Arrange
         _unitOfWorkMock.Setup(u => u.GetRepository<Brand, Guid>().ExistsAsync(
-            new BrandSpecification(TestGuid.FromInt(1)), It.IsAny<CancellationToken>()))
+            new BrandSpecification(TestGuid.FromInt(999)), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
         // Act

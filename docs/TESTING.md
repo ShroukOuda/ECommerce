@@ -118,7 +118,7 @@ public class ProductServiceTests
     {
         // Arrange
         var products = new List<Product> { new() { Id = 1, Name = "Test" } };
-        _unitOfWorkMock.Setup(u => u.ProductRepository.GetAllAsync())
+        _unitOfWorkMock.Setup(u => u.GetRepository<Product, Guid>().GetAllAsync())
             .ReturnsAsync(products);
         _mapperMock.Setup(m => m.Map<IEnumerable<ProductDto>>(products))
             .Returns(new List<ProductDto> { new() { Id = 1, Name = "Test" } });

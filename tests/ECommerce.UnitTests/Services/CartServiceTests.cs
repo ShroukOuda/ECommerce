@@ -50,7 +50,7 @@ public class CartServiceTests
     [Fact]
     public async Task GetCartByIdAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
-        _unitOfWorkMock.Setup(u => u.GetRepository<Cart, Guid>().GetFirstOrDefaultAsync(new CartDetailsSpecification(TestGuid.FromInt(1))))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Cart, Guid>().GetFirstOrDefaultAsync(new CartDetailsSpecification(TestGuid.FromInt(999))))
             .ReturnsAsync((Cart?)null);
 
         var act = () => _cartService.GetCartByIdAsync(TestGuid.FromInt(999));

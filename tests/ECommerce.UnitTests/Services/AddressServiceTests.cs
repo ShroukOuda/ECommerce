@@ -158,7 +158,7 @@ public class AddressServiceTests
     [Fact]
     public async Task DeleteAddressAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
-        _unitOfWorkMock.Setup(u => u.GetRepository<Address, Guid>().ExistsAsync(new AddressSpecification(TestGuid.FromInt(1)), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Address, Guid>().ExistsAsync(new AddressSpecification(TestGuid.FromInt(999)), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
         var act = () => _addressService.DeleteAddressAsync(TestGuid.FromInt(999));

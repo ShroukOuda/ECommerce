@@ -151,7 +151,7 @@ public class CouponServiceTests
     public async Task DeleteCouponAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
         _unitOfWorkMock.Setup(u => u.GetRepository<Coupon, Guid>().ExistsAsync(
-            new CouponSpecification(TestGuid.FromInt(1)), It.IsAny<CancellationToken>()))
+            new CouponSpecification(TestGuid.FromInt(999)), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
         var act = () => _couponService.DeleteCouponAsync(TestGuid.FromInt(999));

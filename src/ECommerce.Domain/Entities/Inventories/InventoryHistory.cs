@@ -1,4 +1,4 @@
-using ECommerce.Domain.Common;
+
 using ECommerce.Domain.Enums.Inventory;
 
 namespace ECommerce.Domain.Entities.Inventories;
@@ -14,11 +14,11 @@ public class InventoryHistory : BaseEntity<Guid>
 
     //FK
     public Guid ProductId { get; set; }
-    public Guid? ProductVariantId { get; set; }
-    public string? UserId { get; set; }
+    public Guid ProductVariantId { get; set; }
+    public string UserId { get; set; } = null!;
     
     //Navigation Properties
-    public virtual Products.Product? Product { get; set; }
-    public virtual Products.ProductVariant? ProductVariant { get; set; }
-    public virtual Users.User? User { get; set; }
+    public virtual Product Product { get; set; } = null!;
+    public virtual ProductVariant ProductVariant { get; set; } = null!;
+    public virtual User User { get; set; } = null!;
 }

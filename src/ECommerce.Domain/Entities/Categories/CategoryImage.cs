@@ -1,6 +1,3 @@
-using ECommerce.Domain.Common;
-using ECommerce.Domain.Enums.Media;
-
 namespace ECommerce.Domain.Entities.Categories;
 
 public class CategoryImage : BaseImage

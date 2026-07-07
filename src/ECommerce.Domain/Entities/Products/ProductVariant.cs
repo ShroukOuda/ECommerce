@@ -21,10 +21,10 @@ public class ProductVariant : BaseEntity<Guid>
     public Guid ProductId { get; set; } 
     
     //Navigation Properties
-    public virtual Product? Product { get; set; }
+    public virtual Product Product { get; set; } = null!;
     public virtual ICollection<ProductImage> ProductImages { get; set; } = new List<ProductImage>();
     public virtual ICollection<ProductVariantOptionValue> ProductVariantOptionValues { get; set; } = new List<ProductVariantOptionValue>();
-    public virtual ICollection<Orders.OrderItem> OrderItems { get; set; } = new List<Orders.OrderItem>();
-    public virtual ICollection<Carts.CartItem> CartItems { get; set; } = new List<Carts.CartItem>();
-    public virtual ICollection<Inventories.InventoryHistory> InventoryHistories { get; set; } = new List<Inventories.InventoryHistory>();
+    public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+    public virtual ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
+    public virtual ICollection<InventoryHistory> InventoryHistories { get; set; } = new List<InventoryHistory>();
 }

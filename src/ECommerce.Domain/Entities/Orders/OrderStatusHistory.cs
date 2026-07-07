@@ -1,4 +1,4 @@
-using ECommerce.Domain.Common;
+
 using ECommerce.Domain.Enums.Order;
 
 namespace ECommerce.Domain.Entities.Orders;
@@ -11,5 +11,5 @@ public class OrderStatusHistory : BaseEntity<Guid>
     public Guid OrderId { get; set; }
     
     //Navigation Properties
-    public virtual Order? Order { get; set; }
+    public virtual Order Order { get; set; } = null!;
 }

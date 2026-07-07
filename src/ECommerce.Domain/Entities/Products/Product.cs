@@ -35,15 +35,15 @@ public class Product : BaseEntity<Guid>
     
     
     // Navigation Properties
-    public virtual Categories.Category Category { get; set; } = null!;
-    public virtual Brands.Brand Brand { get; set; } = null!;
+    public virtual Category Category { get; set; } = null!;
+    public virtual Brand Brand { get; set; } = null!;
     public virtual ICollection<ProductImage> ProductImages { get; set; } = new List<ProductImage>();
     public virtual ICollection<ProductVariant> ProductVariants { get; set; } = new List<ProductVariant>();
     public virtual ICollection<ProductOption> ProductOptions { get; set; } = new List<ProductOption>();
-    public virtual ICollection<Orders.OrderItem> OrderItems { get; set; } = new List<Orders.OrderItem>();
-    public virtual ICollection<Carts.CartItem> CartItems { get; set; } = new List<Carts.CartItem>();
-    public virtual ICollection<Reviews.ProductReview> ProductReviews { get; set; } = new List<Reviews.ProductReview>();
-    public virtual ICollection<Wishlists.Wishlist> Wishlists { get; set; } = new List<Wishlists.Wishlist>();
-    public virtual ICollection<Inventories.InventoryHistory> InventoryHistories { get; set; } = new List<Inventories.InventoryHistory>();
-    public virtual ICollection<Returns.ReturnItem> ReturnItems { get; set; } = new List<Returns.ReturnItem>();
+    public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+    public virtual ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
+    public virtual ICollection<ProductReview> ProductReviews { get; set; } = new List<ProductReview>();
+    public virtual ICollection<Wishlist> Wishlists { get; set; } = new List<Wishlist>();
+    public virtual ICollection<InventoryHistory> InventoryHistories { get; set; } = new List<InventoryHistory>();
+    public virtual ICollection<ReturnItem> ReturnItems { get; set; } = new List<ReturnItem>();
 }

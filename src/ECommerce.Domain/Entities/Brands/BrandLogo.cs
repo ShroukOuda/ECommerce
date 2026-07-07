@@ -1,5 +1,3 @@
-using ECommerce.Domain.Common;
-
 namespace ECommerce.Domain.Entities.Brands;
 
 public class BrandLogo : BaseImage

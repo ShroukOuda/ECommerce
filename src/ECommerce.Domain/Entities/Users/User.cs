@@ -35,12 +35,12 @@ public class User : IdentityUser
     //Navigation Properties
     public virtual ICollection<UserSession> UserSessions { get; set; } = new List<UserSession>();
     public virtual ICollection<Address> Addresses { get; set; } = new List<Address>();
-    public virtual ICollection<Reviews.ProductReview> ProductReviews { get; set; } = new List<Reviews.ProductReview>();
-    public virtual ICollection<Orders.Order> Orders { get; set; } = new List<Orders.Order>();
-    public virtual ICollection<Wishlists.Wishlist> Wishlists { get; set; } = new List<Wishlists.Wishlist>();
-    public virtual ICollection<Carts.Cart> Carts { get; set; } = new List<Carts.Cart>();
-    public virtual ICollection<Coupons.CouponUsage> CouponUsages { get; set; } = new List<Coupons.CouponUsage>();
-    public virtual ICollection<Returns.ReturnRequest> ReturnRequests { get; set; } = new List<Returns.ReturnRequest>();
-    public virtual ICollection<Inventories.InventoryHistory> InventoryHistories { get; set; } = new List<Inventories.InventoryHistory>();
-    public virtual ICollection<Payments.Payment> Payments { get; set; } = new List<Payments.Payment>();
+    public virtual ICollection<ProductReview> ProductReviews { get; set; } = new List<ProductReview>();
+    public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
+    public virtual ICollection<Wishlist> Wishlists { get; set; } = new List<Wishlist>();
+    public virtual ICollection<Cart> Carts { get; set; } = new List<Carts.Cart>();
+    public virtual ICollection<CouponUsage> CouponUsages { get; set; } = new List<CouponUsage>();
+    public virtual ICollection<ReturnRequest> ReturnRequests { get; set; } = new List<ReturnRequest>();
+    public virtual ICollection<InventoryHistory> InventoryHistories { get; set; } = new List<InventoryHistory>();
+    public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
 }

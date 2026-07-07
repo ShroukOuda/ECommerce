@@ -1,5 +1,4 @@
-using ECommerce.Domain.Enums;
-using ECommerce.Domain.Common;
+
 using ECommerce.Domain.Enums.Address;
 
 namespace ECommerce.Domain.Entities.Users;
@@ -17,11 +16,11 @@ public class Address : BaseEntity<Guid>
     public AddressStatus Status { get; set; } = AddressStatus.Active;
     
     //FK
-    public string UserId { get; set; }
+    public string UserId { get; set; } = null!;
     
     //Navigation Properties
-    public virtual User? User { get; set; }
-    public virtual ICollection<Orders.Order> ShippingOrders { get; set; } = new List<Orders.Order>();
-    public virtual ICollection<Orders.Order> BillingOrders { get; set; } = new List<Orders.Order>();
-    public virtual ICollection<Shippings.Shipping> Shippings { get; set; } = new List<Shippings.Shipping>();
+    public virtual User User { get; set; } = null!;
+    public virtual ICollection<Order> ShippingOrders { get; set; } = new List<Orders.Order>();
+    public virtual ICollection<Order> BillingOrders { get; set; } = new List<Orders.Order>();
+    public virtual ICollection<Shipping> Shippings { get; set; } = new List<Shippings.Shipping>();
 }

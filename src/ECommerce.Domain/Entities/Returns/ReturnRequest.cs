@@ -1,4 +1,4 @@
-using ECommerce.Domain.Common;
+
 using ECommerce.Domain.Enums.Return;
 
 namespace ECommerce.Domain.Entities.Returns;
@@ -23,7 +23,7 @@ public class ReturnRequest : BaseEntity<Guid>
     public string UserId { get; set; } = null!;
     
     //Navigation Properties
-    public virtual Orders.Order Order { get; set; } = null!;
-    public virtual Users.User User { get; set; } = null!;
+    public virtual Order Order { get; set; } = null!;
+    public virtual User User { get; set; } = null!;
     public virtual ICollection<ReturnItem> ReturnItems { get; set; } = new List<ReturnItem>();
 }

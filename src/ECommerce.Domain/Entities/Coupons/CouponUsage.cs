@@ -1,4 +1,4 @@
-using ECommerce.Domain.Common;
+
 
 namespace ECommerce.Domain.Entities.Coupons;
 
@@ -9,10 +9,10 @@ public class CouponUsage : BaseEntity<Guid>
     //FK
     public Guid CouponId { get; set; }
     public Guid OrderId { get; set; }
-    public string UserId { get; set; }
+    public string UserId { get; set; } = null!;
     
     //Navigation Properties
-    public virtual Coupon? Coupon { get; set; }
-    public virtual Orders.Order? Order { get; set; }
-    public virtual Users.User? User { get; set; }
+    public virtual Coupon Coupon { get; set; } = null!;
+    public virtual Order Order { get; set; } = null!;
+    public virtual User User { get; set; } = null!;
 }

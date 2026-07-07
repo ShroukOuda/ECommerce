@@ -1,4 +1,4 @@
-using ECommerce.Domain.Common;
+
 using ECommerce.Domain.Enums.Payment;
 
 namespace ECommerce.Domain.Entities.Payments;
@@ -17,9 +17,9 @@ public class Payment : BaseEntity<Guid>
     
     //FK
     public Guid OrderId { get; set; }
-    public string UserId { get; set; }
+    public string UserId { get; set; } = null!;
     
     //Navigation Properties
-    public virtual Orders.Order? Order { get; set; }
-    public virtual Users.User? User { get; set; }
+    public virtual Order Order { get; set; } = null!;
+    public virtual User User { get; set; } = null!;
 }

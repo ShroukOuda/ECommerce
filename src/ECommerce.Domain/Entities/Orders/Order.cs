@@ -1,4 +1,4 @@
-using ECommerce.Domain.Common;
+
 using ECommerce.Domain.Enums.Order;
 
 namespace ECommerce.Domain.Entities.Orders;
@@ -20,15 +20,15 @@ public class Order : BaseEntity<Guid>
     public Guid? BillingAddressId { get; set; }
     
     //Navigation Properties
-    public virtual Users.User User { get; set; } = null!;
-    public virtual Users.Address ShippingAddress { get; set; } = null!;
-    public virtual Users.Address BillingAddress { get; set; } = null!;
+    public virtual User User { get; set; } = null!;
+    public virtual Address ShippingAddress { get; set; } = null!;
+    public virtual Address BillingAddress { get; set; } = null!;
     public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
     public virtual ICollection<OrderStatusHistory> OrderStatusHistories { get; set; } = new List<OrderStatusHistory>();
-    public virtual ICollection<Reviews.ProductReview> ProductReviews { get; set; } = new List<Reviews.ProductReview>();
-    public virtual ICollection<Coupons.CouponUsage> CouponUsages { get; set; } = new List<Coupons.CouponUsage>();
-    public virtual ICollection<Payments.Payment> Payments { get; set; } = new List<Payments.Payment>();
-    public virtual ICollection<Shippings.Shipping> Shippings { get; set; } = new List<Shippings.Shipping>();
-    public virtual ICollection<Returns.ReturnRequest> ReturnRequests { get; set; } = new List<Returns.ReturnRequest>();
-    public virtual ICollection<Returns.ReturnItem> ReturnItems { get; set; } = new List<Returns.ReturnItem>();
+    public virtual ICollection<ProductReview> ProductReviews { get; set; } = new List<ProductReview>();
+    public virtual ICollection<CouponUsage> CouponUsages { get; set; } = new List<CouponUsage>();
+    public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
+    public virtual ICollection<Shipping> Shippings { get; set; } = new List<Shipping>();
+    public virtual ICollection<ReturnRequest> ReturnRequests { get; set; } = new List<ReturnRequest>();
+    public virtual ICollection<ReturnItem> ReturnItems { get; set; } = new List<ReturnItem>();
 }

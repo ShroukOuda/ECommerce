@@ -1,4 +1,3 @@
-using ECommerce.Domain.Common;
 using ECommerce.Domain.Enums.Brand;
 
 namespace ECommerce.Domain.Entities.Brands;
@@ -12,5 +11,5 @@ public class Brand : BaseEntity<Guid>
     
     //Navigation Properties
     public virtual ICollection<BrandLogo> BrandLogos { get; set; } = new List<BrandLogo>();
-    public virtual ICollection<Products.Product> Products { get; set; } = new List<Products.Product>();
+    public virtual ICollection<Product> Products { get; set; } = new List<Product>();
 }

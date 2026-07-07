@@ -1,5 +1,3 @@
-using ECommerce.Domain.Enums;
-using ECommerce.Domain.Common;
 using ECommerce.Domain.Enums.Shipping;
 
 namespace ECommerce.Domain.Entities.Shippings;
@@ -18,6 +16,6 @@ public class Shipping : BaseEntity<Guid>
     public Guid AddressId { get; set; }
     
     //Navigation Properties
-    public virtual Orders.Order? Order { get; set; }
-    public virtual Users.Address? Address { get; set; }
+    public virtual Order Order { get; set; } = null!;
+    public virtual Address Address { get; set; } = null!;
 }

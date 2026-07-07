@@ -1,4 +1,4 @@
-using ECommerce.Domain.Common;
+
 
 namespace ECommerce.Domain.Entities.Reviews;
 
@@ -10,5 +10,5 @@ public class ReviewHelpfulVote : BaseEntity<Guid>
     public Guid ProductReviewId { get; set; }
     
     //Navigation Properties
-    public virtual ProductReview? ProductReview { get; set; }
+    public virtual ProductReview ProductReview { get; set; } = null!;
 }

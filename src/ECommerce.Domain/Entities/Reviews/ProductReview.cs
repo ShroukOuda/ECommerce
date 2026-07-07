@@ -1,4 +1,3 @@
-using ECommerce.Domain.Common;
 using ECommerce.Domain.Enums.Review;
 
 namespace ECommerce.Domain.Entities.Reviews;
@@ -18,7 +17,7 @@ public class ProductReview : BaseEntity<Guid>
     
     //Navigation Properties
     public virtual ICollection<ReviewHelpfulVote> ReviewHelpfulVotes { get; set; } = new List<ReviewHelpfulVote>();
-    public virtual Products.Product? Product { get; set; }
-    public virtual Orders.Order? Order { get; set; }
-    public virtual Users.User? User { get; set; }
+    public virtual Product Product { get; set; } = null!;
+    public virtual Order Order { get; set; } = null!;
+    public virtual User User { get; set; } = null!;
 }

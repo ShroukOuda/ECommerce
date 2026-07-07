@@ -1,4 +1,4 @@
-using ECommerce.Domain.Common;
+
 
 namespace ECommerce.Domain.Entities.Products;
 
@@ -9,6 +9,6 @@ public class ProductVariantOptionValue : BaseEntity<Guid>
     public Guid ProductOptionValueId { get; set; }
     
     //Navigation Properties
-    public virtual ProductVariant? ProductVariant { get; set; }
-    public virtual ProductOptionValue? ProductOptionValue { get; set; }
+    public virtual ProductVariant ProductVariant { get; set; } = null!;
+    public virtual ProductOptionValue ProductOptionValue { get; set; } = null!;
 }

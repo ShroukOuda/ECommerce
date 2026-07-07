@@ -1,4 +1,4 @@
-using ECommerce.Domain.Common;
+
 
 namespace ECommerce.Domain.Entities.Carts;
 
@@ -14,7 +14,7 @@ public class CartItem : BaseEntity<Guid>
     
     //Navigation Properties
     public virtual Cart Cart { get; set; } = null!;
-    public virtual Products.Product Product { get; set; } = null!;
-    public virtual Products.ProductVariant ProductVariant { get; set; } = null!;
+    public virtual Product Product { get; set; } = null!;
+    public virtual ProductVariant ProductVariant { get; set; } = null!;
     public virtual ICollection<CartItemOption> CartItemOptions { get; set; } = new List<CartItemOption>();
 }

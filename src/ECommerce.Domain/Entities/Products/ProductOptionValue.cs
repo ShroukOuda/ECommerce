@@ -14,7 +14,7 @@ public class ProductOptionValue : BaseEntity<Guid>
     public Guid OptionId { get; set; } //FK
     
     //Navigation Properties
-    public virtual ProductOption? ProductOption { get; set; }
+    public virtual ProductOption ProductOption { get; set; } = null!;
     public virtual ICollection<ProductVariantOptionValue> ProductVariantOptionValues { get; set; } = new List<ProductVariantOptionValue>();
 
 }

@@ -1,4 +1,3 @@
-using ECommerce.Domain.Common;
 using ECommerce.Domain.Enums.Return;
 
 namespace ECommerce.Domain.Entities.Returns;
@@ -16,7 +15,7 @@ public class ReturnItem : BaseEntity<Guid>
     public Guid ProductId { get; set; }
     
     //Navigation Properties
-    public virtual ReturnRequest? ReturnRequest { get; set; }
-    public virtual Orders.OrderItem? OrderItem { get; set; }
-    public virtual Products.Product? Product { get; set; }
+    public virtual ReturnRequest ReturnRequest { get; set; } = null!;
+    public virtual OrderItem OrderItem { get; set; } = null!;
+    public virtual Product Product { get; set; } = null!;
 }

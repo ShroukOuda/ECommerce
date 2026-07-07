@@ -1,4 +1,3 @@
-using ECommerce.Domain.Common;
 using ECommerce.Domain.Enums.Coupon;
 
 namespace ECommerce.Domain.Entities.Coupons;

@@ -1,4 +1,4 @@
-using ECommerce.Domain.Common;
+
 
 namespace ECommerce.Domain.Entities.Orders;
 
@@ -12,5 +12,5 @@ public class OrderItemOption : BaseEntity<Guid>
     public Guid OrderItemId { get; set; }
     
     //Navigation Properties
-    public virtual OrderItem? OrderItem { get; set; }
+    public virtual OrderItem OrderItem { get; set; } = null!;
 }

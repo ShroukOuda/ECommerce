@@ -1,4 +1,3 @@
-using ECommerce.Domain.Common;
 using ECommerce.Domain.Enums.Cart;
 
 namespace ECommerce.Domain.Entities.Carts;
@@ -14,6 +13,6 @@ public class Cart : BaseEntity<Guid>
     public string? UserId { get; set; }
     
     //Navigation Properties
-    public virtual Users.User? User { get; set; }
+    public virtual User User { get; set; } = null!;
     public virtual ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
 }

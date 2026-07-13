@@ -27,6 +27,7 @@ public class ProductVariantsController : BaseController
     }
 
     [HttpPost("add")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Add(AddProductVariantDTO dto)
     {
         await _productVariantService.AddVariantAsync(dto);
@@ -34,6 +35,7 @@ public class ProductVariantsController : BaseController
     }
 
     [HttpPut("update")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(UpdateProductVariantDTO dto)
     {
         await _productVariantService.UpdateVariantAsync(dto);
@@ -41,6 +43,7 @@ public class ProductVariantsController : BaseController
     }
 
     [HttpDelete("delete/{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
         await _productVariantService.DeleteVariantAsync(id);

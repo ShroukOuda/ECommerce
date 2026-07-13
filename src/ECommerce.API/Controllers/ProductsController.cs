@@ -31,6 +31,49 @@ public class ProductsController : BaseController
         return Ok(product);
     }
 
+    [HttpGet("get-featured")]
+    public async Task<IActionResult> GetFeaturedProducts()
+    {
+        var products = await _productService.GetFeaturedProductsAsync();
+        return Ok(products);
+    }
+
+    [HttpGet("get-best-sellers")]
+    public async Task<IActionResult> GetBestSellerProducts()
+    {
+        var products = await _productService.GetBestSellerProductsAsync();
+        return Ok(products);
+    }
+
+    [HttpGet("get-new-arrivals")]
+    public async Task<IActionResult> GetNewArrivalProducts()
+    {
+        var products = await _productService.GetNewArrivalProductsAsync();
+        return Ok(products);
+    }
+
+    [HttpGet("get-hot-deals")]
+    public async Task<IActionResult> GetHotDealProducts()
+    {
+        var products = await _productService.GetHotDealProductsAsync();
+        return Ok(products);
+    }
+
+    [HttpGet("get-top-rated")]
+    public async Task<IActionResult> GetTopRatedProducts()
+    {
+        var products = await _productService.GetTopRatedProductsAsync();
+        return Ok(products);
+    }
+
+    [HttpGet("get-low-stock")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> GetLowStockProducts()
+    {
+        var products = await _productService.GetLowStockProductsAsync();
+        return Ok(products);
+    }
+
     [HttpPost("add")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Add(AddProductDTO productDto)
@@ -40,6 +83,7 @@ public class ProductsController : BaseController
     }
     
     [HttpPost("upload-image")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> AddImage([FromForm] UploadProductImageDTO dto, CancellationToken ct = default)
     {
         await _productImageService.UploadImageAsync(dto, ct);
@@ -47,6 +91,7 @@ public class ProductsController : BaseController
     }
 
     [HttpPut("update")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(UpdateProductDTO productDTO)
     {
         await _productService.UpdateProductAsync(productDTO);
@@ -54,6 +99,7 @@ public class ProductsController : BaseController
     }
 
     [HttpDelete("delete/{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
         await _productService.DeleteProductAsync(id);
@@ -61,6 +107,7 @@ public class ProductsController : BaseController
     }
     
     [HttpDelete("delete-photo/{imageId}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteImage(Guid productId, Guid imageId, CancellationToken ct = default)
     {
         await _productImageService.DeleteProductImageAsync(productId, imageId);
@@ -68,6 +115,7 @@ public class ProductsController : BaseController
     }
 
     [HttpDelete("delete-photos/{productId}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteImages(Guid productId, CancellationToken ct = default)
     {
         await _productImageService.DeleteAllProductImagesAsync(productId, ct);

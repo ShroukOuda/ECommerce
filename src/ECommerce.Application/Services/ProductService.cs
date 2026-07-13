@@ -52,6 +52,42 @@ public class ProductService : IProductService
         return _mapper.Map<GetProductDTO>(product);
     }
 
+    public async Task<IReadOnlyList<GetProductDTO>> GetFeaturedProductsAsync()
+    {
+        var spec = new FeaturedProductsSpecification();
+        var products = await _unitOfWork.GetRepository<Product, Guid>().GetAllAsync(spec);
+
+        return _mapper.Map<IReadOnlyList<GetProductDTO>>(products);
+    }
+    public async Task<IReadOnlyList<GetProductDTO>> GetBestSellerProductsAsync()
+    {
+        var spec = new BestSellerProductsSpecification();
+        var products = await _unitOfWork.GetRepository<Product, Guid>().GetAllAsync(spec);
+
+        return _mapper.Map<IReadOnlyList<GetProductDTO>>(products);
+    }
+    public async Task<IReadOnlyList<GetProductDTO>> GetNewArrivalProductsAsync()
+    {
+        var spec = new NewArrivalProductsSpecification();
+        var products = await _unitOfWork.GetRepository<Product, Guid>().GetAllAsync(spec);
+
+        return _mapper.Map<IReadOnlyList<GetProductDTO>>(products);
+    }
+    public async Task<IReadOnlyList<GetProductDTO>> GetHotDealProductsAsync()
+    {
+        var spec = new HotDealProductsSpecification();
+        var products = await _unitOfWork.GetRepository<Product, Guid>().GetAllAsync(spec);
+
+        return _mapper.Map<IReadOnlyList<GetProductDTO>>(products);
+    }
+    public async Task<IReadOnlyList<GetProductDTO>> GetTopRatedProductsAsync()
+    {
+        var spec = new TopRatedProductsSpecification();
+        var products = await _unitOfWork.GetRepository<Product, Guid>().GetAllAsync(spec);
+
+        return _mapper.Map<IReadOnlyList<GetProductDTO>>(products);
+    }
+
     public async Task AddProductAsync(AddProductDTO productDTO, CancellationToken cancellationToken = default)
     {
         var validationResult = await _addProductDtoValidator.ValidateAsync(productDTO);

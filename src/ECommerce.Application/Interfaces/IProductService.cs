@@ -11,6 +11,7 @@ public interface IProductService
     Task<IReadOnlyList<GetProductDTO>> GetNewArrivalProductsAsync();
     Task<IReadOnlyList<GetProductDTO>> GetHotDealProductsAsync();
     Task<IReadOnlyList<GetProductDTO>> GetTopRatedProductsAsync();
+    Task<IReadOnlyList<GetProductDTO>> GetLowStockProductsAsync();
     Task AddProductAsync(AddProductDTO productDto, CancellationToken ct = default);
     Task UpdateProductAsync(UpdateProductDTO productDto, CancellationToken ct = default);
     Task DeleteProductAsync(Guid id, CancellationToken ct = default);

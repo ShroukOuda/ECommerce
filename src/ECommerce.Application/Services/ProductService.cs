@@ -88,6 +88,14 @@ public class ProductService : IProductService
         return _mapper.Map<IReadOnlyList<GetProductDTO>>(products);
     }
 
+    public async Task<IReadOnlyList<GetProductDTO>> GetLowStockProductsAsync()
+    {
+        var spec = new LowStockProductsSpecification();
+        var products = await _unitOfWork.GetRepository<Product, Guid>().GetAllAsync(spec);
+
+        return _mapper.Map<IReadOnlyList<GetProductDTO>>(products);
+    }
+
     public async Task AddProductAsync(AddProductDTO productDTO, CancellationToken cancellationToken = default)
     {
         var validationResult = await _addProductDtoValidator.ValidateAsync(productDTO);

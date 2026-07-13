@@ -1,6 +1,6 @@
 using ECommerce.Domain.Specifications.Base;
 using ECommerce.Domain.Entities.Products;
-using ECommerce.Application.DTO.Product;
+
 
 namespace ECommerce.Application.Specifications.Products;
 
@@ -12,6 +12,7 @@ public class ProductSpecification : BaseSpecification<Product, Guid>
             || x.Name.ToLower().Contains(productParams.Search.ToLower()) 
             || (x.Description != null && x.Description.ToLower().Contains(productParams.Search.ToLower()))) &&
             (!productParams.CategoryId.HasValue || x.CategoryId == productParams.CategoryId) &&
+            (!productParams.BrandId.HasValue || x. BrandId == productParams.BrandId) &&
             (!productParams.MinPrice.HasValue || x.BasePrice >= productParams.MinPrice) &&
             (!productParams.MaxPrice.HasValue || x.BasePrice <= productParams.MaxPrice))
     {

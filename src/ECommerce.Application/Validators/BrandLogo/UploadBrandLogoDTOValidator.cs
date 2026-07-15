@@ -1,4 +1,4 @@
-using ECommerce.Application.DTO.CategoryImages;
+using ECommerce.Application.DTO.BrandLogos;
 using ECommerce.Application.Validators.Common;
 
 namespace ECommerce.Application.Validators.CategoryImage;

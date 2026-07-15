@@ -1,4 +1,5 @@
 using ECommerce.Application.DTO.CategoryImages;
+using ECommerce.Domain.Enums.Media;
 
 namespace ECommerce.API.Controllers;
 
@@ -40,6 +41,27 @@ public class CategoriesController : BaseController
     {
         await _categoryImageService.UploadImageAsync(dto, ct);
         return Ok(new ResponseAPI(200, "Category image uploaded successfully"));
+    }
+
+    [HttpGet("get-Images/{CategoryId}")]
+    public async Task<IActionResult> GetCategoryImages(Guid CategoryId)
+    {
+        var Images = await _categoryImageService.GetCategoryImagesAsync(CategoryId);
+        return Ok(Images);
+    }
+
+    [HttpGet("get-Image-by-sub-type")]
+    public async Task<IActionResult> GetCategoryImageBySubType([FromQuery] Guid CategoryId, ImageSubType subType)
+    {
+        var Image = await _categoryImageService.GetCategoryImageBySubTypeAsync(CategoryId, subType);
+        return Ok(Image);
+    }
+
+    [HttpGet("get-Image/{id}")]
+    public async Task<IActionResult> GetCategoryImageById(Guid ImageId)
+    {
+        var Image = await _categoryImageService.GetImageByIdAsync(ImageId);
+        return Ok(Image);
     }
 
     [HttpPut("update")]

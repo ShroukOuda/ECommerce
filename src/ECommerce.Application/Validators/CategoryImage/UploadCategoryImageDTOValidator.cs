@@ -28,29 +28,29 @@ public class UploadCategoryImageDTOValidator : AbstractValidator<UploadCategoryI
             .WithMessage("File is required")
             .SetValidator(_fileValidator);
         
-        When(x => x.SubType == ImageSubType.CategoryIcon, () =>
+        When(x => x.SubType == ImageSubType.Icon, () =>
         {
             RuleFor(x => x.File.Length)
-                .LessThanOrEqualTo(_validationSettings.CategoryImage.IconMaxSizeInBytes)
-                .WithMessage($"Icon must not exceed {_validationSettings.CategoryImage.IconMaxSizeKB}KB");
+                .LessThanOrEqualTo(_validationSettings.IconMaxSizeInBytes)
+                .WithMessage($"Icon must not exceed {_validationSettings.IconMaxSizeKB}KB");
 
             RuleFor(x => x.File.FileName)
                 .Must(HaveValidIconExtension)
-                .WithMessage($"Icon must be: {string.Join(", ", _validationSettings.CategoryImage.IconAllowedExtensions)}");
+                .WithMessage($"Icon must be: {string.Join(", ", _validationSettings.IconAllowedExtensions)}");
         });
         
-        When(x => x.SubType == ImageSubType.CategoryBanner, () =>
+        When(x => x.SubType == ImageSubType.Banner, () =>
         {
             RuleFor(x => x.File.Length)
-                .LessThanOrEqualTo(_validationSettings.CategoryImage.BannerMaxSizeInBytes)
-                .WithMessage($"Banner must not exceed {_validationSettings.CategoryImage.BannerMaxSizeMB}MB");
+                .LessThanOrEqualTo(_validationSettings.BannerMaxSizeInBytes)
+                .WithMessage($"Banner must not exceed {_validationSettings.BannerMaxSizeMB}MB");
         });
 
-        When(x => x.SubType == ImageSubType.CategoryThumbnail, () =>
+        When(x => x.SubType == ImageSubType.Thumbnail, () =>
         {
             RuleFor(x => x.File.Length)
-                .LessThanOrEqualTo(_validationSettings.CategoryImage.ThumbnailMaxSizeInBytes)
-                .WithMessage($"Thumbnail must not exceed {_validationSettings.CategoryImage.ThumbnailMaxSizeMB}MB");
+                .LessThanOrEqualTo(_validationSettings.ThumbnailMaxSizeInBytes)
+                .WithMessage($"Thumbnail must not exceed {_validationSettings.ThumbnailMaxSizeMB}MB");
         });
         
         RuleFor(x => x.AltText)
@@ -63,6 +63,6 @@ public class UploadCategoryImageDTOValidator : AbstractValidator<UploadCategoryI
         if (string.IsNullOrEmpty(fileName)) return false;
         
         var extension = Path.GetExtension(fileName).ToLowerInvariant();
-        return _validationSettings.CategoryImage.IconAllowedExtensions.Contains(extension);
+        return _validationSettings.IconAllowedExtensions.Contains(extension);
     }
 }

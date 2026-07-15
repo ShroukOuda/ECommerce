@@ -27,6 +27,7 @@ public class CategoriesController : BaseController
     }
 
     [HttpPost("add")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Add(AddCategoryDTO categoryDto)
     {
         await _categoryService.AddCategoryAsync(categoryDto);
@@ -34,6 +35,7 @@ public class CategoriesController : BaseController
     }
     
     [HttpPost("uploadPhoto")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UploadImage([FromForm] UploadCategoryImageDTO dto, CancellationToken ct = default)
     {
         await _categoryImageService.UploadImageAsync(dto, ct);
@@ -41,6 +43,7 @@ public class CategoriesController : BaseController
     }
 
     [HttpPut("update")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(UpdateCategoryDTO categoryDto)
     {
         await  _categoryService.UpdateCategoryAsync(categoryDto);
@@ -48,6 +51,7 @@ public class CategoriesController : BaseController
     }
     
     [HttpDelete("delete/{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
         await _categoryService.DeleteCategoryAsync(id);
@@ -55,6 +59,7 @@ public class CategoriesController : BaseController
     }
     
     [HttpDelete("delete-photo/{photoId}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteImage(Guid photoId, Guid categoryId, CancellationToken ct = default)
     {
         await _categoryImageService.DeleteCategoryImageAsync(categoryId, photoId, ct);
@@ -62,6 +67,7 @@ public class CategoriesController : BaseController
     }
 
     [HttpDelete("delete-photos/{categoryId}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteImages(Guid categoryId, CancellationToken ct = default)
     {
         await _categoryImageService.DeleteAllCategoryImagesAsync(categoryId, ct);

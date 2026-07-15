@@ -1,6 +1,6 @@
 using ECommerce.Application.DTO.Common;
 
-namespace ECommerce.Application.DTO.CategoryImages;
+namespace ECommerce.Application.DTO.BrandLogos;
 
 public class BrandLogoDTO : BaseImageDTO
 {

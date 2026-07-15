@@ -2,7 +2,7 @@ namespace ECommerce.Domain.Enums.Media;
 
 public enum ImageSubType
 {
-    CategoryIcon = 1,
-    CategoryBanner = 2,
-    CategoryThumbnail = 3
+    Icon = 1,
+    Banner = 2,
+    Thumbnail = 3
 }

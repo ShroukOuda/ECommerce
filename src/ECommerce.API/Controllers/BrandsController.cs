@@ -27,6 +27,7 @@ public class BrandsController : BaseController
     }
 
     [HttpPost("add")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Add(AddBrandDTO dto)
     {
         await _brandService.AddBrandAsync(dto);
@@ -34,6 +35,7 @@ public class BrandsController : BaseController
     }
 
     [HttpPut("update")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(UpdateBrandDTO dto)
     {
         await _brandService.UpdateBrandAsync(dto);
@@ -41,6 +43,7 @@ public class BrandsController : BaseController
     }
 
     [HttpDelete("delete/{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
         await _brandService.DeleteBrandAsync(id);

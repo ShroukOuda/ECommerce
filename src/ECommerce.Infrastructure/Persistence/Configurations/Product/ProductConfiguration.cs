@@ -8,8 +8,7 @@ public class ProductConfiguration : IEntityTypeConfiguration<Domain.Entities.Pro
     {
         builder.HasKey(p => p.Id);
 
-        builder.HasIndex(p => p.Slug).IsUnique();
-        builder.HasIndex(p => p.Sku).IsUnique();
+      
 
         builder.Property(p => p.Name).IsRequired().HasMaxLength(200);
         builder.Property(p => p.Slug).IsRequired().HasMaxLength(250);
@@ -18,14 +17,23 @@ public class ProductConfiguration : IEntityTypeConfiguration<Domain.Entities.Pro
 
         builder.Property(p => p.BasePrice).IsRequired().HasColumnType("decimal(18,2)");
         builder.Property(p => p.SalePrice).HasColumnType("decimal(18,2)");
-        builder.Property(p => p.AverageRating).HasColumnType("decimal(3,2)");
+
 
         builder.Property(p => p.StockStatus).HasConversion<string>().HasMaxLength(50);
         builder.Property(p => p.Status).HasConversion<string>().HasMaxLength(50);
 
+        builder.Property(p => p.TotalSales).HasDefaultValue(0);
+        builder.Property(p => p.ReviewCount).HasDefaultValue(0);
+        builder.Property(p => p.TotalRating).HasDefaultValue(0);
+        builder.Property(p => p.ViewCount).HasDefaultValue(0);
+
+        builder.Property(p => p.LastViewedAt).HasDefaultValue(null);
+
         // Ignore computed C# properties
         builder.Ignore(p => p.IsOnSale);
         builder.Ignore(p => p.DiscountPercentage);
+        builder.Ignore(p => p.AverageRating);
+
 
         // FK Relationships
         builder.HasOne(p => p.Category)
@@ -85,5 +93,14 @@ public class ProductConfiguration : IEntityTypeConfiguration<Domain.Entities.Pro
             .OnDelete(DeleteBehavior.NoAction);
 
         builder.Property(p => p.IsDeleted).HasDefaultValue(false);
+
+        //Indexes
+        builder.HasIndex(p => p.Slug).IsUnique();
+        builder.HasIndex(p => p.Sku).IsUnique();
+
+        
+        builder.HasIndex(p => p.CategoryId).HasDatabaseName("IX_Products_CategoryId");
+        builder.HasIndex(p => p.BrandId).HasDatabaseName("IX_Products_BrandId");
+       
     }
 }

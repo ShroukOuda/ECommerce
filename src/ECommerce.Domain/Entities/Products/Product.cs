@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using ECommerce.Domain.Common;
 using ECommerce.Domain.Enums.Inventory;
 using ECommerce.Domain.Enums.Product;
@@ -30,9 +31,13 @@ public class Product : BaseEntity<Guid>
 
     public DateTime? LastViewedAt { get; set; }
 
+    [NotMapped]
     public decimal AverageRating => ReviewCount > 0 ? (decimal)TotalRating / ReviewCount : 0;
-    
+
+    [NotMapped]
     public bool IsOnSale => SalePrice < BasePrice && SalePrice > 0;
+
+    [NotMapped] 
     public decimal DiscountPercentage => BasePrice > 0 ? ((BasePrice - SalePrice) / BasePrice) * 100 : 0;
     
     

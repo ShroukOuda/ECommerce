@@ -31,49 +31,6 @@ public class ProductsController : BaseController
         return Ok(product);
     }
 
-    [HttpGet("get-featured")]
-    public async Task<IActionResult> GetFeaturedProducts()
-    {
-        var products = await _productService.GetFeaturedProductsAsync();
-        return Ok(products);
-    }
-
-    [HttpGet("get-best-sellers")]
-    public async Task<IActionResult> GetBestSellerProducts()
-    {
-        var products = await _productService.GetBestSellerProductsAsync();
-        return Ok(products);
-    }
-
-    [HttpGet("get-new-arrivals")]
-    public async Task<IActionResult> GetNewArrivalProducts()
-    {
-        var products = await _productService.GetNewArrivalProductsAsync();
-        return Ok(products);
-    }
-
-    [HttpGet("get-hot-deals")]
-    public async Task<IActionResult> GetHotDealProducts()
-    {
-        var products = await _productService.GetHotDealProductsAsync();
-        return Ok(products);
-    }
-
-    [HttpGet("get-top-rated")]
-    public async Task<IActionResult> GetTopRatedProducts()
-    {
-        var products = await _productService.GetTopRatedProductsAsync();
-        return Ok(products);
-    }
-
-    [HttpGet("get-low-stock")]
-    [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> GetLowStockProducts()
-    {
-        var products = await _productService.GetLowStockProductsAsync();
-        return Ok(products);
-    }
-
     [HttpPost("add")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Add(AddProductDTO productDto)

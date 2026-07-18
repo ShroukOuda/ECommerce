@@ -9,12 +9,17 @@ public class ProductSpecification : BaseSpecification<Product, Guid>
     public ProductSpecification(ProductSpecParams productParams)
         : base(x =>
             (string.IsNullOrEmpty(productParams.Search) 
-            || x.Name.ToLower().Contains(productParams.Search.ToLower()) 
-            || (x.Description != null && x.Description.ToLower().Contains(productParams.Search.ToLower()))) &&
+            || x.Name.ToLower().Contains(productParams.Search) 
+            || (x.Description != null && x.Description.ToLower().Contains(productParams.Search))) &&
             (!productParams.CategoryId.HasValue || x.CategoryId == productParams.CategoryId) &&
             (!productParams.BrandId.HasValue || x. BrandId == productParams.BrandId) &&
             (!productParams.MinPrice.HasValue || x.BasePrice >= productParams.MinPrice) &&
-            (!productParams.MaxPrice.HasValue || x.BasePrice <= productParams.MaxPrice))
+            (!productParams.MaxPrice.HasValue || x.BasePrice <= productParams.MaxPrice) &&
+            (!productParams.IsFeatured.HasValue || x.IsFeatured == productParams.IsFeatured) &&
+            (!productParams.IsBestSeller.HasValue || x.IsBestSeller == productParams.IsBestSeller) &&
+            (!productParams.IsHotDeal.HasValue || x.IsHotDeal == productParams.IsHotDeal) &&
+            (!productParams.IsNewArrival.HasValue || x.IsNewArrival == productParams.IsNewArrival) &&
+            (!productParams.IsTopRated.HasValue || x.IsTopRated == productParams.IsTopRated))
     {
         switch (productParams.SortBy)
         {
@@ -39,8 +44,8 @@ public class ProductSpecification : BaseSpecification<Product, Guid>
         } 
 
         AddInclude(p => p.Category);
+        AddInclude(p => p.Brand);
         AddInclude(p => p.ProductImages);
-        
         ApplyPaging(productParams.PageSize, productParams.PageNumber);
 
         AsNoTracking(); 

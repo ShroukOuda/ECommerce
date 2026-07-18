@@ -7,5 +7,5 @@ public class CategoryImage : BaseImage
     public ImageSubType SubType { get; set; }
     
     //Navigation Properties
-    public virtual Category? Category { get; set; }
+    public  Category? Category { get; set; }
 }

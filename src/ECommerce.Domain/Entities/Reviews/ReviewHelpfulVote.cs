@@ -10,5 +10,5 @@ public class ReviewHelpfulVote : BaseEntity<Guid>
     public Guid ProductReviewId { get; set; }
     
     //Navigation Properties
-    public virtual ProductReview ProductReview { get; set; } = null!;
+    public  ProductReview ProductReview { get; set; } = null!;
 }

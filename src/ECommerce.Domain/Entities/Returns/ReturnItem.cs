@@ -15,7 +15,7 @@ public class ReturnItem : BaseEntity<Guid>
     public Guid ProductId { get; set; }
     
     //Navigation Properties
-    public virtual ReturnRequest ReturnRequest { get; set; } = null!;
-    public virtual OrderItem OrderItem { get; set; } = null!;
-    public virtual Product Product { get; set; } = null!;
+    public  ReturnRequest ReturnRequest { get; set; } = null!;
+    public  OrderItem OrderItem { get; set; } = null!;
+    public  Product Product { get; set; } = null!;
 }

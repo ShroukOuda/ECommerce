@@ -10,6 +10,6 @@ public class Brand : BaseEntity<Guid>
     public BrandStatus Status { get; set; } = BrandStatus.Active;
     
     //Navigation Properties
-    public virtual ICollection<BrandLogo> BrandLogos { get; set; } = new List<BrandLogo>();
-    public virtual ICollection<Product> Products { get; set; } = new List<Product>();
+    public  ICollection<BrandLogo> BrandLogos { get; set; } = new List<BrandLogo>();
+    public  ICollection<Product> Products { get; set; } = new List<Product>();
 }

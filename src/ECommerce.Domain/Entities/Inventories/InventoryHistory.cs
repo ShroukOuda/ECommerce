@@ -18,7 +18,7 @@ public class InventoryHistory : BaseEntity<Guid>
     public string UserId { get; set; } = null!;
     
     //Navigation Properties
-    public virtual Product Product { get; set; } = null!;
-    public virtual ProductVariant ProductVariant { get; set; } = null!;
-    public virtual User User { get; set; } = null!;
+    public  Product Product { get; set; } = null!;
+    public  ProductVariant ProductVariant { get; set; } = null!;
+    public  User User { get; set; } = null!;
 }

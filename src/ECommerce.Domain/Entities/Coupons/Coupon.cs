@@ -19,6 +19,6 @@ public class Coupon : BaseEntity<Guid>
     public CouponStatus Status { get; set; } = CouponStatus.Active;
     
     //Navigation Properties
-    public virtual ICollection<CouponUsage> CouponUsages { get; set; } = new List<CouponUsage>();
+    public  ICollection<CouponUsage> CouponUsages { get; set; } = new List<CouponUsage>();
 
 }

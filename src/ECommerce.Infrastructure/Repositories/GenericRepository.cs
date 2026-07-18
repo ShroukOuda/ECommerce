@@ -15,7 +15,7 @@ public class GenericRepository<TEntity, TKey> : IGenericRepository<TEntity, TKey
         _dbSet = context.Set<TEntity>();
     }
     
-    public virtual async Task<IReadOnlyList<TEntity>> GetAllAsync(
+    public  async Task<IReadOnlyList<TEntity>> GetAllAsync(
         CancellationToken ct = default)
     {
         return await _dbSet
@@ -31,7 +31,7 @@ public class GenericRepository<TEntity, TKey> : IGenericRepository<TEntity, TKey
 
 
 
-    public virtual async Task<TEntity?> GetByIdAsync(
+    public  async Task<TEntity?> GetByIdAsync(
         TKey id,
         CancellationToken ct = default)
     {
@@ -43,7 +43,7 @@ public class GenericRepository<TEntity, TKey> : IGenericRepository<TEntity, TKey
         return await SpecificationEvaluator.GetQuery(_dbSet, specification).FirstOrDefaultAsync();
     }
 
-    public virtual async Task AddAsync(TEntity entity, CancellationToken ct = default)
+    public  async Task AddAsync(TEntity entity, CancellationToken ct = default)
     {
         if (entity is BaseEntity<TKey> baseEntity)
         {
@@ -53,7 +53,7 @@ public class GenericRepository<TEntity, TKey> : IGenericRepository<TEntity, TKey
 
         await _dbSet.AddAsync(entity, ct);
     }
-    public virtual async Task AddRangeAsync(
+    public  async Task AddRangeAsync(
         IEnumerable<TEntity> entities,
         CancellationToken ct = default)
     {
@@ -69,7 +69,7 @@ public class GenericRepository<TEntity, TKey> : IGenericRepository<TEntity, TKey
 
         await _dbSet.AddRangeAsync(entities, ct);
     }
-    public virtual void Update(TEntity entity, CancellationToken ct = default)
+    public  void Update(TEntity entity, CancellationToken ct = default)
     {
         if (entity is BaseEntity<TKey> baseEntity)
         {
@@ -79,7 +79,7 @@ public class GenericRepository<TEntity, TKey> : IGenericRepository<TEntity, TKey
         _dbSet.Update(entity);
     }
     
-    public virtual void UpdateRange(
+    public  void UpdateRange(
         IEnumerable<TEntity> entities,
         CancellationToken ct = default)
     {
@@ -96,12 +96,12 @@ public class GenericRepository<TEntity, TKey> : IGenericRepository<TEntity, TKey
         
     }
     
-    public virtual void Delete(TEntity entity, CancellationToken ct = default)
+    public  void Delete(TEntity entity, CancellationToken ct = default)
     {
         _dbSet.Remove(entity);
        
     }
-    public virtual void DeleteRange(
+    public  void DeleteRange(
         IEnumerable<TEntity> entities,
         CancellationToken ct = default)
     {
@@ -109,14 +109,14 @@ public class GenericRepository<TEntity, TKey> : IGenericRepository<TEntity, TKey
         
     }
     
-    public virtual async Task<bool> ExistsAsync(
+    public  async Task<bool> ExistsAsync(
         BaseSpecification<TEntity, TKey> specification,
         CancellationToken ct = default)
     {
         return await SpecificationEvaluator.GetQuery(_dbSet, specification).AnyAsync();
     }
     
-    public virtual async Task<int> CountAsync(
+    public  async Task<int> CountAsync(
         BaseSpecification<TEntity, TKey> specification,
         CancellationToken ct = default)
     {

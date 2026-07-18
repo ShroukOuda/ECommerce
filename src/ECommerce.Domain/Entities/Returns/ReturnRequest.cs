@@ -23,7 +23,7 @@ public class ReturnRequest : BaseEntity<Guid>
     public string UserId { get; set; } = null!;
     
     //Navigation Properties
-    public virtual Order Order { get; set; } = null!;
-    public virtual User User { get; set; } = null!;
-    public virtual ICollection<ReturnItem> ReturnItems { get; set; } = new List<ReturnItem>();
+    public  Order Order { get; set; } = null!;
+    public  User User { get; set; } = null!;
+    public  ICollection<ReturnItem> ReturnItems { get; set; } = new List<ReturnItem>();
 }

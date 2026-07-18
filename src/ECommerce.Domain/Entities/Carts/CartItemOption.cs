@@ -13,6 +13,6 @@ public class CartItemOption : BaseEntity<Guid>
     public Guid CartItemId { get; set; }
     
     //Navigation Properties
-    public virtual ProductOption ProductOption { get; set; } = null!;
-    public virtual CartItem CartItem { get; set; } = null!;
+    public  ProductOption ProductOption { get; set; } = null!;
+    public  CartItem CartItem { get; set; } = null!;
 }

@@ -11,5 +11,5 @@ public class OrderStatusHistory : BaseEntity<Guid>
     public Guid OrderId { get; set; }
     
     //Navigation Properties
-    public virtual Order Order { get; set; } = null!;
+    public  Order Order { get; set; } = null!;
 }

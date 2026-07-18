@@ -16,6 +16,6 @@ public class Shipping : BaseEntity<Guid>
     public Guid AddressId { get; set; }
     
     //Navigation Properties
-    public virtual Order Order { get; set; } = null!;
-    public virtual Address Address { get; set; } = null!;
+    public  Order Order { get; set; } = null!;
+    public  Address Address { get; set; } = null!;
 }

@@ -20,6 +20,6 @@ public class Payment : BaseEntity<Guid>
     public string UserId { get; set; } = null!;
     
     //Navigation Properties
-    public virtual Order Order { get; set; } = null!;
-    public virtual User User { get; set; } = null!;
+    public  Order Order { get; set; } = null!;
+    public  User User { get; set; } = null!;
 }

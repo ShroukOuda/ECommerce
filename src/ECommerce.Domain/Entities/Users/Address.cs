@@ -19,8 +19,8 @@ public class Address : BaseEntity<Guid>
     public string UserId { get; set; } = null!;
     
     //Navigation Properties
-    public virtual User User { get; set; } = null!;
-    public virtual ICollection<Order> ShippingOrders { get; set; } = new List<Orders.Order>();
-    public virtual ICollection<Order> BillingOrders { get; set; } = new List<Orders.Order>();
-    public virtual ICollection<Shipping> Shippings { get; set; } = new List<Shippings.Shipping>();
+    public  User User { get; set; } = null!;
+    public  ICollection<Order> ShippingOrders { get; set; } = new List<Orders.Order>();
+    public  ICollection<Order> BillingOrders { get; set; } = new List<Orders.Order>();
+    public  ICollection<Shipping> Shippings { get; set; } = new List<Shippings.Shipping>();
 }

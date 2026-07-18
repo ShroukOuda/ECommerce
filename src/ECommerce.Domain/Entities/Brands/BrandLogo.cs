@@ -8,5 +8,5 @@ public class BrandLogo : BaseImage
     public ImageSubType SubType { get; set; }
     
     //Navigation Properties
-    public virtual  Brand? Brand { get; set; }
+    public Brand Brand { get; set; } = null!;
 }

@@ -17,8 +17,8 @@ public class OrderItem : BaseEntity<Guid>
     public Guid ProductVariantId { get; set; }
     
     //Navigation Properties
-    public virtual Order Order { get; set; } = null!;
-    public virtual Product Product { get; set; } = null!;
-    public virtual ProductVariant ProductVariant { get; set; } = null!;
-    public virtual ICollection<OrderItemOption> OrderItemOptions { get; set; } = new List<OrderItemOption>();
+    public  Order Order { get; set; } = null!;
+    public  Product Product { get; set; } = null!;
+    public  ProductVariant ProductVariant { get; set; } = null!;
+    public  ICollection<OrderItemOption> OrderItemOptions { get; set; } = new List<OrderItemOption>();
 }

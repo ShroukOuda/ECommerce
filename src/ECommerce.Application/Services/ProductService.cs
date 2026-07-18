@@ -29,7 +29,7 @@ public class ProductService : IProductService
     }
     
     
-    public async Task<PaginatedResult<GetProductDTO>> GetAllProductsAsync(
+    public async Task<PaginatedResult<GetProductsDTO>> GetAllProductsAsync(
         ProductSpecParams productSpecParams,
         CancellationToken ct = default)
     {
@@ -40,16 +40,56 @@ public class ProductService : IProductService
         
         var productCountSpec = new ProductCountSpecification(productSpecParams);
         var totalItems = await _unitOfWork.GetRepository<Product, Guid>().CountAsync(productCountSpec);
-        var mapProducts = _mapper.Map<IReadOnlyList<GetProductDTO>>(products);
-        return new PaginatedResult<GetProductDTO>(mapProducts, totalItems, productSpecParams.PageNumber, productSpecParams.PageSize);
+        var mapProducts = _mapper.Map<IReadOnlyList<GetProductsDTO>>(products);
+        return new PaginatedResult<GetProductsDTO>(mapProducts, totalItems, productSpecParams.PageNumber, productSpecParams.PageSize);
     }
 
-    public async Task<GetProductDTO> GetProductByIdAsync(Guid id, CancellationToken ct = default)
+    public async Task<GetProductDetailsDTO> GetProductByIdAsync(Guid id, CancellationToken ct = default)
     {
-        var product = await _unitOfWork.GetRepository<Product, Guid>().GetByIdAsync(id, ct);
+        var spec = new ProductDetailsSpecification(id);
+        var product = await _unitOfWork.GetRepository<Product, Guid>().GetFirstOrDefaultAsync(spec);
         if (product is null)
             throw new KeyNotFoundException($"Product with ID {id} not found");
-        return _mapper.Map<GetProductDTO>(product);
+
+        product.ViewCount++;
+        product.LastViewedAt = DateTime.UtcNow;
+        
+        await _unitOfWork.SaveChangesAsync(ct);
+        
+        return _mapper.Map<GetProductDetailsDTO>(product);
+    }
+
+    public async Task<PaginatedResult<GetProductsDTO>> GetSimilarProductsAsync(
+        Guid productId,
+        PaginationParams paginationParams,
+        CancellationToken ct = default)
+    {
+        
+        var repository = _unitOfWork.GetRepository<Product, Guid>();
+
+        var product = await _unitOfWork.GetRepository<Product, Guid>().GetFirstOrDefaultAsync(new ProductDetailsSpecification(productId));
+
+        if (product is null)
+            throw new KeyNotFoundException(
+                $"Product with ID {productId} not found.");
+
+        var spec = new SimilarProductsSpecification(
+            product,
+            paginationParams);
+
+        var products = await repository.GetAllAsync(spec);
+
+        var countSpec = new SimilarProductsCountSpecification(product);
+
+        var totalItems = await repository.CountAsync(countSpec);
+
+        var dto = _mapper.Map<IReadOnlyList<GetProductsDTO>>(products);
+
+        return new PaginatedResult<GetProductsDTO>(
+            dto,
+            totalItems,
+            paginationParams.PageNumber,
+            paginationParams.PageSize);
     }
 
     public async Task AddProductAsync(AddProductDTO productDTO, CancellationToken cancellationToken = default)

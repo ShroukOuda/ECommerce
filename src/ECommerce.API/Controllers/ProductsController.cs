@@ -18,7 +18,7 @@ public class ProductsController : BaseController
     }
 
     [HttpGet("get-all")]
-    public async Task<ActionResult<PaginatedResult<GetProductDTO>>> GetAll([FromQuery] ProductSpecParams productParams)
+    public async Task<ActionResult<PaginatedResult<GetProductsDTO>>> GetAll([FromQuery] ProductSpecParams productParams)
     {
         var products = await _productService.GetAllProductsAsync(productParams);
         return Ok(products);
@@ -31,6 +31,13 @@ public class ProductsController : BaseController
         return Ok(product);
     }
 
+    [HttpGet("get-similar/{productId}")]
+    public async Task<IActionResult> GetSimilarProducts(Guid productId, [FromQuery] PaginationParams paginationParams)
+    {
+        var similarProducts = await _productService.GetSimilarProductsAsync(productId, paginationParams);
+        return Ok(similarProducts);
+    }
+    
     [HttpPost("add")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Add(AddProductDTO productDto)

@@ -15,8 +15,8 @@ public class Category:BaseEntity<Guid>
     public Guid? ParentCategoryId { get; set; } 
 
     // Navigation Properties
-    public virtual Category ParentCategory { get; set; } = null!;
-    public virtual ICollection<Category> ChildCategories { get; set; } = new List<Category>();
-    public virtual ICollection<Product> Products { get; set; } = new List<Product>();
-    public virtual ICollection<CategoryImage> CategoryImages { get; set; } = new List<CategoryImage>();
+    public  Category ParentCategory { get; set; } = null!;
+    public  ICollection<Category> ChildCategories { get; set; } = new List<Category>();
+    public  ICollection<Product> Products { get; set; } = new List<Product>();
+    public  ICollection<CategoryImage> CategoryImages { get; set; } = new List<CategoryImage>();
 }

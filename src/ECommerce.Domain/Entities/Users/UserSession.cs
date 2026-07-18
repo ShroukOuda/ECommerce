@@ -24,5 +24,5 @@ public class UserSession : BaseEntity<Guid>
     public string UserId { get; set; } = string.Empty;
 
     // Navigation property
-    public virtual User User { get; set; } = null!;
+    public  User User { get; set; } = null!;
 }

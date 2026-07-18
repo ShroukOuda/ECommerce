@@ -21,10 +21,8 @@ public class ProductCountSpecification : BaseSpecification<Product, Guid>
         (!productParams.MinPrice.HasValue || x.BasePrice >= productParams.MinPrice) &&
         (!productParams.MaxPrice.HasValue || x.BasePrice <= productParams.MaxPrice) &&
         (!productParams.IsFeatured.HasValue || x.IsFeatured == productParams.IsFeatured) &&
-        (!productParams.IsBestSeller.HasValue || x.IsBestSeller == productParams.IsBestSeller) &&
         (!productParams.IsHotDeal.HasValue || x.IsHotDeal == productParams.IsHotDeal) &&
-        (!productParams.IsNewArrival.HasValue || x.IsNewArrival == productParams.IsNewArrival) &&
-        (!productParams.IsTopRated.HasValue || x.IsTopRated == productParams.IsTopRated))
+        (!productParams.IsNewArrival.HasValue || x.IsNewArrival == productParams.IsNewArrival))
     {
         
     }

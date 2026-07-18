@@ -13,20 +13,28 @@ public class ProductMapping : Profile
 
         CreateMap<Product, GetProductsDTO>()
             .ForMember(dest=>dest.CategoryName, 
-                src=>src.MapFrom(src=>src.Category.Name))
+                opt => opt.MapFrom(src=>src.Category.Name))
             .ForMember(dest=>dest.BrandName, 
-                src=>src.MapFrom(src=>src.Brand.Name))
-            .ForMember(dest=>dest.ProductMainImageUrl, 
-                src=>src.MapFrom(src=>src.ProductImages.FirstOrDefault(pi=>pi.IsMain).ImageUrl))
+                opt => opt.MapFrom(src=>src.Brand.Name))
+            .ForMember(dest => dest.ProductMainImageUrl, 
+                opt => opt.MapFrom(src => src.ProductImages.First(i => i.IsMain).ImageUrl))
+            .ForMember(dest=>dest.IsTopRated , 
+                opt => opt.MapFrom(src => src.ReviewCount > 10 && src.AverageRating >= 4.5m))
+            .ForMember(dest=>dest.IsBestSeller , 
+                opt => opt.MapFrom(src=>src.TotalSales >= 100))
             .ReverseMap();
 
         CreateMap<Product, GetProductDetailsDTO>()
             .ForMember(dest=>dest.CategoryName, 
-                src=>src.MapFrom(src=>src.Category.Name))
+                opt => opt.MapFrom(src=>src.Category.Name))
             .ForMember(dest=>dest.BrandName, 
-                src=>src.MapFrom(src=>src.Brand.Name))
+                opt => opt.MapFrom(src=>src.Brand.Name))
             .ForMember(dest=>dest.ImageUrls, 
-                src=>src.MapFrom(src=>src.ProductImages.Select(pi=>pi.ImageUrl).ToList()))
+                opt => opt.MapFrom(src=>src.ProductImages.Select(pi=>pi.ImageUrl).ToList()))
+            .ForMember(dest=>dest.IsTopRated , 
+                opt => opt.MapFrom(src => src.ReviewCount > 10 && src.AverageRating >= 4.5m))
+            .ForMember(dest=>dest.IsBestSeller , 
+                opt => opt.MapFrom(src=>src.TotalSales >= 100))
             .ReverseMap();
     }
 }

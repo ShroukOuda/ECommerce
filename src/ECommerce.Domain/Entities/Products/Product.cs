@@ -14,10 +14,8 @@ public class Product : BaseEntity<Guid>
     public int StockQuantity { get; set; }
     public StockStatus StockStatus { get; set; } = StockStatus.InStock;
     public string Sku { get; set; } = string.Empty;
-    public bool IsBestSeller { get; set; }
     public bool IsNewArrival { get; set; }
     public bool IsHotDeal { get; set; }
-    public bool IsTopRated { get; set; }
     public bool IsFeatured { get; set; }
 
     public ProductStatus Status { get; set; } = ProductStatus.Published;

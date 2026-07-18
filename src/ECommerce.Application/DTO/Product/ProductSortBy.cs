@@ -6,6 +6,8 @@ public enum ProductSortBy
     NameDesc,
     PriceAsc,
     PriceDesc,
+    Rating,
+    BestSeller,
     Newest,
     Oldest
 }

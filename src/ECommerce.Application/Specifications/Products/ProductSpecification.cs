@@ -16,10 +16,8 @@ public class ProductSpecification : BaseSpecification<Product, Guid>
             (!productParams.MinPrice.HasValue || x.BasePrice >= productParams.MinPrice) &&
             (!productParams.MaxPrice.HasValue || x.BasePrice <= productParams.MaxPrice) &&
             (!productParams.IsFeatured.HasValue || x.IsFeatured == productParams.IsFeatured) &&
-            (!productParams.IsBestSeller.HasValue || x.IsBestSeller == productParams.IsBestSeller) &&
             (!productParams.IsHotDeal.HasValue || x.IsHotDeal == productParams.IsHotDeal) &&
-            (!productParams.IsNewArrival.HasValue || x.IsNewArrival == productParams.IsNewArrival) &&
-            (!productParams.IsTopRated.HasValue || x.IsTopRated == productParams.IsTopRated))
+            (!productParams.IsNewArrival.HasValue || x.IsNewArrival == productParams.IsNewArrival))
     {
         switch (productParams.SortBy)
         {
@@ -35,11 +33,20 @@ public class ProductSpecification : BaseSpecification<Product, Guid>
             case ProductSortBy.PriceDesc:
                 AddOrderByDescending(p => p.BasePrice);
                 break;
+            case ProductSortBy.Rating:
+                AddOrderByDescending(p => p.AverageRating);
+                break;
+            case ProductSortBy.BestSeller:
+                AddOrderByDescending(p => p.TotalSales);
+                break;
             case ProductSortBy.Newest:
                 AddOrderByDescending(p => p.CreatedAt);
                 break;
             case ProductSortBy.Oldest:
                 AddOrderBy(p => p.CreatedAt);   
+                break;
+            default:
+                AddOrderBy(p => p.CreatedAt);
                 break;
         } 
 

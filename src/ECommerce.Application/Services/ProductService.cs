@@ -97,18 +97,10 @@ public class ProductService : IProductService
         var validationResult = await _addProductDtoValidator.ValidateAsync(productDTO);
         if (!validationResult.IsValid)
             throw new ValidationException(validationResult.Errors);
-        Product? product = null; 
-        try
-        {
-            product = _mapper.Map<Product>(productDTO);
-            await _unitOfWork.GetRepository<Product, Guid>().AddAsync(product);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
-            
-        }
-        catch (Exception e)
-        { 
-            throw new Exception($"Error Adding Product: {e.Message}", e);
-        }
+    
+        var product = _mapper.Map<Product>(productDTO);
+        await _unitOfWork.GetRepository<Product, Guid>().AddAsync(product);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
        
     }
     
@@ -118,23 +110,17 @@ public class ProductService : IProductService
         if (!validationResult.IsValid)
             throw new ValidationException(validationResult.Errors);
         
-        try
-        {
-            var spec = new ProductSpecification(productDto.Id);
-            bool exists = await _unitOfWork.GetRepository<Product, Guid>().ExistsAsync(spec);
-            
-            if (!exists)
-                throw new KeyNotFoundException($"Product with ID {productDto.Id} not found.");
+        
+        var spec = new ProductSpecification(productDto.Id);
+        bool exists = await _unitOfWork.GetRepository<Product, Guid>().ExistsAsync(spec);
+        
+        if (!exists)
+            throw new KeyNotFoundException($"Product with ID {productDto.Id} not found.");
 
-            var product = _mapper.Map<Product>(productDto);
-            _unitOfWork.GetRepository<Product, Guid>().Update(product, ct);
-            await _unitOfWork.SaveChangesAsync(ct);
-            
-        }
-        catch (Exception e)
-        {
-            throw new Exception($"Error updating product: {e.Message}", e);
-        }
+        var product = _mapper.Map<Product>(productDto);
+        _unitOfWork.GetRepository<Product, Guid>().Update(product, ct);
+        await _unitOfWork.SaveChangesAsync(ct);
+    
        
     }
     public async Task DeleteProductAsync(Guid id, CancellationToken ct = default)

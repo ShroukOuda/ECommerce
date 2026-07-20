@@ -38,45 +38,59 @@ public class ProductServiceTests
             _updateValidatorMock.Object);
     }
 
-    // [Fact]
-    // public async Task GetAllProductsAsync_ShouldReturnMappedProducts()
-    // {
-    //     var products = new List<Product> { new() { Id = TestGuid.FromInt(1), Name = "Laptop" } };
-    //     var productDtos = new List<GetProductDTO> { new() { Id = TestGuid.FromInt(1), Name = "Laptop" } };
-    //     var productSpecParams = new ProductSpecParams();
+    [Fact]
+    public async Task GetAllProductsAsync_ShouldReturnMappedProducts()
+    {
+        var products = new List<Product> { new() { Id = TestGuid.FromInt(1), Name = "Laptop" } };
+        var productDtos = new List<GetProductsDTO> { new() { Id = TestGuid.FromInt(1), Name = "Laptop" } };
+        var productSpecParams = new ProductSpecParams();
 
-    //     _unitOfWorkMock.Setup(u => u.GetRepository<Product, Guid>().GetAllAsync(new ProductSpecification(productSpecParams)))
-    //         .ReturnsAsync(PaginatedResult<GetProductDTO>(products, 1, productSpecParams.PageNumber, productSpecParams.PageSize));
-
-    //     _mapperMock.Setup(m => m.Map<IEnumerable<GetProductDTO>>(products))
-    //         .Returns(productDtos);
-
-    //     var result = await _productService.GetAllProductsAsync(productSpecParams);
-
+        var repositoryMock = new Mock<IGenericRepository<Product, Guid>>();
+        repositoryMock.Setup(r => r.GetAllAsync(It.IsAny<ProductSpecification>()))
+            .ReturnsAsync(products);
+        repositoryMock.Setup(r => r.CountAsync(It.IsAny<ProductCountSpecification>(), CancellationToken.None))
+            .ReturnsAsync(1);
         
-    // }
+        _unitOfWorkMock.Setup(u => u.GetRepository<Product, Guid>()).Returns(repositoryMock.Object);
+        _mapperMock.Setup(m => m.Map<IReadOnlyList<GetProductsDTO>>(products))
+            .Returns(productDtos.AsReadOnly());
 
-    // [Fact]
-    // public async Task GetAllProductsAsync_WhenNoProducts_ShouldThrowKeyNotFoundException()
-    // {
+        var result = await _productService.GetAllProductsAsync(productSpecParams);
 
-    //     _unitOfWorkMock.Setup(u => u.GetRepository<Product, Guid>().GetAllAsync(new ProductSpecification(new ProductSpecParams())))
-    //         .ReturnsAsync(PaginatedResult<GetProductDTO>);
+        result.Should().NotBeNull();
+        result.Items.Should().HaveCount(1);
+        result.Items.First().Name.Should().Be("Laptop");
+    }
 
-    //     var act = () => _productService.GetAllProductsAsync(productParams);
+    [Fact]
+    public async Task GetAllProductsAsync_WhenNoProducts_ShouldThrowKeyNotFoundException()
+    {
+        var productParams = new ProductSpecParams();
+        
+        var repositoryMock = new Mock<IGenericRepository<Product, Guid>>();
+        repositoryMock.Setup(r => r.GetAllAsync(It.IsAny<ProductSpecification>()))
+            .ReturnsAsync((List<Product>)null!);
+        
+        _unitOfWorkMock.Setup(u => u.GetRepository<Product, Guid>()).Returns(repositoryMock.Object);
 
-    //     await act.Should().ThrowAsync<KeyNotFoundException>();
-    // }
+        var act = () => _productService.GetAllProductsAsync(productParams);
+
+        await act.Should().ThrowAsync<KeyNotFoundException>();
+    }
 
     [Fact]
     public async Task GetProductByIdAsync_WhenProductExists_ShouldReturnProduct()
     {
         var product = new Product { Id = TestGuid.FromInt(1), Name = "Laptop" };
-        var productDto = new GetProductDTO { Id = TestGuid.FromInt(1), Name = "Laptop" };
+        var productDto = new GetProductDetailsDTO { Id = TestGuid.FromInt(1), Name = "Laptop" };
 
-        _unitOfWorkMock.Setup(u => u.GetRepository<Product, Guid>().GetByIdAsync(TestGuid.FromInt(1), It.IsAny<CancellationToken>()))
+        var repositoryMock = new Mock<IGenericRepository<Product, Guid>>();
+        repositoryMock.Setup(r => r.GetFirstOrDefaultAsync(It.IsAny<ProductDetailsSpecification>()))
             .ReturnsAsync(product);
-        _mapperMock.Setup(m => m.Map<GetProductDTO>(product))
+        
+        _unitOfWorkMock.Setup(u => u.GetRepository<Product, Guid>()).Returns(repositoryMock.Object);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _mapperMock.Setup(m => m.Map<GetProductDetailsDTO>(product))
             .Returns(productDto);
 
         var result = await _productService.GetProductByIdAsync(TestGuid.FromInt(1));
@@ -88,8 +102,11 @@ public class ProductServiceTests
     [Fact]
     public async Task GetProductByIdAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
-        _unitOfWorkMock.Setup(u => u.GetRepository<Product, Guid>().GetByIdAsync(TestGuid.FromInt(999), It.IsAny<CancellationToken>()))
+        var repositoryMock = new Mock<IGenericRepository<Product, Guid>>();
+        repositoryMock.Setup(r => r.GetFirstOrDefaultAsync(It.IsAny<ProductDetailsSpecification>()))
             .ReturnsAsync((Product?)null);
+        
+        _unitOfWorkMock.Setup(u => u.GetRepository<Product, Guid>()).Returns(repositoryMock.Object);
 
         var act = () => _productService.GetProductByIdAsync(TestGuid.FromInt(999));
 
@@ -97,11 +114,17 @@ public class ProductServiceTests
     }
 
     [Fact]
-    public async Task GetProductByIdAsync_WithZeroId_ShouldThrowArgumentException()
+    public async Task GetProductByIdAsync_WithZeroId_ShouldThrowKeyNotFoundException()
     {
+        var repositoryMock = new Mock<IGenericRepository<Product, Guid>>();
+        repositoryMock.Setup(r => r.GetFirstOrDefaultAsync(It.IsAny<ProductDetailsSpecification>()))
+            .ReturnsAsync((Product?)null);
+        
+        _unitOfWorkMock.Setup(u => u.GetRepository<Product, Guid>()).Returns(repositoryMock.Object);
+
         var act = () => _productService.GetProductByIdAsync(Guid.Empty);
 
-        await act.Should().ThrowAsync<ArgumentException>();
+        await act.Should().ThrowAsync<KeyNotFoundException>();
     }
 
     [Fact]
@@ -110,16 +133,19 @@ public class ProductServiceTests
         var dto = new AddProductDTO { Name = "Laptop", BasePrice = 999, SKU = "LAP-001", CategoryId = TestGuid.FromInt(1) };
         var product = new Product { Name = "Laptop" };
 
+        var repositoryMock = new Mock<IGenericRepository<Product, Guid>>();
+        repositoryMock.Setup(r => r.AddAsync(It.IsAny<Product>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        
         _addValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
         _mapperMock.Setup(m => m.Map<Product>(dto)).Returns(product);
-        _unitOfWorkMock.Setup(u => u.GetRepository<Product, Guid>().AddAsync(It.IsAny<Product>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+        _unitOfWorkMock.Setup(u => u.GetRepository<Product, Guid>()).Returns(repositoryMock.Object);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
         await _productService.AddProductAsync(dto);
 
-        _unitOfWorkMock.Verify(u => u.GetRepository<Product, Guid>().AddAsync(product, It.IsAny<CancellationToken>()), Times.Once);
+        repositoryMock.Verify(u => u.AddAsync(It.IsAny<Product>(), It.IsAny<CancellationToken>()), Times.Once);
         _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -140,24 +166,31 @@ public class ProductServiceTests
     [Fact]
     public async Task DeleteProductAsync_WhenProductExists_ShouldDeleteProduct()
     {
-        _unitOfWorkMock.Setup(u => u.GetRepository<Product, Guid>().ExistsAsync(
-            new ProductSpecification(TestGuid.FromInt(1)), It.IsAny<CancellationToken>()))
+        var productId = TestGuid.FromInt(1);
+        
+        var repositoryMock = new Mock<IGenericRepository<Product, Guid>>();
+        repositoryMock.Setup(r => r.ExistsAsync(It.IsAny<ProductSpecification>(), CancellationToken.None))
             .ReturnsAsync(true);
+        repositoryMock.Setup(r => r.Delete(It.IsAny<Product>(), It.IsAny<CancellationToken>()));
+        
+        _unitOfWorkMock.Setup(u => u.GetRepository<Product, Guid>()).Returns(repositoryMock.Object);
         _fileStorageServiceMock.Setup(s => s.DeleteFolderAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-        await _productService.DeleteProductAsync(TestGuid.FromInt(1));
+        await _productService.DeleteProductAsync(productId);
 
-        _unitOfWorkMock.Verify(u => u.GetRepository<Product, Guid>().Delete(It.IsAny<Product>(), It.IsAny<CancellationToken>()), Times.Once);
+        repositoryMock.Verify(u => u.Delete(It.IsAny<Product>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task DeleteProductAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
-        _unitOfWorkMock.Setup(u => u.GetRepository<Product, Guid>().ExistsAsync(
-            new ProductSpecification(TestGuid.FromInt(999)), It.IsAny<CancellationToken>()))
+        var repositoryMock = new Mock<IGenericRepository<Product, Guid>>();
+        repositoryMock.Setup(r => r.ExistsAsync(It.IsAny<ProductSpecification>(), CancellationToken.None))
             .ReturnsAsync(false);
+        
+        _unitOfWorkMock.Setup(u => u.GetRepository<Product, Guid>()).Returns(repositoryMock.Object);
 
         var act = () => _productService.DeleteProductAsync(TestGuid.FromInt(1));
 
@@ -165,18 +198,27 @@ public class ProductServiceTests
     }
 
     [Fact]
-    public async Task DeleteProductAsync_WithZeroId_ShouldThrowArgumentException()
+    public async Task DeleteProductAsync_WithZeroId_ShouldThrowKeyNotFoundException()
     {
+        var repositoryMock = new Mock<IGenericRepository<Product, Guid>>();
+        repositoryMock.Setup(r => r.ExistsAsync(It.IsAny<ProductSpecification>(), CancellationToken.None))
+            .ReturnsAsync(false);
+        
+        _unitOfWorkMock.Setup(u => u.GetRepository<Product, Guid>()).Returns(repositoryMock.Object);
+
         var act = () => _productService.DeleteProductAsync(Guid.Empty);
 
-        await act.Should().ThrowAsync<ArgumentException>();
+        await act.Should().ThrowAsync<KeyNotFoundException>();
     }
 
     [Fact]
     public async Task GetTotalCountAsync_ShouldReturnCount()
     {
-        _unitOfWorkMock.Setup(u => u.GetRepository<Product, Guid>().CountAsync(new ProductCountSpecification(), It.IsAny<CancellationToken>()))
+        var repositoryMock = new Mock<IGenericRepository<Product, Guid>>();
+        repositoryMock.Setup(r => r.CountAsync(It.IsAny<ProductCountSpecification>(), CancellationToken.None))
             .ReturnsAsync(42);
+        
+        _unitOfWorkMock.Setup(u => u.GetRepository<Product, Guid>()).Returns(repositoryMock.Object);
 
         var result = await _productService.GetTotalCountAsync();
 

@@ -4,6 +4,7 @@ using ECommerce.Domain.Entities.Carts;
 using ECommerce.Domain.Entities.Categories;
 using ECommerce.Domain.Entities.Coupons;
 using ECommerce.Domain.Entities.Inventories;
+using ECommerce.Domain.Entities.Notifications;
 using ECommerce.Domain.Entities.Orders;
 using ECommerce.Domain.Entities.Payments;
 using ECommerce.Domain.Entities.Products;
@@ -76,7 +77,12 @@ public class AppDbContext : IdentityDbContext<User>
     //User
     public  DbSet<UserSession> UserSessions { get; set; }
     public  DbSet<Address> Addresses { get; set; }
-    
+
+    //Notification
+    public DbSet<Notification> Notifications { get; set; }
+    public DbSet<UserNotificationPreference> UserNotificationPreferences { get; set; }
+    public DbSet<CategorySubscription> CategorySubscriptions { get; set; }
+    public DbSet<ProductStockAlert> ProductStockAlerts { get; set; }    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

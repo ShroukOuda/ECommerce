@@ -14,6 +14,7 @@ global using ECommerce.Domain.Entities.Shippings;
 global using ECommerce.Domain.Entities.Wishlists;
 global using ECommerce.Domain.Entities.Categories;
 global using ECommerce.Domain.Entities.Brands;
+global using ECommerce.Domain.Entities.Notifications;
 
 
 

@@ -43,4 +43,8 @@ public class User : IdentityUser
     public  ICollection<ReturnRequest> ReturnRequests { get; set; } = new List<ReturnRequest>();
     public  ICollection<InventoryHistory> InventoryHistories { get; set; } = new List<InventoryHistory>();
     public  ICollection<Payment> Payments { get; set; } = new List<Payment>();
+    public  ICollection<UserNotificationPreference> UserNotificationPreferences { get; set; } = new List<UserNotificationPreference>();
+    public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
+    public ICollection<ProductStockAlert> ProductStockAlerts { get; set; } = new List<ProductStockAlert>();
+    public ICollection<CategorySubscription> CategorySubscriptions { get; set; } = new List<CategorySubscription>();
 }

@@ -91,6 +91,12 @@ public class ProductConfiguration : IEntityTypeConfiguration<Domain.Entities.Pro
             .WithOne(ri => ri.Product)
             .HasForeignKey(ri => ri.ProductId)
             .OnDelete(DeleteBehavior.NoAction);
+        
+        builder.HasMany(p => p.ProductStockAlerts)
+            .WithOne(PSA => PSA.Product)
+            .HasForeignKey(PSA => PSA.ProductId)
+            .OnDelete(DeleteBehavior.NoAction);
+
 
         builder.Property(p => p.IsDeleted).HasDefaultValue(false);
 

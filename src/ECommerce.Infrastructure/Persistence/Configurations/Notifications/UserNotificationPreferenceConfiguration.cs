@@ -1,0 +1,36 @@
+using ECommerce.Domain.Entities.Notifications;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace ECommerce.Infrastructure.Persistence.Configurations.Notifications;
+
+public class UserNotificationPreferenceConfiguration
+    : IEntityTypeConfiguration<UserNotificationPreference>
+{
+    public void Configure(EntityTypeBuilder<UserNotificationPreference> builder)
+    {
+        builder.HasKey(x => x.Id);
+
+        builder.Property(x => x.Type)
+            .HasConversion<string>()
+            .HasMaxLength(50);
+
+        builder.Property(x => x.Channel)
+            .HasConversion<string>()
+            .HasMaxLength(30);
+
+        builder.Property(x => x.IsEnabled)
+            .HasDefaultValue(true);
+
+        builder.HasIndex(x => new
+        {
+            x.UserId,
+            x.Type,
+            x.Channel
+        }).IsUnique();
+
+        builder.HasOne(x => x.User)
+            .WithMany(x => x.UserNotificationPreferences)
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}

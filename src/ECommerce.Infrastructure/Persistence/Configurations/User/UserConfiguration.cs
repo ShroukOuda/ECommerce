@@ -87,5 +87,27 @@ public class UserConfiguration : IEntityTypeConfiguration<Domain.Entities.Users.
             .WithOne(p => p.User)
             .HasForeignKey(p => p.UserId)
             .OnDelete(DeleteBehavior.NoAction);
+        
+        builder.HasMany(u => u.Notifications)
+            .WithOne(n => n.User)
+            .HasForeignKey(n => n.UserId)
+            .OnDelete(DeleteBehavior.NoAction);
+        
+        builder.HasMany(u => u.UserNotificationPreferences)
+            .WithOne(unp => unp.User)
+            .HasForeignKey(unp => unp.UserId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        builder.HasMany(u => u.CategorySubscriptions)
+            .WithOne(cs => cs.User)
+            .HasForeignKey(cs => cs.UserId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        builder.HasMany(u => u.ProductStockAlerts)
+            .WithOne(psa => psa.User)
+            .HasForeignKey(psa => psa.UserId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        
     }
 }

@@ -42,6 +42,11 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Domain.Entities.Ca
             .HasForeignKey(ci => ci.CategoryId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.HasMany(c => c.CategorySubscriptions)
+            .WithOne(cs => cs.Category)
+            .HasForeignKey(cs => cs.CategoryId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         builder.Property(c => c.IsDeleted).HasDefaultValue(false);
     }
 }

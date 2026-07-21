@@ -47,15 +47,16 @@ public class Product : BaseEntity<Guid>
     
     
     // Navigation Properties
-    public  Category Category { get; set; } = null!;
-    public  Brand Brand { get; set; } = null!;
+    public Category Category { get; set; } = null!;
+    public Brand Brand { get; set; } = null!;
     public ICollection<ProductImage> ProductImages { get; set; } = new List<ProductImage>();
-    public  ICollection<ProductVariant> ProductVariants { get; set; } = new List<ProductVariant>();
-    public  ICollection<ProductOption> ProductOptions { get; set; } = new List<ProductOption>();
-    public  ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
-    public  ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
-    public  ICollection<ProductReview> ProductReviews { get; set; } = new List<ProductReview>();
-    public  ICollection<InventoryHistory> InventoryHistories { get; set; } = new List<InventoryHistory>();
-    public  ICollection<ReturnItem> ReturnItems { get; set; } = new List<ReturnItem>();
+    public ICollection<ProductVariant> ProductVariants { get; set; } = new List<ProductVariant>();
+    public ICollection<ProductOption> ProductOptions { get; set; } = new List<ProductOption>();
+    public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+    public ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
+    public ICollection<ProductReview> ProductReviews { get; set; } = new List<ProductReview>();
+    public ICollection<InventoryHistory> InventoryHistories { get; set; } = new List<InventoryHistory>();
+    public ICollection<ReturnItem> ReturnItems { get; set; } = new List<ReturnItem>();
     public ICollection<Wishlist> Wishlists { get; set; } = new List<Wishlist>();
+    public ICollection<ProductStockAlert> ProductStockAlerts { get; set; } = new List<ProductStockAlert>();
 }

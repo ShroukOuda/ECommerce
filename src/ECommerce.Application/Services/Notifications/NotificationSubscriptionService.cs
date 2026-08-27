@@ -64,4 +64,29 @@ public class NotificationSubscriptionService : INotificationSubscriptionService
             await _unitOfWork.SaveChangesAsync();
         }
     }
+
+    public async Task SubscribeToBrandAsync(Guid brandId, string userId)
+    {
+        var subscription = new BrandSubscription
+        {
+            BrandId = brandId,
+            UserId = userId,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await _unitOfWork.GetRepository<BrandSubscription, Guid>().AddAsync(subscription);
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task UnsubscribeFromBrandAsync(Guid brandId, string userId)
+    {
+        var spec = new BrandSubscriptionSpecification(brandId, userId);
+        var subscription = await _unitOfWork.GetRepository<BrandSubscription, Guid>().GetFirstOrDefaultAsync(spec);
+
+        if (subscription != null)
+        {
+            _unitOfWork.GetRepository<BrandSubscription, Guid>().Delete(subscription);
+            await _unitOfWork.SaveChangesAsync();
+        }
+    }
 }

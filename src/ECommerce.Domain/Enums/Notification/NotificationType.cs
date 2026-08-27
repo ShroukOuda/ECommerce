@@ -2,30 +2,21 @@ namespace ECommerce.Domain.Enums.Notification;
 
 public enum NotificationType
 {
+    // Security
+    SecurityAlert,
+    LoginFromNewDevice,
+    PasswordChanged,
+
+    // Products
+    NewProduct,
+    BackInStock,
+
     // Orders
     OrderPlaced,
-    OrderConfirmed,
     OrderShipped,
     OrderDelivered,
     OrderCancelled,
 
-    // Products
-    BackInStock,
-    PriceDrop,
-    NewProduct,
-
-    // Reviews
-    ReviewReply,
-
     // Promotions
-    Promotion,
-    Coupon,
-
-    // Security
-    LoginAlert,
-    PasswordChanged,
-    SecurityAlert,
-
-    // System
-    SystemAnnouncement
+    Promotion
 }

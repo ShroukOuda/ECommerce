@@ -9,4 +9,8 @@ public interface INotificationSubscriptionService
     Task SubscribeToCategoryAsync(Guid categoryId, string userId);
 
     Task UnsubscribeFromCategoryAsync(Guid categoryId, string userId);
+
+    Task SubscribeToBrandAsync(Guid brandId, string userId);
+
+    Task UnsubscribeFromBrandAsync(Guid brandId, string userId);
 }

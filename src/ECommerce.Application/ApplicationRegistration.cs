@@ -1,5 +1,7 @@
 using System.Reflection;
+using ECommerce.Application.Interfaces.Notifications;
 using ECommerce.Application.Services;
+using ECommerce.Application.Services.Notifications;
 using Microsoft.Extensions.DependencyInjection;
 
 
@@ -30,6 +32,10 @@ public static class ApplicationRegistration
         services.AddScoped<IProductVariantService, ProductVariantService>();
         services.AddScoped<IUserSessionService, UserSessionService>();
         services.AddScoped<IAuthenticationService, AuthenticationService>();
+        services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<INotificationSubscriptionService, NotificationSubscriptionService>();
+        services.AddScoped<INotificationPreferenceService, NotificationPreferenceService>();
+        services.AddScoped<INotificationEventService, NotificationEventService>();
 
         
         services.AddValidatorsFromAssembly(

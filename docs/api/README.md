@@ -13,6 +13,7 @@ Complete API reference for the E-Commerce platform built with ASP.NET Core 9.
 | **Authentication** | 8 | 📋 Planned | [AUTHENTICATION.md](AUTHENTICATION.md) |
 | **Products** | 24 | ✅ Partial (13) | [PRODUCTS.md](PRODUCTS.md) |
 | **Variant Selectors** | 6 | 📋 Planned | [VARIANT_SELECTORS.md](VARIANT_SELECTORS.md) |
+| **Notifications** | 10 | ✅ Added | [NOTIFICATIONS.md](NOTIFICATIONS.md) |
 | **Categories** | 12 | ✅ Partial (11) | [CATEGORIES.md](CATEGORIES.md) |
 | **Brands** | 9 | 📋 Planned | [BRANDS.md](BRANDS.md) |
 | **Shopping Cart** | 9 | 📋 Planned | [CART.md](CART.md) |
@@ -265,8 +266,6 @@ By Access Level:
   Optional Auth:        12 (8%)
   Admin Only:           74 (51%)
 ```
-
----
 
 
 

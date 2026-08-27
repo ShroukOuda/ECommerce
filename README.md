@@ -53,6 +53,7 @@ docs/                        # Full documentation
 | Coupons | [docs/api/COUPONS.md](docs/api/COUPONS.md) |
 | Wishlist | [docs/api/WISHLIST.md](docs/api/WISHLIST.md) |
 | Variant Selectors | [docs/api/VARIANT_SELECTORS.md](docs/api/VARIANT_SELECTORS.md) |
+| Notifications | [docs/api/NOTIFICATIONS.md](docs/api/NOTIFICATIONS.md) |
 | Admin | [docs/api/ADMIN.md](docs/api/ADMIN.md) |
 | Analytics | [docs/api/ANALYTICS.md](docs/api/ANALYTICS.md) |
 | Homepage | [docs/api/HOMEPAGE.md](docs/api/HOMEPAGE.md) |

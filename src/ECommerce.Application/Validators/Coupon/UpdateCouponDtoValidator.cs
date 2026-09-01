@@ -6,6 +6,6 @@ public class UpdateCouponDtoValidator : CouponBaseValidator<UpdateCouponDTO>
 {
     public UpdateCouponDtoValidator()
     {
-        RuleFor(x => x.Id).NotEmpty();
+        
     }
 }

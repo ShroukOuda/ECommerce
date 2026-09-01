@@ -6,5 +6,4 @@ public class AddReviewDTO
     public string Title { get; set; } = string.Empty;
     public Guid ProductId { get; set; }
     public Guid OrderId { get; set; }
-    public string UserId { get; set; } = string.Empty;
 }

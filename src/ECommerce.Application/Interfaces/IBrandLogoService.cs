@@ -5,6 +5,7 @@ namespace ECommerce.Application.Interfaces;
 public interface IBrandLogoService
 {
     Task<BrandLogoDTO> UploadlogoAsync(
+        Guid brandId,
         UploadBrandLogoDTO dto, 
         CancellationToken ct = default);
     
@@ -17,6 +18,7 @@ public interface IBrandLogoService
         CancellationToken ct = default);
     
     Task<BrandLogoDTO?> GetLogoByIdAsync(
+        Guid brandId,
         Guid logoId,
         CancellationToken ct = default);
     Task DeleteBrandLogoAsync(

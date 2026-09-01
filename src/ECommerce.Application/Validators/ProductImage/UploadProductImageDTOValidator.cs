@@ -15,10 +15,7 @@ public class UploadProductImageDTOValidator : AbstractValidator<UploadProductIma
     {
         _imageFileValidator = imageFileValidator;
         _validationSettings = validationSettings.Value;
-        
-        RuleFor(x => x.ProductId)
-            .NotEmpty()
-            .WithMessage("ProductId is required");
+    
         
         RuleFor(x => x.File)
             .NotNull()

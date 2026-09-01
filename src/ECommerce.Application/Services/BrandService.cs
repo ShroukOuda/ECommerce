@@ -37,7 +37,7 @@ public class BrandService : IBrandService
         return _mapper.Map<GetBrandDTO>(brand);
     }
 
-    public async Task AddBrandAsync(AddBrandDTO dto, CancellationToken ct = default)
+    public async Task<GetBrandDTO> AddBrandAsync(AddBrandDTO dto, CancellationToken ct = default)
     {
         var result = await _addValidator.ValidateAsync(dto, ct);
         if (!result.IsValid) throw new ValidationException(result.Errors);
@@ -45,22 +45,30 @@ public class BrandService : IBrandService
         brand.Slug = dto.Name.ToLower().Replace(" ", "-");
         await _unitOfWork.GetRepository<Brand, Guid>().AddAsync(brand, ct);
         await _unitOfWork.SaveChangesAsync(ct);
+        return _mapper.Map<GetBrandDTO>(brand);
     }
 
-    public async Task UpdateBrandAsync(UpdateBrandDTO dto, CancellationToken ct = default)
+    public async Task<GetBrandDTO> UpdateBrandAsync(Guid id, UpdateBrandDTO dto, CancellationToken ct = default)
     {
+
         var result = await _updateValidator.ValidateAsync(dto, ct);
         if (!result.IsValid) throw new ValidationException(result.Errors);
+
+        var spec = new BrandSpecification(id);
+        var existingBrand = await _unitOfWork.GetRepository<Brand, Guid>().ExistsAsync(spec, ct);
+        if (!existingBrand) throw new KeyNotFoundException($"Brand with ID {id} not found.");
+        
         var brand = _mapper.Map<Brand>(dto);
         brand.Slug = dto.Name.ToLower().Replace(" ", "-");
         _unitOfWork.GetRepository<Brand, Guid>().Update(brand, ct);
         await _unitOfWork.SaveChangesAsync(ct);
+        return _mapper.Map<GetBrandDTO>(brand);
     }
 
     public async Task DeleteBrandAsync(Guid id, CancellationToken ct = default)
     {
         var spec = new BrandSpecification(id);
-        bool exists = await _unitOfWork.GetRepository<Brand, Guid>().ExistsAsync(spec);
+        bool exists = await _unitOfWork.GetRepository<Brand, Guid>().ExistsAsync(spec, ct);
         if (!exists) throw new KeyNotFoundException($"Brand with ID {id} not found.");
         var stub = new Brand { Id = id };
         _unitOfWork.GetRepository<Brand, Guid>().Delete(stub, ct);

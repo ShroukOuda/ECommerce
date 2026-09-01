@@ -1,5 +1,6 @@
 using ECommerce.Application.DTO.Pagination;
 using ECommerce.Application.DTO.ProductImages;
+using ECommerce.Application.Interfaces.Notifications;
 using ECommerce.Domain.Enums.Media;
 using Microsoft.AspNetCore.Authorization;
 
@@ -10,80 +11,135 @@ public class ProductsController : BaseController
 {
     private readonly IProductService _productService;
     private readonly IProductImageService _productImageService;
+    private readonly INotificationSubscriptionService _notificationSubscriptionService;
     
-    public ProductsController(IProductService productService, IProductImageService productImageService)
+    public ProductsController(
+        IProductService productService, 
+        IProductImageService productImageService, 
+        INotificationSubscriptionService notificationSubscriptionService)
     {
         _productService =  productService;
         _productImageService = productImageService;
+        _notificationSubscriptionService = notificationSubscriptionService;
     }
 
-    [HttpGet("get-all")]
-    public async Task<ActionResult<PaginatedResult<GetProductsDTO>>> GetAll([FromQuery] ProductSpecParams productParams)
+
+    private string CurrentUserId =>
+        User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+
+    [HttpGet]
+    public async Task<IActionResult> GetAll(
+        [FromQuery] ProductSpecParams productParams)
     {
         var products = await _productService.GetAllProductsAsync(productParams);
-        return Ok(products);
+
+        return Success(
+            products,
+            "Products retrieved successfully.");
     }
 
-    [HttpGet("get-by-id/{id}")]
+    [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
         var product = await _productService.GetProductByIdAsync(id);
-        return Ok(product);
+        return Success(
+            product,
+            "Product retrieved successfully.");
+
     }
 
-    [HttpGet("get-similar/{productId}")]
+    [HttpGet("{productId:guid}/similar")]
     public async Task<IActionResult> GetSimilarProducts(Guid productId, [FromQuery] PaginationParams paginationParams)
     {
         var similarProducts = await _productService.GetSimilarProductsAsync(productId, paginationParams);
-        return Ok(similarProducts);
+        return Success(
+            similarProducts,
+            "Similar products retrieved successfully.");
     }
     
-    [HttpPost("add")]
+    [HttpPost]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Add(AddProductDTO productDto)
     {
-        await _productService.AddProductAsync(productDto);
-        return Ok("Added Successfully");
+        var product = await _productService.AddProductAsync(productDto);
+        return Created(
+            product,
+            "Product added successfully.");
     }
     
-    [HttpPost("upload-image")]
+    [HttpPost("{productId:guid}/images")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> AddImage([FromForm] UploadProductImageDTO dto, CancellationToken ct = default)
+    public async Task<IActionResult> AddImage(Guid productId, [FromForm] UploadProductImageDTO dto, CancellationToken ct = default)
     {
-        await _productImageService.UploadImageAsync(dto, ct);
-        return Ok("Photo Uploaded Successfully");
+        var image = await _productImageService.UploadImageAsync(productId, dto, ct);
+        return Created(
+            image,
+            "Product image uploaded successfully.");
     }
 
-    [HttpPut("update")]
+    [HttpPut("{id:guid}")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> Update(UpdateProductDTO productDTO)
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateProductDTO productDTO)
     {
-        await _productService.UpdateProductAsync(productDTO);
-        return Ok("Updated Successfully");
+        var product = await _productService.UpdateProductAsync(id, productDTO);
+        return Success(
+            product,
+            "Product updated successfully.");
     }
 
-    [HttpDelete("delete/{id}")]
+    [HttpDelete("{id:guid}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
         await _productService.DeleteProductAsync(id);
-        return Ok("Deleted Successfully");
+        return NoContent();
     }
     
-    [HttpDelete("delete-photo/{imageId}")]
+    [HttpDelete("{productId:guid}/images/{imageId:guid}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteImage(Guid productId, Guid imageId, CancellationToken ct = default)
     {
         await _productImageService.DeleteProductImageAsync(productId, imageId);
-        return Ok("Image Deleted Successfully");
+        return NoContent();
     }
 
-    [HttpDelete("delete-photos/{productId}")]
+    [HttpDelete("{productId:guid}/images")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteImages(Guid productId, CancellationToken ct = default)
     {
         await _productImageService.DeleteAllProductImagesAsync(productId, ct);
-        return Ok("Images Deleted Successfully");
+        return NoContent();
     }
+
+    [HttpGet("{productId:guid}/images")]
+    public async Task<IActionResult> GetProductImages(Guid productId, CancellationToken ct = default)
+    {
+        var images = await _productImageService.GetProductImagesAsync(productId, ct);
+        return Success(
+            images,
+            "Product images retrieved successfully.");
+    }
+
+    [HttpPost("{productId:guid}/subscribe-stock-alert")]
+    [Authorize(Roles = "Customer")]
+    public async Task<IActionResult> SubscribeToStockAlert(Guid productId)
+    {
+        var userId = CurrentUserId;
+        await _notificationSubscriptionService.SubscribeToStockAlertAsync(productId, userId);
+        return SuccessMessage("Subscribed to stock alert successfully." + 
+        "You will receive a notification when the product is back in stock.");
+    }
+
+    [HttpDelete("{productId:guid}/unsubscribe-stock-alert")]
+    [Authorize(Roles = "Customer")]
+    public async Task<IActionResult> UnsubscribeFromStockAlert(Guid productId)
+    {
+        var userId = CurrentUserId;
+        await _notificationSubscriptionService.UnsubscribeFromStockAlertAsync(productId, userId);
+        return SuccessMessage("Unsubscribed from stock alert successfully.");
+    }
+
+
 
 }

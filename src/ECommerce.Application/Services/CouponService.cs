@@ -41,22 +41,27 @@ public class CouponService : ICouponService
         return coupon is null ? null : _mapper.Map<GetCouponDTO>(coupon);
     }
 
-    public async Task AddCouponAsync(AddCouponDTO dto, CancellationToken ct = default)
+    public async Task<GetCouponDTO> AddCouponAsync(AddCouponDTO dto, CancellationToken ct = default)
     {
         var result = await _addValidator.ValidateAsync(dto, ct);
         if (!result.IsValid) throw new ValidationException(result.Errors);
         var coupon = _mapper.Map<Coupon>(dto);
         await _unitOfWork.GetRepository<Coupon, Guid>().AddAsync(coupon, ct);
         await _unitOfWork.SaveChangesAsync(ct);
+        return _mapper.Map<GetCouponDTO>(coupon);
     }
 
-    public async Task UpdateCouponAsync(UpdateCouponDTO dto, CancellationToken ct = default)
+    public async Task<GetCouponDTO> UpdateCouponAsync(Guid id, UpdateCouponDTO dto, CancellationToken ct = default)
     {
         var result = await _updateValidator.ValidateAsync(dto, ct);
         if (!result.IsValid) throw new ValidationException(result.Errors);
+        var spec = new CouponSpecification(id);
+        bool exists = await _unitOfWork.GetRepository<Coupon, Guid>().ExistsAsync(spec, ct);
+        if (!exists) throw new KeyNotFoundException($"Coupon with ID {id} not found.");
         var coupon = _mapper.Map<Coupon>(dto);
         _unitOfWork.GetRepository<Coupon, Guid>().Update(coupon, ct);
         await _unitOfWork.SaveChangesAsync(ct);
+        return _mapper.Map<GetCouponDTO>(coupon);
     }
 
     public async Task DeleteCouponAsync(Guid id, CancellationToken ct = default)

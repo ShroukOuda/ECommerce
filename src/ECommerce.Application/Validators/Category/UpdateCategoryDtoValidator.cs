@@ -4,7 +4,6 @@ public class UpdateCategoryDtoValidator : CategoryBaseValidator<UpdateCategoryDT
 {
     public UpdateCategoryDtoValidator()
     {
-        RuleFor(x => x.Id)
-            .NotEmpty().WithMessage("Category Id is required.");
+        
     }
 }

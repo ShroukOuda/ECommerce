@@ -7,8 +7,8 @@ public interface IProductService
         CancellationToken ct = default);
     Task<GetProductDetailsDTO> GetProductByIdAsync(Guid id, CancellationToken ct = default);
     Task<PaginatedResult<GetProductsDTO>> GetSimilarProductsAsync(Guid productId, PaginationParams paginationParams, CancellationToken ct = default);
-    Task AddProductAsync(AddProductDTO productDto, CancellationToken ct = default);
-    Task UpdateProductAsync(UpdateProductDTO productDto, CancellationToken ct = default);
+    Task<GetProductDetailsDTO> AddProductAsync(AddProductDTO productDto, CancellationToken ct = default);
+    Task<GetProductDetailsDTO> UpdateProductAsync(Guid productId, UpdateProductDTO productDto, CancellationToken ct = default);
     Task DeleteProductAsync(Guid id, CancellationToken ct = default);
     Task<int> GetTotalCountAsync();
 }

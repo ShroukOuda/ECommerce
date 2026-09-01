@@ -34,7 +34,7 @@ public class CartService : ICartService
         return cart is null ? null : _mapper.Map<GetCartDTO>(cart);
     }
 
-    public async Task AddCartItemAsync(AddCartItemDTO dto, CancellationToken ct = default)
+    public async Task<GetCartItemDTO> AddCartItemAsync(AddCartItemDTO dto, CancellationToken ct = default)
     {
         var result = await _addItemValidator.ValidateAsync(dto, ct);
         if (!result.IsValid) throw new ValidationException(result.Errors);
@@ -42,20 +42,22 @@ public class CartService : ICartService
         var item = _mapper.Map<CartItem>(dto);
         await _unitOfWork.GetRepository<CartItem, Guid>().AddAsync(item, ct);
         await _unitOfWork.SaveChangesAsync(ct);
+        return _mapper.Map<GetCartItemDTO>(item);
     }
 
-    public async Task UpdateCartItemAsync(UpdateCartItemDTO dto, CancellationToken ct = default)
+    public async Task<GetCartItemDTO> UpdateCartItemAsync(Guid id, UpdateCartItemDTO dto, CancellationToken ct = default)
     {
-        var item = await _unitOfWork.GetRepository<CartItem, Guid>().GetByIdAsync(dto.Id, ct);
-        if (item is null) throw new KeyNotFoundException($"Cart item with ID {dto.Id} not found.");
+        var item = await _unitOfWork.GetRepository<CartItem, Guid>().GetByIdAsync(id, ct);
+        if (item is null) throw new KeyNotFoundException($"Cart item with ID {id} not found.");
         item.Quantity = dto.Quantity;
         _unitOfWork.GetRepository<CartItem, Guid>().Update(item, ct);
         await _unitOfWork.SaveChangesAsync(ct);
+        return _mapper.Map<GetCartItemDTO>(item);
     }
 
-    public async Task RemoveCartItemAsync(Guid cartItemId, CancellationToken ct = default)
+    public async Task RemoveCartItemAsync(Guid cartId, Guid cartItemId, CancellationToken ct = default)
     {
-        var spec = new CartItemSpecification(cartItemId);
+        var spec = new CartItemSpecification(cartId, cartItemId);
         bool exist = await _unitOfWork.GetRepository<CartItem, Guid>().ExistsAsync(spec);
         if (!exist) throw new KeyNotFoundException($"Cart item with ID {cartItemId} not found.");
         var stub = new CartItem { Id = cartItemId };

@@ -10,6 +10,5 @@ public class AddReviewDtoValidator : AbstractValidator<AddReviewDTO>
         RuleFor(x => x.Title).NotEmpty().MaximumLength(200);
         RuleFor(x => x.ProductId).NotEmpty();
         RuleFor(x => x.OrderId).NotEmpty();
-        RuleFor(x => x.UserId).NotEmpty();
     }
 }

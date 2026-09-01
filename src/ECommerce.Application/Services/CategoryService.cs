@@ -27,20 +27,21 @@ public class CategoryService : ICategoryService
         _updateCategoryDtoValidator = updateCategoryDtoValidator;
     }
 
-    public async Task<IEnumerable<Category>> GetAllCategoriesAsync()
+    public async Task<IEnumerable<GetCategoryDTO>> GetAllCategoriesAsync()
     {
-        return await _unitOfWork.GetRepository<Category, Guid>().GetAllAsync();
+        var categories = await _unitOfWork.GetRepository<Category, Guid>().GetAllAsync();
+        return _mapper.Map<IEnumerable<GetCategoryDTO>>(categories);
     }
 
-    public async Task<Category> GetCategoryByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<GetCategoryDetailDTO> GetCategoryByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var category = await _unitOfWork.GetRepository<Category, Guid>().GetByIdAsync(id, cancellationToken);
         if (category == null)
             throw new KeyNotFoundException($"Category with ID {id} not found.");
-        return category;
+        return _mapper.Map<GetCategoryDetailDTO>(category);
     }
 
-    public async Task AddCategoryAsync(AddCategoryDTO categoryDTO, CancellationToken cancellationToken = default)
+    public async Task<GetCategoryDTO> AddCategoryAsync(AddCategoryDTO categoryDTO, CancellationToken cancellationToken = default)
     {
         var validationResult = await _addCategoryDtoValidator.ValidateAsync(categoryDTO);
         if (!validationResult.IsValid)
@@ -48,18 +49,24 @@ public class CategoryService : ICategoryService
         var category = _mapper.Map<Category>(categoryDTO);
         await _unitOfWork.GetRepository<Category, Guid>().AddAsync(category);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+        return _mapper.Map<GetCategoryDTO>(category);
     }
 
-    public async Task UpdateCategoryAsync(UpdateCategoryDTO categoryDTO, CancellationToken cancellationToken = default)
+    public async Task<GetCategoryDTO> UpdateCategoryAsync(Guid id, UpdateCategoryDTO categoryDTO, CancellationToken cancellationToken = default)
     {
         
         var validationResult = await _updateCategoryDtoValidator.ValidateAsync(categoryDTO);
         if (!validationResult.IsValid)
             throw new ValidationException(validationResult.Errors);
         
+        var spec = new CategorySpecification(id);
+        bool exist = await _unitOfWork.GetRepository<Category, Guid>().ExistsAsync(spec);
+        if (!exist)
+            throw new KeyNotFoundException($"Category with ID {id} not found.");
         var category = _mapper.Map<Category>(categoryDTO);
         _unitOfWork.GetRepository<Category, Guid>().Update(category);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+        return _mapper.Map<GetCategoryDTO>(category);
     }
 
     public async Task DeleteCategoryAsync(Guid id, CancellationToken cancellationToken = default)

@@ -3,6 +3,7 @@ using ECommerce.Application.Interfaces;
 
 namespace ECommerce.API.Controllers;
 
+[Authorize(Roles = "Admin")]
 public class ReturnsController : BaseController
 {
     private readonly IReturnService _returnService;
@@ -12,24 +13,32 @@ public class ReturnsController : BaseController
         _returnService = returnService;
     }
 
-    [HttpGet("get-by-user/{userId}")]
-    public async Task<IActionResult> GetByUser(string userId)
+    private string currentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+    [HttpGet()]
+    public async Task<IActionResult> GetByUser()
     {
-        var returns = await _returnService.GetReturnsByUserIdAsync(userId);
-        return Ok(returns);
+        var returns = await _returnService.GetReturnsByUserIdAsync(currentUserId);
+        return Success(
+            returns,
+            "Returns retrieved successfully.");
     }
 
-    [HttpGet("get-by-id/{id}")]
+    [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
         var ret = await _returnService.GetReturnByIdAsync(id);
-        return Ok(ret);
+        return Success(
+            ret,
+            "Return retrieved successfully.");
     }
 
     [HttpPost("create")]
     public async Task<IActionResult> Create(CreateReturnRequestDTO dto)
     {
         var ret = await _returnService.CreateReturnRequestAsync(dto);
-        return Ok(ret);
+        return Created(
+            ret,
+            "Return request created successfully.");
     }
 }

@@ -11,11 +11,13 @@ public class HomepageController : BaseController
         _homePageService = homePageService;
     }
 
-    [HttpGet("get-homepage-data")]
+    [HttpGet()]
     public async Task<IActionResult> GetHomePageData()
     {
         var homepageData = await _homePageService.GetHomePageDataAsync();
-        return Ok(homepageData);
+        return Success(
+            homepageData,
+            "Homepage data retrieved successfully.");
     }
 
 }

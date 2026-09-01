@@ -11,5 +11,11 @@ public class ProductOptionValueSpecification : BaseSpecification<ProductOptionVa
     {
         AsNoTracking();
     }
+
+    public ProductOptionValueSpecification(Guid productOptionId, Guid productOptionValueId)
+        : base(pov => pov.OptionId == productOptionId && pov.Id == productOptionValueId)
+    {
+        AsNoTracking();
+    }
     
 }

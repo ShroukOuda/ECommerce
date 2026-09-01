@@ -15,9 +15,6 @@ public class UploadBrandLogoDTOValidator : AbstractValidator<UploadBrandLogoDTO>
         _fileValidator = fileValidator;
         _validationSettings = validationSettings.Value;
         
-        RuleFor(x => x.BrandId)
-            .NotEmpty()
-            .WithMessage("BrandId is required");
 
         RuleFor(x => x.SubType)
             .IsInEnum()

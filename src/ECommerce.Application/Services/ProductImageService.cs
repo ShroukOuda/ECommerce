@@ -32,15 +32,16 @@ public class ProductImageService : IProductImageService
     }
 
     public async Task<ProductImageDTO> UploadImageAsync(
+        Guid productId,
         UploadProductImageDTO dto,
         CancellationToken ct = default)
     {
-        var productSpec = new ProductSpecification(dto.ProductId);
+        var productSpec = new ProductSpecification(productId);
         bool exist = await _unitOfWork.GetRepository<Product, Guid>().ExistsAsync(productSpec);
         if (!exist)
-            throw new NotFoundException($"Product with ID {dto.ProductId} not found");
+            throw new NotFoundException($"Product with ID {productId} not found");
         
-        var productImageSpec = new ProductImageSpecification(dto.ProductId);
+        var productImageSpec = new ProductImageSpecification(productId);
         var count = await _unitOfWork.GetRepository<ProductImage, Guid>().CountAsync(productImageSpec);
 
         if (count >= _settings.ProductImage.MaxTotalPhotos)
@@ -56,9 +57,9 @@ public class ProductImageService : IProductImageService
             throw new ValidationException(validationResult.Errors);
         
         if (dto.IsMain)
-            await ResetExistingMainImageAsync(dto.ProductId, ct);
+            await ResetExistingMainImageAsync(productId, ct);
 
-        var folderPath = $"products/{dto.ProductId}";
+        var folderPath = $"products/{productId}";
         await using var stream = dto.File.OpenReadStream();
 
         try
@@ -69,9 +70,9 @@ public class ProductImageService : IProductImageService
             var image = new ProductImage
             {
                 ImageUrl = filePath,
-                ProductId = dto.ProductId,
+                ProductId = productId,
                 IsMain = dto.IsMain,
-                AltText = dto.AltText ?? $"Product {dto.ProductId} image",
+                AltText = dto.AltText ?? $"Product {productId} image",
                 UploadedAt = DateTime.Now
             };
             
@@ -80,7 +81,7 @@ public class ProductImageService : IProductImageService
             
             _logger.LogInformation(
                 "Photo uploaded for Product {ProductId}: {FilePath} (Main:{IsMain})",
-                dto.ProductId, filePath, dto.IsMain);
+                productId, filePath, dto.IsMain);
 
             return _mapper.Map<ProductImageDTO>(image);
         }

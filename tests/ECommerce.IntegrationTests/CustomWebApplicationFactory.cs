@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.AspNetCore.Authentication;
 
 namespace ECommerce.IntegrationTests;
 
@@ -55,6 +56,14 @@ public class CustomWebApplicationFactory : WebApplicationFactory<ECommerce.API.P
             // Replace IFileProvider
             services.RemoveAll<IFileProvider>();
             services.AddSingleton<IFileProvider>(new NullFileProvider());
+
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = TestAuthenticationHandler.SchemeName;
+                options.DefaultChallengeScheme = TestAuthenticationHandler.SchemeName;
+            }).AddScheme<AuthenticationSchemeOptions, TestAuthenticationHandler>(
+                TestAuthenticationHandler.SchemeName,
+                _ => { });
 
             // Ensure the database is created
             var sp = services.BuildServiceProvider();

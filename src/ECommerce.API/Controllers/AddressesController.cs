@@ -11,35 +11,47 @@ public class AddressesController : BaseController
         _addressService = addressService;
     }
 
-    [HttpGet("get-by-user/{userId}")]
-    public async Task<IActionResult> GetByUser(string userId)
+    private string CurrentUserId =>
+        User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+    [HttpGet()]
+    [Authorize(Roles = "Admin, Customer")]
+    public async Task<IActionResult> GetMyAddresses()
     {
-        var addresses = await _addressService.GetAddressesByUserIdAsync(userId);
-        return Ok(addresses);
+        var addresses = await _addressService.GetAddressesByUserIdAsync(CurrentUserId);
+        return Success(
+            addresses,
+            "Addresses retrieved successfully.");
     }
 
-    [HttpGet("get-by-id/{id}")]
+    [HttpGet("{id:guid}")]
+    [Authorize(Roles = "Admin, Customer")]
     public async Task<IActionResult> GetById(Guid id)
     {
         var address = await _addressService.GetAddressByIdAsync(id);
-        return Ok(address);
+        return Success(
+            address,
+            "Address retrieved successfully.");
     }
 
-    [HttpPost("add")]
+    [HttpPost()]
+    [Authorize(Roles = "Admin, Customer")]
     public async Task<IActionResult> Add(AddAddressDTO dto)
     {
-        await _addressService.AddAddressAsync(dto);
-        return Ok(new ResponseAPI(200, "Address added successfully"));
+        var address = await _addressService.AddAddressAsync(dto);
+        return Created(address, "Address added successfully.");
     }
 
-    [HttpPut("update")]
-    public async Task<IActionResult> Update(UpdateAddressDTO dto)
+    [HttpPut("{id:guid}")]
+    [Authorize(Roles = "Admin, Customer")]
+    public async Task<IActionResult> Update(Guid id, UpdateAddressDTO dto)
     {
-        await _addressService.UpdateAddressAsync(dto);
-        return Ok(new ResponseAPI(200, "Address updated successfully"));
+        var address = await _addressService.UpdateAddressAsync(id, dto);
+        return Success(address, "Address updated successfully");
     }
 
-    [HttpDelete("delete/{id}")]
+    [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin, Customer")]
     public async Task<IActionResult> Delete(Guid id)
     {
         await _addressService.DeleteAddressAsync(id);

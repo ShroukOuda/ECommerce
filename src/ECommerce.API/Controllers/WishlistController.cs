@@ -3,6 +3,7 @@ using ECommerce.Application.Interfaces;
 
 namespace ECommerce.API.Controllers;
 
+[Authorize(Roles = "Customer")]
 public class WishlistController : BaseController
 {
     private readonly IWishlistService _wishlistService;
@@ -12,24 +13,30 @@ public class WishlistController : BaseController
         _wishlistService = wishlistService;
     }
 
-    [HttpGet("get-by-user/{userId}")]
-    public async Task<IActionResult> GetByUser(string userId)
+    private string CurrentUserId => User?.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+    [HttpGet()]
+    public async Task<IActionResult> GetMyWishlist()
     {
-        var items = await _wishlistService.GetWishlistByUserIdAsync(userId);
-        return Ok(items);
+        var items = await _wishlistService.GetWishlistByUserIdAsync(CurrentUserId);
+        return Success(
+            items,
+            "Wishlist retrieved successfully.");
     }
 
-    [HttpPost("add")]
+    [HttpPost()]
     public async Task<IActionResult> Add(AddWishlistDTO dto)
     {
-        await _wishlistService.AddToWishlistAsync(dto);
-        return Ok(new ResponseAPI(200, "Added to wishlist successfully"));
+        var item = await _wishlistService.AddToWishlistAsync(dto);
+        return Created(
+            item,
+            "Added to wishlist successfully.");
     }
 
-    [HttpDelete("remove/{id}")]
+    [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Remove(Guid id)
     {
         await _wishlistService.RemoveFromWishlistAsync(id);
-        return Ok(new ResponseAPI(200, "Removed from wishlist successfully"));
+        return NoContent();
     }
 }

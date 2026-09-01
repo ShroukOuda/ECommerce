@@ -92,7 +92,7 @@ public class ProductService : IProductService
             paginationParams.PageSize);
     }
 
-    public async Task AddProductAsync(AddProductDTO productDTO, CancellationToken cancellationToken = default)
+    public async Task<GetProductDetailsDTO> AddProductAsync(AddProductDTO productDTO, CancellationToken cancellationToken = default)
     {
         var validationResult = await _addProductDtoValidator.ValidateAsync(productDTO);
         if (!validationResult.IsValid)
@@ -101,25 +101,29 @@ public class ProductService : IProductService
         var product = _mapper.Map<Product>(productDTO);
         await _unitOfWork.GetRepository<Product, Guid>().AddAsync(product);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return _mapper.Map<GetProductDetailsDTO>(product);
        
     }
     
-    public async Task UpdateProductAsync(UpdateProductDTO productDto, CancellationToken ct = default)
+    public async Task<GetProductDetailsDTO> UpdateProductAsync(Guid productId, UpdateProductDTO productDto, CancellationToken ct = default)
     {
         var validationResult = await _updateProductDtoValidator.ValidateAsync(productDto, ct);
         if (!validationResult.IsValid)
             throw new ValidationException(validationResult.Errors);
         
         
-        var spec = new ProductSpecification(productDto.Id);
+        var spec = new ProductSpecification(productId);
         bool exists = await _unitOfWork.GetRepository<Product, Guid>().ExistsAsync(spec);
         
         if (!exists)
-            throw new KeyNotFoundException($"Product with ID {productDto.Id} not found.");
+            throw new KeyNotFoundException($"Product with ID {productId} not found.");
 
         var product = _mapper.Map<Product>(productDto);
         _unitOfWork.GetRepository<Product, Guid>().Update(product, ct);
         await _unitOfWork.SaveChangesAsync(ct);
+
+        return _mapper.Map<GetProductDetailsDTO>(product);
     
        
     }

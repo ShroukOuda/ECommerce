@@ -11,12 +11,15 @@ public class AuthenticationController : BaseController
     public AuthenticationController(IAuthenticationService authService)
         => _authService = authService;
 
+    private string CurrentUserId =>
+        User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
     [HttpPost("register")]
     [AllowAnonymous]
     public async Task<IActionResult> Register([FromBody] RegisterDTO dto)
     {
-        var result = await _authService.RegisterAsync(dto);
-        return Ok(result);    
+        await _authService.RegisterAsync(dto);
+        return CreatedMessage("Registration successful. Please check your email to confirm your account.");
     }
 
 
@@ -27,7 +30,7 @@ public class AuthenticationController : BaseController
         [FromQuery] string token)
     {
         await _authService.ConfirmEmailAsync(email, token);
-        return Ok(new ResponseAPI(200, "Email confirmed successfully"));
+        return SuccessMessage("Email confirmed successfully. You can now log in.");
     }
 
     
@@ -36,7 +39,7 @@ public class AuthenticationController : BaseController
     public async Task<IActionResult> Login([FromBody] LoginDTO dto)
     {
         var result = await _authService.LoginAsync(dto);
-        return Ok(result);
+        return Success(result, "Login successful.");
 
     }
 
@@ -45,7 +48,7 @@ public class AuthenticationController : BaseController
     public async Task<IActionResult> ForgotPassword([FromBody] string email)
     {
         await _authService.ForgotPasswordAsync(email);
-        return Ok(new ResponseAPI(200, "Password reset email sent successfully"));
+        return SuccessMessage("Password reset email sent successfully. Please check your email.");
     }
 
     [HttpPost("reset-password")]
@@ -53,7 +56,7 @@ public class AuthenticationController : BaseController
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDTO dto)
     {
         await _authService.ResetPasswordAsync(dto);
-        return Ok(new ResponseAPI(200, "Password reset successfully"));
+        return SuccessMessage("Password reset successfully. You can now log in with your new password.");
     }
 
     [HttpPost("resend-confirmation-email")]
@@ -61,7 +64,7 @@ public class AuthenticationController : BaseController
     public async Task<IActionResult> ResendConfirmationEmail([FromBody] string email)
     {
         await _authService.ResendConfirmationEmailAsync(email);
-        return Ok(new ResponseAPI(200, "Confirmation email resent successfully"));
+        return SuccessMessage("Confirmation email resent successfully. Please check your email.");
     }
 
     [HttpPost("refresh")]
@@ -69,7 +72,7 @@ public class AuthenticationController : BaseController
     public async Task<IActionResult> Refresh([FromBody] string refreshToken)
     {
         var result = await _authService.RefreshTokenAsync(refreshToken);
-        return Ok(result);
+        return Success(result, "Token refreshed successfully.");
     }
 
     
@@ -86,7 +89,7 @@ public class AuthenticationController : BaseController
     [Authorize]
     public async Task<IActionResult> LogoutAll()
     {
-        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value!;
+        var userId = CurrentUserId;
         await _authService.RevokeAllAsync(userId);
         return NoContent();
     }

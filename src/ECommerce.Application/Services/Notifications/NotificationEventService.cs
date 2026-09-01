@@ -8,11 +8,11 @@ namespace ECommerce.Application.Services.Notifications;
 public class NotificationEventService : INotificationEventService
 {
     private readonly INotificationService _notificationService;
-    private readonly INotificationPreferenceService _notificationPreferenceService;
+    private readonly IUserNotificationPreferenceService _notificationPreferenceService;
 
     public NotificationEventService(
         INotificationService notificationService,
-        INotificationPreferenceService notificationPreferenceService)
+        IUserNotificationPreferenceService notificationPreferenceService)
     {
         _notificationService = notificationService;
         _notificationPreferenceService = notificationPreferenceService;
@@ -122,7 +122,7 @@ public class NotificationEventService : INotificationEventService
         if (string.IsNullOrWhiteSpace(userId))
             throw new ArgumentException("User id is required.", nameof(userId));
 
-        var isEnabled = await _notificationPreferenceService.IsEnabledAsync(userId, type);
+        var isEnabled = await _notificationPreferenceService.IsEnabledAsync(userId, type, NotificationChannel.InApp);
         if (!isEnabled)
             return;
 

@@ -32,18 +32,20 @@ public class ReviewService : IReviewService
         return _mapper.Map<GetReviewDTO>(review);
     }
 
-    public async Task AddReviewAsync(AddReviewDTO dto, CancellationToken ct = default)
+    public async Task<GetReviewDTO> AddReviewAsync(string userId, AddReviewDTO dto, CancellationToken ct = default)
     {
         var result = await _addValidator.ValidateAsync(dto, ct);
         if (!result.IsValid) throw new ValidationException(result.Errors);
         var review = _mapper.Map<ProductReview>(dto);
+        review.UserId = userId;
         await _unitOfWork.GetRepository<ProductReview, Guid>().AddAsync(review, ct);
         await _unitOfWork.SaveChangesAsync(ct);
+        return _mapper.Map<GetReviewDTO>(review);
     }
 
-    public async Task DeleteReviewAsync(Guid id, CancellationToken ct = default)
+    public async Task DeleteReviewAsync(string userId, Guid id, CancellationToken ct = default)
     {
-        var spec = new ReviewSpecification(id);
+        var spec = new ReviewByUserSpecification(userId, id);
         bool exists = await _unitOfWork.GetRepository<ProductReview, Guid>().ExistsAsync(spec);
         if (!exists) throw new KeyNotFoundException($"Review with ID {id} not found.");
         var stub = new ProductReview { Id = id };

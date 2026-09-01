@@ -12,41 +12,63 @@ public class ProductVariantsController : BaseController
         _productVariantService = productVariantService;
     }
 
-    [HttpGet("get-by-product/{productId}")]
+    [HttpGet("product/{productId:guid}")]
     public async Task<IActionResult> GetByProduct(Guid productId)
     {
         var variants = await _productVariantService.GetVariantsByProductIdAsync(productId);
-        return Ok(variants);
+        return Success(
+            variants,
+            "Product variants retrieved successfully.");
     }
 
-    [HttpGet("get-by-id/{id}")]
+    [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
         var variant = await _productVariantService.GetVariantByIdAsync(id);
-        return Ok(variant);
+        return Success(
+            variant,
+            "Product variant retrieved successfully.");
     }
 
-    [HttpPost("add")]
+    [HttpPost()]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Add(AddProductVariantDTO dto)
     {
-        await _productVariantService.AddVariantAsync(dto);
-        return Ok(new ResponseAPI(200, "Product variant added successfully"));
+        var variant = await _productVariantService.AddVariantAsync(dto);
+        return Created(
+            variant,
+            "Product variant added successfully.");
     }
 
-    [HttpPut("update")]
+    [HttpPut("{id:guid}")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> Update(UpdateProductVariantDTO dto)
+    public async Task<IActionResult> Update(Guid id, UpdateProductVariantDTO dto)
     {
-        await _productVariantService.UpdateVariantAsync(dto);
-        return Ok(new ResponseAPI(200, "Product variant updated successfully"));
+        var variant = await _productVariantService.UpdateVariantAsync(id, dto);
+        return Success(
+            variant,
+            "Product variant updated successfully.");
     }
 
-    [HttpDelete("delete/{id}")]
+    [HttpDelete("{id:guid}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
         await _productVariantService.DeleteVariantAsync(id);
-        return Ok(new ResponseAPI(200, "Product variant deleted successfully"));
+        return NoContent();
     }
+    
+    [HttpGet("{id:guid}/sku/{sku}")]
+    public async Task<IActionResult> GetBySKU(Guid id, string sku)
+    {
+        var variant = await _productVariantService.GetVariantBySKUAsync(id, sku);
+        return Success(
+            variant,
+            "Product variant retrieved successfully.");
+    }
+
+
 }
+
+   
+

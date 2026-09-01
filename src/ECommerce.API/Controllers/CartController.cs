@@ -1,5 +1,6 @@
 using ECommerce.Application.DTO.Cart;
 using ECommerce.Application.Interfaces;
+using Microsoft.EntityFrameworkCore.Infrastructure.Internal;
 
 namespace ECommerce.API.Controllers;
 
@@ -12,38 +13,43 @@ public class CartController : BaseController
         _cartService = cartService;
     }
 
-    [HttpGet("get-by-user/{userId}")]
-    public async Task<IActionResult> GetByUserId(string userId)
+    private string CurrentUserId =>
+        User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+    [HttpGet()]
+    public async Task<IActionResult> GetMyCart()
     {
-        var cart = await _cartService.GetActiveCartByUserIdAsync(userId);
-        return Ok(cart);
+        var cart = await _cartService.GetActiveCartByUserIdAsync(CurrentUserId);
+        return Success(
+            cart,
+            "Cart retrieved successfully.");
     }
 
-    [HttpPost("add-item")]
+    [HttpPost()]
     public async Task<IActionResult> AddItem(AddCartItemDTO dto)
     {
-        await _cartService.AddCartItemAsync(dto);
-        return Ok(new ResponseAPI(200, "Item added to cart successfully"));
+        var item = await _cartService.AddCartItemAsync(dto);
+        return Created(item, "Item added to cart successfully");
     }
 
-    [HttpPut("update-item")]
-    public async Task<IActionResult> UpdateItem(UpdateCartItemDTO dto)
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> UpdateItem(Guid id, UpdateCartItemDTO dto)
     {
-        await _cartService.UpdateCartItemAsync(dto);
-        return Ok(new ResponseAPI(200, "Cart item updated successfully"));
+        var item = await _cartService.UpdateCartItemAsync(id, dto);
+        return Success(item, "Cart item updated successfully");
     }
 
-    [HttpDelete("remove-item/{cartItemId}")]
-    public async Task<IActionResult> RemoveItem(Guid cartItemId)
+    [HttpDelete("{cartId:guid}/items/{cartItemId:guid}")]
+    public async Task<IActionResult> RemoveItem(Guid cartId, Guid cartItemId)
     {
-        await _cartService.RemoveCartItemAsync(cartItemId);
-        return Ok(new ResponseAPI(200, "Item removed from cart successfully"));
+        await _cartService.RemoveCartItemAsync(cartId, cartItemId);
+        return NoContent();
     }
 
-    [HttpDelete("clear/{cartId}")]
-    public async Task<IActionResult> ClearCart(Guid cartId)
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> ClearCart(Guid id)
     {
-        await _cartService.ClearCartAsync(cartId);
-        return Ok(new ResponseAPI(200, "Cart cleared successfully"));
+        await _cartService.ClearCartAsync(id);
+        return NoContent();
     }
 }

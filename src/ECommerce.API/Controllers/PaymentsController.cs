@@ -12,24 +12,28 @@ public class PaymentsController : BaseController
         _paymentService = paymentService;
     }
 
-    [HttpGet("get-by-order/{orderId}")]
+    [HttpGet("order/{orderId:guid}")]
     public async Task<IActionResult> GetByOrder(Guid orderId)
     {
         var payments = await _paymentService.GetPaymentsByOrderIdAsync(orderId);
         return Ok(payments);
     }
 
-    [HttpGet("get-by-id/{id}")]
+    [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
         var payment = await _paymentService.GetPaymentByIdAsync(id);
-        return Ok(payment);
+        return Success(
+            payment,
+            "Payment retrieved successfully.");
     }
 
-    [HttpPost("create")]
+    [HttpPost()]
     public async Task<IActionResult> Create(CreatePaymentDTO dto)
     {
         var payment = await _paymentService.CreatePaymentAsync(dto);
-        return Ok(payment);
+        return Created(
+            payment,
+            "Payment created successfully.");
     }
 }

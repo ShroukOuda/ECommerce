@@ -4,6 +4,7 @@ using ECommerce.Domain.Entities.Brands;
 using ECommerce.Domain.Interfaces.Repositories;
 using ECommerce.Application.Specifications.Brands;
 
+
 namespace ECommerce.Application.Services;
 
 public class BrandLogoService : IBrandLogoService
@@ -32,22 +33,23 @@ public class BrandLogoService : IBrandLogoService
     }
     
     public async Task<BrandLogoDTO> UploadlogoAsync(
+        Guid brandId,
         UploadBrandLogoDTO dto,
         CancellationToken ct = default)
     {
-        var brandSpec = new BrandSpecification(dto.BrandId);
+        var brandSpec = new BrandSpecification(brandId);
 
         var exist = await _unitOfWork.GetRepository<Brand, Guid>().ExistsAsync(brandSpec);
         if (!exist)
-            throw new NotFoundException($"Brand {dto.BrandId} not found");
+            throw new NotFoundException($"Brand {brandId} not found");
         
-        var BrandLogoSpec = new BrandLogoSpecification(dto.BrandId, dto.SubType);
+        var BrandLogoSpec = new BrandLogoSpecification(brandId, dto.SubType);
         var existingPhoto = await _unitOfWork.GetRepository<BrandLogo, Guid>()
             .ExistsAsync(BrandLogoSpec);
 
         if (existingPhoto)
         {
-            throw new Exception($"{dto.SubType} already exists for Brand {dto.BrandId} " +
+            throw new Exception($"{dto.SubType} already exists for Brand {brandId} " +
                                 $"If you want to replace it, please delete the existing one first.");
             
         }
@@ -56,7 +58,7 @@ public class BrandLogoService : IBrandLogoService
         if (!validationResult.IsValid)
             throw new ValidationException(validationResult.Errors);
         
-        var folderPath = $"categories/{dto.BrandId}/{dto.SubType.ToString().ToLowerInvariant()}";
+        var folderPath = $"categories/{brandId}/{dto.SubType.ToString().ToLowerInvariant()}";
         await using var stream = dto.File.OpenReadStream();
 
         try
@@ -67,9 +69,9 @@ public class BrandLogoService : IBrandLogoService
             var logo = new BrandLogo
             {
                 ImageUrl = filePath,
-                BrandId = dto.BrandId,
+                BrandId = brandId,
                 SubType = dto.SubType,
-                AltText = dto.AltText ?? $"{dto.SubType} for Brand {dto.BrandId}",
+                AltText = dto.AltText ?? $"{dto.SubType} for Brand {brandId}",
                 UploadedAt = DateTime.UtcNow
             };
 
@@ -77,7 +79,7 @@ public class BrandLogoService : IBrandLogoService
             await _unitOfWork.SaveChangesAsync(ct);
 
             _logger.LogInformation("{SubType} uploaded for Brand {BrandId}",
-                dto.SubType, dto.BrandId);
+                dto.SubType, brandId);
 
             return _mapper.Map<BrandLogoDTO>(logo);
         }
@@ -155,11 +157,17 @@ public class BrandLogoService : IBrandLogoService
     }
     
     public async Task<BrandLogoDTO?> GetLogoByIdAsync(
+        Guid brandId,
         Guid logoId,
         CancellationToken ct = default)
     {
-        var logo = await _unitOfWork.GetRepository<BrandLogo, Guid>().GetByIdAsync(logoId, ct);
-        if (logo == null) return null;
+        var spec = new BrandLogoSpecification(brandId, logoId);
+        var exists = await _unitOfWork.GetRepository<BrandLogo, Guid>().ExistsAsync(spec, ct);
+        
+        if (!exists) 
+            throw new NotFoundException($"Logo {logoId} not found for Brand {brandId}");   
+
+        var logo = await _unitOfWork.GetRepository<BrandLogo, Guid>().GetFirstOrDefaultAsync(spec);
         return _mapper.Map<BrandLogoDTO>(logo);
     }
 

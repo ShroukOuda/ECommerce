@@ -21,26 +21,32 @@ public class UserSessionsController : BaseController
     public async Task<IActionResult> GetActiveSessions()
     {
         var sessions = await _sessionService.GetActiveSessionsAsync(CurrentUserId);
-        return Ok(sessions);
+        return Success(
+            sessions,
+            "Active sessions retrieved successfully.");
     }
 
-    [HttpGet]
+    [HttpGet("all")]
     public async Task<IActionResult> GetAllSessions()
     {
         var sessions = await _sessionService.GetAllSessionsAsync(CurrentUserId);
-        return Ok(sessions);
+        return Success(
+            sessions,
+            "All sessions retrieved successfully.");
     }
 
-    [HttpGet("user/{userId}")]
+    [HttpGet("user/{userId:string}")]
     [Authorize(Roles = "Admin")]
 
     public async Task<IActionResult> GetSessionsForUser(string userId)
     {
         var sessions = await _sessionService.GetAllSessionsAsync(userId);
-        return Ok(sessions);
+        return Success(
+            sessions,
+            "Sessions for user retrieved successfully.");
     }
 
-    [HttpDelete("{sessionId}")]
+    [HttpDelete("{sessionId:guid}")]
     public async Task<IActionResult> RevokeSession(Guid sessionId)
     {
         await _sessionService.RevokeSessionAsync(sessionId, CurrentUserId);

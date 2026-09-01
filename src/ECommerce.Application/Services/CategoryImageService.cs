@@ -32,22 +32,23 @@ public class CategoryImageService : ICategoryImageService
     }
     
     public async Task<CategoryImageDTO> UploadImageAsync(
+        Guid Id,
         UploadCategoryImageDTO dto,
         CancellationToken ct = default)
     {
-        var categorySpec = new CategorySpecification(dto.CategoryId);
+        var categorySpec = new CategorySpecification(Id);
 
         var exist = await _unitOfWork.GetRepository<Category, Guid>().ExistsAsync(categorySpec);
         if (!exist)
-            throw new NotFoundException($"Category {dto.CategoryId} not found");
+            throw new NotFoundException($"Category {Id} not found");
         
-        var categoryImageSpec = new CategoryImageSpecification(dto.CategoryId, dto.SubType);
+        var categoryImageSpec = new CategoryImageSpecification(Id, dto.SubType);
         var existingPhoto = await _unitOfWork.GetRepository<CategoryImage, Guid>()
             .ExistsAsync(categoryImageSpec);
 
         if (existingPhoto)
         {
-            throw new Exception($"{dto.SubType} already exists for Category {dto.CategoryId} " +
+            throw new Exception($"{dto.SubType} already exists for Category {Id} " +
                                 $"If you want to replace it, please delete the existing one first.");
             
         }
@@ -56,7 +57,7 @@ public class CategoryImageService : ICategoryImageService
         if (!validationResult.IsValid)
             throw new ValidationException(validationResult.Errors);
         
-        var folderPath = $"categories/{dto.CategoryId}/{dto.SubType.ToString().ToLowerInvariant()}";
+        var folderPath = $"categories/{Id}/{dto.SubType.ToString().ToLowerInvariant()}";
         await using var stream = dto.File.OpenReadStream();
 
         try
@@ -67,9 +68,9 @@ public class CategoryImageService : ICategoryImageService
             var image = new CategoryImage
             {
                 ImageUrl = filePath,
-                CategoryId = dto.CategoryId,
+                CategoryId = Id,
                 SubType = dto.SubType,
-                AltText = dto.AltText ?? $"{dto.SubType} for category {dto.CategoryId}",
+                AltText = dto.AltText ?? $"{dto.SubType} for category {Id}",
                 UploadedAt = DateTime.UtcNow
             };
 
@@ -77,7 +78,7 @@ public class CategoryImageService : ICategoryImageService
             await _unitOfWork.SaveChangesAsync(ct);
 
             _logger.LogInformation("{SubType} uploaded for Category {CategoryId}",
-                dto.SubType, dto.CategoryId);
+                dto.SubType, Id);
 
             return _mapper.Map<CategoryImageDTO>(image);
         }
@@ -155,11 +156,15 @@ public class CategoryImageService : ICategoryImageService
     }
     
     public async Task<CategoryImageDTO?> GetImageByIdAsync(
+        Guid categoryId,
         Guid imageId,
         CancellationToken ct = default)
     {
-        var image = await _unitOfWork.GetRepository<CategoryImage, Guid>().GetByIdAsync(imageId, ct);
-        if (image == null) return null;
+        var spec = new CategoryImageSpecification(categoryId, imageId);
+        var exist = await _unitOfWork.GetRepository<CategoryImage, Guid>().ExistsAsync(spec);
+        if (!exist)
+            throw new NotFoundException($"Image {imageId} not found for category {categoryId}");
+        var image = await _unitOfWork.GetRepository<CategoryImage, Guid>().GetFirstOrDefaultAsync(spec);
         return _mapper.Map<CategoryImageDTO>(image);
     }
 

@@ -6,6 +6,6 @@ public class UpdateAddressDtoValidator : AddressBaseValidator<UpdateAddressDTO>
 {
     public UpdateAddressDtoValidator()
     {
-        RuleFor(x => x.Id).NotEmpty();
+        
     }
 }

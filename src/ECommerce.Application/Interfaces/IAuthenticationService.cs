@@ -4,7 +4,7 @@ namespace ECommerce.Application.Interfaces;
 
 public interface IAuthenticationService 
 {
-    public Task<RegisterResultDTO> RegisterAsync(RegisterDTO registerDto);
+    public Task RegisterAsync(RegisterDTO registerDto);
     public Task ConfirmEmailAsync(string email, string token);
     public Task<AuthResultDTO> LoginAsync(LoginDTO loginDto);
     public Task<AuthResultDTO> RefreshTokenAsync(string refreshToken);

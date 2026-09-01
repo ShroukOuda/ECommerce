@@ -12,5 +12,11 @@ public class ProductVariantSpecification : BaseSpecification<ProductVariant, Gui
         
     }
 
+    public ProductVariantSpecification(Guid productId, string sku)
+        : base(pv => pv.ProductId == productId && pv.Sku == sku)
+    {
+        
+    }
+
     
 }

@@ -12,31 +12,41 @@ public class ReviewsController : BaseController
         _reviewService = reviewService;
     }
 
-    [HttpGet("get-by-product/{productId}")]
+    private string currentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+    [HttpGet("product/{productId}")]
     public async Task<IActionResult> GetByProduct(Guid productId)
     {
         var reviews = await _reviewService.GetReviewsByProductIdAsync(productId);
-        return Ok(reviews);
+        return Success(
+            reviews,
+            "Reviews retrieved successfully.");
     }
 
-    [HttpGet("get-by-id/{id}")]
+    [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
         var review = await _reviewService.GetReviewByIdAsync(id);
-        return Ok(review);
+        return Success(
+            review,
+            "Review retrieved successfully.");
     }
 
-    [HttpPost("add")]
+    [HttpPost()]
+    [Authorize(Roles = "Customer")]
     public async Task<IActionResult> Add(AddReviewDTO dto)
     {
-        await _reviewService.AddReviewAsync(dto);
-        return Ok(new ResponseAPI(200, "Review added successfully"));
+        var review = await _reviewService.AddReviewAsync(currentUserId, dto);
+        return Created(
+            review,
+            "Review added successfully.");
     }
 
-    [HttpDelete("delete/{id}")]
+    [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Customer")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        await _reviewService.DeleteReviewAsync(id);
-        return Ok(new ResponseAPI(200, "Review deleted successfully"));
+        await _reviewService.DeleteReviewAsync(currentUserId, id);
+        return NoContent();
     }
 }

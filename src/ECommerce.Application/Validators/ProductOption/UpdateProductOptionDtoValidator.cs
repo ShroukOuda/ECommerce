@@ -6,7 +6,6 @@ public class UpdateProductOptionDtoValidator : AbstractValidator<UpdateProductOp
 {
     public UpdateProductOptionDtoValidator()
     {
-        RuleFor(x => x.Id).NotEmpty();
         RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
         RuleFor(x => x.DisplayType).NotEmpty();
         RuleFor(x => x.Type).NotEmpty();

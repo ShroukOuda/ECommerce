@@ -5,6 +5,7 @@ namespace ECommerce.Application.Interfaces;
 public interface IProductImageService
 {
     Task<ProductImageDTO> UploadImageAsync(
+        Guid productId,
         UploadProductImageDTO dto, 
         CancellationToken ct = default);
     Task<IReadOnlyList<ProductImageDTO>> GetProductImagesAsync(

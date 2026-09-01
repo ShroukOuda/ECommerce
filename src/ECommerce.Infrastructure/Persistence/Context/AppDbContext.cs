@@ -80,6 +80,7 @@ public class AppDbContext : IdentityDbContext<User>
 
     //Notification
     public DbSet<Notification> Notifications { get; set; }
+    public DbSet<NotificationPreference> NotificationPreferences { get; set; }
     public DbSet<UserNotificationPreference> UserNotificationPreferences { get; set; }
     public DbSet<CategorySubscription> CategorySubscriptions { get; set; }
     public DbSet<ProductStockAlert> ProductStockAlerts { get; set; }    

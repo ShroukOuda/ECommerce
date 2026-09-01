@@ -12,5 +12,11 @@ public class ReviewByUserSpecification : BaseSpecification<ProductReview, Guid>
         AsNoTracking();
     }
 
+    public ReviewByUserSpecification(string userId, Guid id)
+        : base(pr => pr.UserId == userId && pr.Id == id)
+    {
+        AsNoTracking();
+    }
+
     
 }

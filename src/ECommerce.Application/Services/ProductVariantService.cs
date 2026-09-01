@@ -36,7 +36,7 @@ public class ProductVariantService : IProductVariantService
         return _mapper.Map<GetProductVariantDTO>(variant);
     }
 
-    public async Task AddVariantAsync(AddProductVariantDTO dto, CancellationToken ct = default)
+    public async Task<GetProductVariantDTO> AddVariantAsync(AddProductVariantDTO dto, CancellationToken ct = default)
     {
         var result = await _addValidator.ValidateAsync(dto, ct);
         if (!result.IsValid) throw new ValidationException(result.Errors);
@@ -58,15 +58,23 @@ public class ProductVariantService : IProductVariantService
             }
             await _unitOfWork.SaveChangesAsync(ct);
         }
+        return _mapper.Map<GetProductVariantDTO>(variant);
     }
 
-    public async Task UpdateVariantAsync(UpdateProductVariantDTO dto, CancellationToken ct = default)
+    public async Task<GetProductVariantDTO> UpdateVariantAsync(Guid id, UpdateProductVariantDTO dto, CancellationToken ct = default)
     {
+        
         var result = await _updateValidator.ValidateAsync(dto, ct);
         if (!result.IsValid) throw new ValidationException(result.Errors);
+
+        var spec = new ProductVariantSpecification(id);
+        bool exists = await _unitOfWork.GetRepository<ProductVariant, Guid>().ExistsAsync(spec, ct);
+        if (!exists) throw new KeyNotFoundException($"Product variant with ID {id} not found.");
+        
         var variant = _mapper.Map<ProductVariant>(dto);
         _unitOfWork.GetRepository<ProductVariant, Guid>().Update(variant, ct);
         await _unitOfWork.SaveChangesAsync(ct);
+        return _mapper.Map<GetProductVariantDTO>(variant);
     }
 
     public async Task DeleteVariantAsync(Guid id, CancellationToken ct = default)
@@ -78,4 +86,13 @@ public class ProductVariantService : IProductVariantService
         _unitOfWork.GetRepository<ProductVariant, Guid>().Delete(stub, ct);
         await _unitOfWork.SaveChangesAsync(ct);
     }
+
+    public async Task<GetProductVariantDTO> GetVariantBySKUAsync(Guid id, string sku, CancellationToken ct = default)
+    {
+        var spec = new ProductVariantSpecification(id, sku);
+        var variant = await _unitOfWork.GetRepository<ProductVariant, Guid>().GetFirstOrDefaultAsync(spec);
+        if (variant is null) throw new KeyNotFoundException($"Product variant with SKU {sku} not found.");
+        return _mapper.Map<GetProductVariantDTO>(variant);
+    }
+
 }

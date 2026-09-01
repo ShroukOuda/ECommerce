@@ -15,7 +15,7 @@ public class NotificationsControllerTests : IClassFixture<CustomWebApplicationFa
     [Fact]
     public async Task GetPreferences_ShouldReturnSuccessStatusCode()
     {
-        var response = await _client.GetAsync("/api/Notifications/preferences/user-123");
+        var response = await _client.GetAsync("/api/v1/notifications/preferences");
         var body = await response.Content.ReadAsStringAsync();
         response.StatusCode.Should().Be(HttpStatusCode.OK, because: $"Response body: {body}");
     }
@@ -23,7 +23,7 @@ public class NotificationsControllerTests : IClassFixture<CustomWebApplicationFa
     [Fact]
     public async Task GetUnreadCount_ShouldReturnSuccessStatusCode()
     {
-        var response = await _client.GetAsync("/api/Notifications/unread-count/user-123");
+        var response = await _client.GetAsync("/api/v1/notifications/unread-count");
         var body = await response.Content.ReadAsStringAsync();
         response.StatusCode.Should().Be(HttpStatusCode.OK, because: $"Response body: {body}");
     }

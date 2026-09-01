@@ -34,7 +34,9 @@ public static class ApplicationRegistration
         services.AddScoped<IAuthenticationService, AuthenticationService>();
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<INotificationSubscriptionService, NotificationSubscriptionService>();
-        services.AddScoped<INotificationPreferenceService, NotificationPreferenceService>();
+        services.AddScoped<IUserNotificationPreferenceService, UserNotificationPreferenceService>();
+        services.AddScoped<INotificationPreferenceService, UserNotificationPreferenceService>();
+        services.AddScoped<INotificationPreferenceAdminService, NotificationPreferenceAdminService>();
         services.AddScoped<INotificationEventService, NotificationEventService>();
 
         

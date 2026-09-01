@@ -23,7 +23,7 @@ public class NotificationEventServiceTests
     [Fact]
     public async Task NotifyNewProductAsync_WhenEnabled_ShouldCreateNotification()
     {
-        _preferenceServiceMock.Setup(p => p.IsEnabledAsync("user-1", NotificationType.NewProduct)).ReturnsAsync(true);
+        _preferenceServiceMock.Setup(p => p.IsEnabledAsync("user-1", NotificationType.NewProduct, NotificationChannel.InApp)).ReturnsAsync(true);
         _notificationServiceMock.Setup(n => n.CreateAsync(It.IsAny<CreateNotificationDTO>())).ReturnsAsync(new NotificationDTO());
 
         await _service.NotifyNewProductAsync("user-1", "Gaming Laptop");
@@ -37,7 +37,7 @@ public class NotificationEventServiceTests
     [Fact]
     public async Task NotifySecurityAlertAsync_WhenDisabled_ShouldNotCreateNotification()
     {
-        _preferenceServiceMock.Setup(p => p.IsEnabledAsync("user-1", NotificationType.SecurityAlert)).ReturnsAsync(false);
+        _preferenceServiceMock.Setup(p => p.IsEnabledAsync("user-1", NotificationType.SecurityAlert, NotificationChannel.InApp)).ReturnsAsync(false);
 
         await _service.NotifySecurityAlertAsync("user-1", "Chrome on Windows");
 

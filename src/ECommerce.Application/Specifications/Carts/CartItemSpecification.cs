@@ -11,5 +11,11 @@ public class CartItemSpecification : BaseSpecification<CartItem, Guid>
         AsNoTracking();
     }
 
+    public CartItemSpecification(Guid cartId, Guid cartItemId)
+        : base(ci => ci.Id == cartItemId && ci.CartId == cartId)
+    {
+        AsNoTracking();
+    }
+
     
 }

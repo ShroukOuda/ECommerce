@@ -39,22 +39,27 @@ public class ProductOptionService : IProductOptionService
         return _mapper.Map<GetProductOptionDTO>(option);
     }
 
-    public async Task AddOptionAsync(AddProductOptionDTO dto, CancellationToken ct = default)
+    public async Task<GetProductOptionDTO> AddOptionAsync(AddProductOptionDTO dto, CancellationToken ct = default)
     {
         var result = await _addValidator.ValidateAsync(dto, ct);
         if (!result.IsValid) throw new ValidationException(result.Errors);
         var option = _mapper.Map<ProductOption>(dto);
         await _unitOfWork.GetRepository<ProductOption, Guid>().AddAsync(option, ct);
         await _unitOfWork.SaveChangesAsync(ct);
+        return _mapper.Map<GetProductOptionDTO>(option);
     }
 
-    public async Task UpdateOptionAsync(UpdateProductOptionDTO dto, CancellationToken ct = default)
+    public async Task<GetProductOptionDTO> UpdateOptionAsync(Guid id, UpdateProductOptionDTO dto, CancellationToken ct = default)
     {
         var result = await _updateValidator.ValidateAsync(dto, ct);
         if (!result.IsValid) throw new ValidationException(result.Errors);
+        var spec = new ProductOptionSpecification(id);
+        bool exists = await _unitOfWork.GetRepository<ProductOption, Guid>().ExistsAsync(spec, ct);
+        if (!exists) throw new KeyNotFoundException($"Product option with ID {id} not found.");
         var option = _mapper.Map<ProductOption>(dto);
         _unitOfWork.GetRepository<ProductOption, Guid>().Update(option, ct);
         await _unitOfWork.SaveChangesAsync(ct);
+        return _mapper.Map<GetProductOptionDTO>(option);
     }
 
     public async Task DeleteOptionAsync(Guid id, CancellationToken ct = default)
@@ -67,21 +72,27 @@ public class ProductOptionService : IProductOptionService
         await _unitOfWork.SaveChangesAsync(ct);
     }
 
-    public async Task AddOptionValueAsync(AddProductOptionValueDTO dto, CancellationToken ct = default)
+    public async Task<GetProductOptionValueDTO> AddOptionValueAsync(Guid optionId, AddProductOptionValueDTO dto, CancellationToken ct = default)
     {
         var result = await _addValueValidator.ValidateAsync(dto, ct);
         if (!result.IsValid) throw new ValidationException(result.Errors);
+
+        var spec = new ProductOptionSpecification(optionId);
+        bool exists = await _unitOfWork.GetRepository<ProductOption, Guid>().ExistsAsync(spec, ct);
+        if (!exists) throw new KeyNotFoundException($"Product option with ID {optionId} not found.");
+        
         var value = _mapper.Map<ProductOptionValue>(dto);
         await _unitOfWork.GetRepository<ProductOptionValue, Guid>().AddAsync(value, ct);
         await _unitOfWork.SaveChangesAsync(ct);
+        return _mapper.Map<GetProductOptionValueDTO>(value);
     }
 
-    public async Task DeleteOptionValueAsync(Guid id, CancellationToken ct = default)
+    public async Task DeleteOptionValueAsync(Guid optionId, Guid valueId, CancellationToken ct = default)
     {
-        var spec = new ProductOptionValueSpecification(id);
+        var spec = new ProductOptionValueSpecification(optionId, valueId);
         bool exists = await _unitOfWork.GetRepository<ProductOptionValue, Guid>().ExistsAsync(spec);
-        if (!exists) throw new KeyNotFoundException($"Product option value with ID {id} not found.");
-        var stub = new ProductOptionValue { Id = id };
+        if (!exists) throw new KeyNotFoundException($"Product option value with ID {valueId} not found.");
+        var stub = new ProductOptionValue { Id = valueId };
         _unitOfWork.GetRepository<ProductOptionValue, Guid>().Delete(stub, ct);
         await _unitOfWork.SaveChangesAsync(ct);
     }

@@ -12,45 +12,61 @@ public class CouponsController : BaseController
         _couponService = couponService;
     }
 
-    [HttpGet("get-all")]
+    [HttpGet()]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetAll()
     {
         var coupons = await _couponService.GetAllCouponsAsync();
-        return Ok(coupons);
+        return Success(
+            coupons,
+            "Coupons retrieved successfully.");
     }
 
-    [HttpGet("get-by-id/{id}")]
+    [HttpGet("{id:guid}")]
+    [Authorize(Roles = "Admin, Customer")]
     public async Task<IActionResult> GetById(Guid id)
     {
         var coupon = await _couponService.GetCouponByIdAsync(id);
-        return Ok(coupon);
+        return Success(
+            coupon,
+            "Coupon retrieved successfully.");
     }
 
-    [HttpGet("get-by-code/{code}")]
+    [HttpGet("{code:string}")]
+    [Authorize(Roles = "Admin, Customer")]
     public async Task<IActionResult> GetByCode(string code)
     {
         var coupon = await _couponService.GetCouponByCodeAsync(code);
-        return Ok(coupon);
+        return Success(
+            coupon,
+            "Coupon retrieved successfully.");
     }
 
-    [HttpPost("add")]
+    [HttpPost()]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Add(AddCouponDTO dto)
     {
-        await _couponService.AddCouponAsync(dto);
-        return Ok(new ResponseAPI(200, "Coupon added successfully"));
+        var coupon = await _couponService.AddCouponAsync(dto);
+        return Created(
+            coupon,
+            "Coupon added successfully.");
     }
 
-    [HttpPut("update")]
-    public async Task<IActionResult> Update(UpdateCouponDTO dto)
+    [HttpPut("{id:guid}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateCouponDTO dto)
     {
-        await _couponService.UpdateCouponAsync(dto);
-        return Ok(new ResponseAPI(200, "Coupon updated successfully"));
+        var coupon = await _couponService.UpdateCouponAsync(id, dto);
+        return Success(
+            coupon,
+            "Coupon updated successfully.");
     }
 
-    [HttpDelete("delete/{id}")]
+    [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
         await _couponService.DeleteCouponAsync(id);
-        return Ok(new ResponseAPI(200, "Coupon deleted successfully"));
+        return NoContent();
     }
 }

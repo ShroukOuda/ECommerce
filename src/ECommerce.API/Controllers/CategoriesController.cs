@@ -13,86 +13,103 @@ public class CategoriesController : BaseController
         _categoryImageService = categoryImageService;
     }
     
-    [HttpGet("get-all")]
+    [HttpGet()]
     public async Task<IActionResult> GetAll()
     {
         var categories = await _categoryService.GetAllCategoriesAsync();
-        return Ok(categories);
+        return Success(
+            categories,
+            "Categories retrieved successfully.");
     }
 
-    [HttpGet("get-by-id/{id}")]
+    [HttpGet("{id}")]
     public async Task<IActionResult> GetById(Guid id)
     {
         var category = await _categoryService.GetCategoryByIdAsync(id);
-        return Ok(category);
+        return Success(
+            category,
+            "Category retrieved successfully.");
     }
 
-    [HttpPost("add")]
+    [HttpPost()]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Add(AddCategoryDTO categoryDto)
     {
-        await _categoryService.AddCategoryAsync(categoryDto);
-        return Ok(new ResponseAPI(200, "Category added successfully"));
+        var category = await _categoryService.AddCategoryAsync(categoryDto);
+        return Created(
+            category,
+            "Category added successfully.");
     }
     
-    [HttpPost("uploadPhoto")]
+    [HttpPost("{categoryId:guid}/images")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> UploadImage([FromForm] UploadCategoryImageDTO dto, CancellationToken ct = default)
+    public async Task<IActionResult> UploadImage(Guid categoryId, [FromForm] UploadCategoryImageDTO dto, CancellationToken ct = default)
     {
-        await _categoryImageService.UploadImageAsync(dto, ct);
-        return Ok(new ResponseAPI(200, "Category image uploaded successfully"));
+        var image = await _categoryImageService.UploadImageAsync(categoryId, dto, ct);
+        return Created(
+            image,
+            "Category image uploaded successfully.");
     }
 
-    [HttpGet("get-Images/{CategoryId}")]
-    public async Task<IActionResult> GetCategoryImages(Guid CategoryId)
+    [HttpGet("{categoryId:guid}/images")]
+    public async Task<IActionResult> GetCategoryImages(Guid categoryId)
     {
-        var Images = await _categoryImageService.GetCategoryImagesAsync(CategoryId);
-        return Ok(Images);
+        var Images = await _categoryImageService.GetCategoryImagesAsync(categoryId);
+        return Success(
+            Images,
+            "Category images retrieved successfully.");
     }
 
-    [HttpGet("get-Image-by-sub-type")]
-    public async Task<IActionResult> GetCategoryImageBySubType([FromQuery] Guid CategoryId, ImageSubType subType)
+
+    [HttpGet("{categoryId:guid}/images/sub-type")]
+    public async Task<IActionResult> GetCategoryImageBySubType([FromQuery] Guid categoryId, ImageSubType subType)
     {
-        var Image = await _categoryImageService.GetCategoryImageBySubTypeAsync(CategoryId, subType);
-        return Ok(Image);
+        var Image = await _categoryImageService.GetCategoryImageBySubTypeAsync(categoryId, subType);
+        return Success(
+            Image,
+            "Category image retrieved successfully.");
     }
 
-    [HttpGet("get-Image/{id}")]
-    public async Task<IActionResult> GetCategoryImageById(Guid ImageId)
+    [HttpGet("{categoryId:guid}/images/{id}")]
+    public async Task<IActionResult> GetCategoryImageById(Guid categoryId, Guid ImageId)
     {
-        var Image = await _categoryImageService.GetImageByIdAsync(ImageId);
-        return Ok(Image);
+        var Image = await _categoryImageService.GetImageByIdAsync(categoryId, ImageId);
+        return Success(
+            Image,
+            "Category image retrieved successfully.");
     }
 
-    [HttpPut("update")]
+    [HttpPut("{id:guid}")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> Update(UpdateCategoryDTO categoryDto)
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateCategoryDTO categoryDto)
     {
-        await  _categoryService.UpdateCategoryAsync(categoryDto);
-        return Ok(new ResponseAPI(200, "Category updated successfully"));
+        await  _categoryService.UpdateCategoryAsync(id, categoryDto);
+        return Success(
+            categoryDto,
+            "Category updated successfully.");
     }
     
-    [HttpDelete("delete/{id}")]
+    [HttpDelete("{id:guid}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
         await _categoryService.DeleteCategoryAsync(id);
-        return Ok(new ResponseAPI(200, "Category deleted successfully"));
+        return NoContent();
     }
     
-    [HttpDelete("delete-photo/{photoId}")]
+    [HttpDelete("{categoryId:guid}/images/{photoId:guid}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteImage(Guid photoId, Guid categoryId, CancellationToken ct = default)
     {
         await _categoryImageService.DeleteCategoryImageAsync(categoryId, photoId, ct);
-        return Ok(new ResponseAPI(200, "Category image deleted successfully"));
+        return NoContent();
     }
 
-    [HttpDelete("delete-photos/{categoryId}")]
+    [HttpDelete("{categoryId:guid}/images")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteImages(Guid categoryId, CancellationToken ct = default)
     {
         await _categoryImageService.DeleteAllCategoryImagesAsync(categoryId, ct);
-        return Ok(new ResponseAPI(200, "Category Media images deleted successfully"));
+        return NoContent();
     }
 }

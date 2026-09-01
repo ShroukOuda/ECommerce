@@ -59,11 +59,11 @@ public class OrderService : IOrderService
         return _mapper.Map<GetOrderDTO>(order);
     }
 
-    public async Task UpdateOrderStatusAsync(UpdateOrderStatusDTO dto, CancellationToken ct = default)
+    public async Task<GetOrderDTO> UpdateOrderStatusAsync(Guid id, UpdateOrderStatusDTO dto, CancellationToken ct = default)
     {
-        var order = await _unitOfWork.GetRepository<Order, Guid>().GetByIdAsync(dto.Id, ct);
-        if (order is null) throw new KeyNotFoundException($"Order with ID {dto.Id} not found.");
-
+        var spec = new OrderSpecification(id);
+        var order = await _unitOfWork.GetRepository<Order, Guid>().GetFirstOrDefaultAsync(spec);
+        if (order is null) throw new KeyNotFoundException($"Order with ID {id} not found.");
         if (Enum.TryParse<OrderStatus>(dto.OrderStatus, out var status))
             order.OrderStatus = status;
         else
@@ -71,6 +71,7 @@ public class OrderService : IOrderService
 
         _unitOfWork.GetRepository<Order, Guid>().Update(order, ct);
         await _unitOfWork.SaveChangesAsync(ct);
+        return _mapper.Map<GetOrderDTO>(order);
     }
 
     public async Task DeleteOrderAsync(Guid id, CancellationToken ct = default)

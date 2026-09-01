@@ -11,18 +11,22 @@ public class InventoryController : BaseController
     {
         _inventoryService = inventoryService;
     }
+    private string CurrentUserId =>
+        User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
-    [HttpGet("history/{productId}")]
+    [HttpGet("{productId:guid}/history")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetHistory(Guid productId)
     {
         var history = await _inventoryService.GetHistoryByProductIdAsync(productId);
-        return Ok(history);
+        return Success(history, "Inventory history retrieved successfully.");
     }
 
-    [HttpPost("add-history")]
-    public async Task<IActionResult> AddHistory(CreateInventoryHistoryDTO dto)
+    [HttpPost("{productId:guid}/history")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> AddHistory(Guid productId, CreateInventoryHistoryDTO dto)
     {
-        await _inventoryService.AddInventoryHistoryAsync(dto);
-        return Ok(new ResponseAPI(200, "Inventory history recorded successfully"));
+        var history = await _inventoryService.AddInventoryHistoryAsync(productId, CurrentUserId, dto);
+        return Created(history, "Inventory history added successfully.");
     }
 }

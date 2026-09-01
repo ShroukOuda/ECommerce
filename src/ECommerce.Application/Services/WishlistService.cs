@@ -25,7 +25,7 @@ public class WishlistService : IWishlistService
         return _mapper.Map<IEnumerable<GetWishlistDTO>>(items);
     }
 
-    public async Task AddToWishlistAsync(AddWishlistDTO dto, CancellationToken ct = default)
+    public async Task<GetWishlistDTO> AddToWishlistAsync(AddWishlistDTO dto, CancellationToken ct = default)
     {
         var result = await _addValidator.ValidateAsync(dto, ct);
         if (!result.IsValid) throw new ValidationException(result.Errors);
@@ -37,6 +37,7 @@ public class WishlistService : IWishlistService
         var wishlist = _mapper.Map<Wishlist>(dto);
         await _unitOfWork.GetRepository<Wishlist, Guid>().AddAsync(wishlist, ct);
         await _unitOfWork.SaveChangesAsync(ct);
+        return _mapper.Map<GetWishlistDTO>(wishlist);
     }
 
     public async Task RemoveFromWishlistAsync(Guid id, CancellationToken ct = default)

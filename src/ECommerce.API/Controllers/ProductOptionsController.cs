@@ -12,52 +12,68 @@ public class ProductOptionsController : BaseController
         _productOptionService = productOptionService;
     }
 
-    [HttpGet("get-by-product/{productId}")]
+    [HttpGet("product/{productId:guid}")]
     public async Task<IActionResult> GetByProduct(Guid productId)
     {
         var options = await _productOptionService.GetOptionsByProductIdAsync(productId);
-        return Ok(options);
+        return Success(
+            options,
+            "Product options retrieved successfully.");
     }
 
-    [HttpGet("get-by-id/{id}")]
+    [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
         var option = await _productOptionService.GetOptionByIdAsync(id);
-        return Ok(option);
+        return Success(
+            option,
+            "Product option retrieved successfully.");
     }
 
-    [HttpPost("add")]
+
+    [HttpPost()]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Add(AddProductOptionDTO dto)
     {
-        await _productOptionService.AddOptionAsync(dto);
-        return Ok(new ResponseAPI(200, "Product option added successfully"));
+        var option = await _productOptionService.AddOptionAsync(dto);
+        return Created(
+            option,
+            "Product option added successfully.");
     }
 
-    [HttpPut("update")]
-    public async Task<IActionResult> Update(UpdateProductOptionDTO dto)
+    [HttpPut("{id:guid}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Update(Guid id, UpdateProductOptionDTO dto)
     {
-        await _productOptionService.UpdateOptionAsync(dto);
-        return Ok(new ResponseAPI(200, "Product option updated successfully"));
+        var option = await _productOptionService.UpdateOptionAsync(id, dto);
+        return Success(
+            option,
+            "Product option updated successfully.");
     }
 
-    [HttpDelete("delete/{id}")]
+    [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
         await _productOptionService.DeleteOptionAsync(id);
-        return Ok(new ResponseAPI(200, "Product option deleted successfully"));
+        return NoContent();
     }
 
-    [HttpPost("add-value")]
-    public async Task<IActionResult> AddValue(AddProductOptionValueDTO dto)
+    [HttpPost("{optionId:guid}/values")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> AddValue(Guid optionId, AddProductOptionValueDTO dto)
     {
-        await _productOptionService.AddOptionValueAsync(dto);
-        return Ok(new ResponseAPI(200, "Option value added successfully"));
+        var value = await _productOptionService.AddOptionValueAsync(optionId, dto);
+        return Created(
+            value,
+            "Option value added successfully.");
     }
 
-    [HttpDelete("delete-value/{id}")]
-    public async Task<IActionResult> DeleteValue(Guid id)
+    [HttpDelete("{optionId:guid}/values/{valueId:guid}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> DeleteValue(Guid optionId, Guid valueId)
     {
-        await _productOptionService.DeleteOptionValueAsync(id);
-        return Ok(new ResponseAPI(200, "Option value deleted successfully"));
+        await _productOptionService.DeleteOptionValueAsync(optionId, valueId);
+        return NoContent();
     }
 }

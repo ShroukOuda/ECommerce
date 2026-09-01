@@ -17,87 +17,95 @@ public class BrandsController : BaseController
         _brandLogoService = brandLogoService;
     }
 
-    [HttpGet("get-all")]
+    [HttpGet()]
     public async Task<IActionResult> GetAll()
     {
         var brands = await _brandService.GetAllBrandsAsync();
-        return Ok(brands);
+        return Success(
+            brands,
+            "Brands retrieved successfully.");
     }
 
-    [HttpGet("get-by-id/{id}")]
+    [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
         var brand = await _brandService.GetBrandByIdAsync(id);
-        return Ok(brand);
+        return Success(brand, "Brand retrieved successfully.");
     }
 
-    [HttpPost("add")]
+    [HttpPost()]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Add(AddBrandDTO dto)
     {
-        await _brandService.AddBrandAsync(dto);
-        return Ok(new ResponseAPI(200, "Brand added successfully"));
+        var brand = await _brandService.AddBrandAsync(dto);
+        return Created(brand, "Brand added successfully");
     }
 
-    [HttpPut("update")]
+    [HttpPut("{id:guid}")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> Update(UpdateBrandDTO dto)
+    public async Task<IActionResult> Update(Guid id, UpdateBrandDTO dto)
     {
-        await _brandService.UpdateBrandAsync(dto);
-        return Ok(new ResponseAPI(200, "Brand updated successfully"));
+        var brand = await _brandService.UpdateBrandAsync(id, dto);
+        return Success(brand, "Brand updated successfully");
     }
 
-    [HttpDelete("delete/{id}")]
+    [HttpDelete("{id:guid}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
         await _brandService.DeleteBrandAsync(id);
-        return Ok(new ResponseAPI(200, "Brand deleted successfully"));
+        return NoContent();
     }
 
-    [HttpPost("upload-logo")]
+    [HttpPost("{brandId:guid}/logos")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> UploadLogo(UploadBrandLogoDTO dto)
+    public async Task<IActionResult> UploadLogo(Guid brandId, UploadBrandLogoDTO dto)
     {
-        await _brandLogoService.UploadlogoAsync(dto);
-        return Ok(new ResponseAPI(200, "Brand logo uploaded successfully"));
+        var logo = await _brandLogoService.UploadlogoAsync(brandId, dto);
+        return Created(logo, "Brand logo uploaded successfully");
     }
 
-    [HttpGet("get-logos/{brandId}")]
+    [HttpGet("{brandId:guid}/logos")]
     public async Task<IActionResult> GetBrandLogos(Guid brandId)
     {
         var logos = await _brandLogoService.GetBrandLogosAsync(brandId);
-        return Ok(logos);
+        return Success(
+            logos,
+            "Brand logos retrieved successfully.");
     }
 
-    [HttpGet("get-logo-by-sub-type")]
+    [HttpGet("{brandId:guid}/logos/{subType}")]
     public async Task<IActionResult> GetBrandLogoBySubType([FromQuery] Guid brandId, ImageSubType subType)
     {
         var logo = await _brandLogoService.GetBrandLogoBySubTypeAsync(brandId, subType);
-        return Ok(logo);
+        return Success(
+            logo,
+            "Brand logo retrieved successfully.");
     }
 
-    [HttpGet("get-logo/{id}")]
-    public async Task<IActionResult> GetBrandLogoById(Guid logoId)
+    [HttpGet("{brandId:guid}/logos/{id:guid}")]
+    public async Task<IActionResult> GetBrandLogoById(Guid brandId, Guid logoId)
     {
-        var logo = await _brandLogoService.GetLogoByIdAsync(logoId);
-        return Ok(logo);
+        var logo = await _brandLogoService.GetLogoByIdAsync(brandId, logoId);
+        return Success(
+            logo,
+            "Brand logo retrieved successfully.");
     }
 
-    [HttpDelete("delete-logo")]
+    [HttpDelete("{brandId:guid}/logos/{id:guid}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteBrandLogo(Guid brandId, Guid logoId)
     {
         await _brandLogoService.DeleteBrandLogoAsync(brandId, logoId);
-        return Ok(new ResponseAPI(200, "Brand Logo deleted successfully"));
+        return NoContent();
     }
 
-    [HttpDelete("delete-logos")]
+    [HttpDelete("{brandId:guid}/logos")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteBrandLogos(Guid brandId)
     {
         await _brandLogoService.DeleteAllBrandLogosAsync(brandId);
-        return Ok(new ResponseAPI(200, "Brand Logos deleted successfully"));
+        return NoContent();
     }
 
 }

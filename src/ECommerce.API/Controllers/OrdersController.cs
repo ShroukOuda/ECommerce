@@ -12,38 +12,48 @@ public class OrdersController : BaseController
         _orderService = orderService;
     }
 
-    [HttpGet("get-by-user/{userId}")]
-    public async Task<IActionResult> GetByUserId(string userId)
+    private string currentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+    [HttpGet()]
+    public async Task<IActionResult> GetMyOrders()
     {
-        var orders = await _orderService.GetOrdersByUserIdAsync(userId);
-        return Ok(orders);
+        var orders = await _orderService.GetOrdersByUserIdAsync(currentUserId);
+        return Success(
+            orders,
+            "Orders retrieved successfully.");
     }
 
-    [HttpGet("get-by-id/{id}")]
+    [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
         var order = await _orderService.GetOrderByIdAsync(id);
-        return Ok(order);
+        return Success(
+            order,
+            "Order retrieved successfully.");
     }
 
-    [HttpPost("create")]
+    [HttpPost()]
     public async Task<IActionResult> Create(CreateOrderDTO dto)
     {
         var order = await _orderService.CreateOrderAsync(dto);
-        return Ok(order);
+        return Created(
+            order,
+            "Order created successfully.");
     }
 
-    [HttpPut("update-status")]
-    public async Task<IActionResult> UpdateStatus(UpdateOrderStatusDTO dto)
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> UpdateStatus(Guid id, UpdateOrderStatusDTO dto)
     {
-        await _orderService.UpdateOrderStatusAsync(dto);
-        return Ok(new ResponseAPI(200, "Order status updated successfully"));
+        var order = await _orderService.UpdateOrderStatusAsync(id, dto);
+        return Success(
+            order,
+            "Order status updated successfully.");
     }
 
-    [HttpDelete("delete/{id}")]
+    [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
         await _orderService.DeleteOrderAsync(id);
-        return Ok(new ResponseAPI(200, "Order deleted successfully"));
+        return NoContent();
     }
 }

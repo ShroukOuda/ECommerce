@@ -12,24 +12,30 @@ public class ShippingController : BaseController
         _shippingService = shippingService;
     }
 
-    [HttpGet("get-by-order/{orderId}")]
+    [HttpGet("order/{orderId:guid}")]
     public async Task<IActionResult> GetByOrder(Guid orderId)
     {
         var shippings = await _shippingService.GetShippingsByOrderIdAsync(orderId);
-        return Ok(shippings);
+        return Success(
+            shippings,
+            "Shippings retrieved successfully.");
     }
 
-    [HttpGet("get-by-id/{id}")]
+    [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
         var shipping = await _shippingService.GetShippingByIdAsync(id);
-        return Ok(shipping);
+        return Success(
+            shipping,
+            "Shipping retrieved successfully.");
     }
 
-    [HttpPost("create")]
+    [HttpPost()]
     public async Task<IActionResult> Create(CreateShippingDTO dto)
     {
         var shipping = await _shippingService.CreateShippingAsync(dto);
-        return Ok(shipping);
+        return Created(
+            shipping,
+            "Shipping created successfully.");
     }
 }

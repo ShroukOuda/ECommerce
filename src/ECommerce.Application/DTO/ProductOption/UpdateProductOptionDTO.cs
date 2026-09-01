@@ -2,7 +2,6 @@ namespace ECommerce.Application.DTO.ProductOption;
 
 public class UpdateProductOptionDTO
 {
-    public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string DisplayType { get; set; } = "Dropdown";
     public string Type { get; set; } = "VariantSelector";

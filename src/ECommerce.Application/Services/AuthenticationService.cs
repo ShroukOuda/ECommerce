@@ -40,7 +40,7 @@ public class AuthenticationService : IAuthenticationService
         _notificationEmailService = notificationEmailService;
     }
 
-    public async Task<RegisterResultDTO> RegisterAsync(RegisterDTO registerDto)
+    public async Task RegisterAsync(RegisterDTO registerDto)
     {
         
         var existingEmail = await _identityService.FindByEmailAsync(registerDto.Email);
@@ -81,10 +81,6 @@ public class AuthenticationService : IAuthenticationService
 
         await SendConfirmationEmailAsync(user);
 
-        return new RegisterResultDTO
-        {
-            Message = "Registration successful. Please check your email to confirm your account.",
-        };
     }
 
     public async Task ConfirmEmailAsync(string email, string token)

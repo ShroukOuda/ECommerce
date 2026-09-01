@@ -2,89 +2,84 @@ using ECommerce.Application.DTO.Notification;
 using ECommerce.Application.DTO.Pagination;
 using ECommerce.Application.Interfaces.Notifications;
 using ECommerce.Domain.Enums.Notification;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ECommerce.API.Controllers;
 
+[Authorize]
 public class NotificationsController : BaseController
 {
     private readonly INotificationService _notificationService;
-    private readonly INotificationPreferenceService _notificationPreferenceService;
+    private readonly IUserNotificationPreferenceService _notificationPreferenceService;
 
     public NotificationsController(
         INotificationService notificationService,
-        INotificationPreferenceService notificationPreferenceService)
+        IUserNotificationPreferenceService notificationPreferenceService)
     {
         _notificationService = notificationService;
         _notificationPreferenceService = notificationPreferenceService;
     }
 
-    [HttpGet("get-for-user/{userId}")]
-    public async Task<IActionResult> GetForUser(string userId, [FromQuery] PaginationParams pagination)
+    private string CurrentUserId =>
+        User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+    [HttpGet()]
+    public async Task<IActionResult> GetMyNotifications([FromQuery] PaginationParams pagination)
     {
-        var notifications = await _notificationService.GetForUserAsync(userId, pagination);
-        return Ok(notifications);
+        var notifications = await _notificationService.GetForUserAsync(CurrentUserId, pagination);
+        return Success(
+            notifications,
+            "Notifications retrieved successfully.");
     }
 
-    [HttpGet("get-unread/{userId}")]
-    public async Task<IActionResult> GetUnread(string userId, [FromQuery] PaginationParams pagination)
+    [HttpGet("unread")]
+    public async Task<IActionResult> GetUnread([FromQuery] PaginationParams pagination)
     {
-        var notifications = await _notificationService.GetUnreadForUserAsync(userId, pagination);
-        return Ok(notifications);
+        var notifications = await _notificationService.GetUnreadForUserAsync(CurrentUserId, pagination);
+        return Success(
+            notifications,
+            "Unread notifications retrieved successfully.");
     }
 
-    [HttpGet("unread-count/{userId}")]
-    public async Task<IActionResult> GetUnreadCount(string userId)
+    [HttpGet("unread-count")]
+    public async Task<IActionResult> GetUnreadCount()
     {
-        var count = await _notificationService.GetUnreadCountAsync(userId);
-        return Ok(count);
+        var count = await _notificationService.GetUnreadCountAsync(CurrentUserId);
+        return Success(count, "Unread count retrieved successfully.");
     }
 
-    [HttpPost("mark-as-read/{userId}/{notificationId}")]
-    public async Task<IActionResult> MarkAsRead(string userId, Guid notificationId)
+    [HttpPost("{notificationId:guid}/read")]
+    public async Task<IActionResult> MarkAsRead(Guid notificationId)
     {
-        await _notificationService.MarkAsReadAsync(userId, notificationId);
-        return Ok(new ResponseAPI(200, "Notification marked as read successfully"));
+        await _notificationService.MarkAsReadAsync(CurrentUserId, notificationId);
+        return SuccessMessage("Notification marked as read successfully.");
     }
 
-    [HttpPost("mark-all-as-read/{userId}")]
-    public async Task<IActionResult> MarkAllAsRead(string userId)
+    [HttpPost("read-all")]
+    public async Task<IActionResult> MarkAllAsRead()
     {
-        await _notificationService.MarkAllAsReadAsync(userId);
-        return Ok(new ResponseAPI(200, "All notifications marked as read successfully"));
+        await _notificationService.MarkAllAsReadAsync(CurrentUserId);
+        return SuccessMessage("All notifications marked as read successfully.");
     }
 
-    [HttpGet("preferences/{userId}")]
-    public async Task<IActionResult> GetPreferences(string userId)
+    [HttpGet("preferences")]
+    public async Task<IActionResult> GetPreferences()
     {
-        var preferences = await _notificationPreferenceService.GetPreferencesAsync(userId);
-        return Ok(preferences);
+        var preferences = await _notificationPreferenceService.GetPreferencesAsync(CurrentUserId);
+        return Success(preferences, "Notification preferences retrieved successfully.");
     }
 
-    [HttpPost("preferences/{userId}/update")]
-    public async Task<IActionResult> UpdatePreference(string userId, [FromBody] UpdateNotificationPreferenceDTO dto)
+    [HttpPatch("preferences/{preferenceId:guid}")]
+    public async Task<IActionResult> UpdatePreference(Guid preferenceId, [FromBody] UpdateUserNotificationPreferenceDTO dto)
     {
-        await _notificationPreferenceService.UpdatePreferenceAsync(userId, dto);
-        return Ok(new ResponseAPI(200, "Notification preference updated successfully"));
+        var updated = await _notificationPreferenceService.UpdatePreferenceAsync(CurrentUserId, preferenceId, dto);
+        return Success(updated, "Notification preference updated successfully.");
     }
 
-    [HttpPost("preferences/{userId}/save")]
-    public async Task<IActionResult> SaveAll(string userId, [FromBody] SaveNotificationPreferencesDto dto)
+    [HttpPost("preferences/turn-off-all")]
+    public async Task<IActionResult> TurnOffAll()
     {
-        await _notificationPreferenceService.SaveAllPreferencesAsync(userId, dto);
-        return Ok(new ResponseAPI(200, "Notification preferences saved successfully"));
-    }
-
-    [HttpPost("preferences/{userId}/turn-off-all")]
-    public async Task<IActionResult> TurnOffAll(string userId)
-    {
-        await _notificationPreferenceService.TurnOffAllAsync(userId);
-        return Ok(new ResponseAPI(200, "All notification preferences disabled successfully"));
-    }
-
-    [HttpGet("preferences/{userId}/is-enabled/{type}")]
-    public async Task<IActionResult> IsEnabled(string userId, NotificationType type)
-    {
-        var enabled = await _notificationPreferenceService.IsEnabledAsync(userId, type);
-        return Ok(enabled);
+        await _notificationPreferenceService.TurnOffAllAsync(CurrentUserId);
+        return SuccessMessage("Notification preferences turned off successfully.");
     }
 }

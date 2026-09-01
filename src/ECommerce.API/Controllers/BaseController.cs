@@ -1,37 +1,60 @@
+using ECommerce.Application.DTO.Common;
+
 namespace ECommerce.API.Controllers;
 
-[Route("api/[controller]")]
 [ApiController]
-public class BaseController : ControllerBase
+[Route("api/v1/[controller]")]
+public abstract class BaseController : ControllerBase
 {
-   protected IActionResult ApiResponse(int statusCode = 200, string? message = null)
-   {
-      var response = new ResponseAPI(statusCode, message);
-      return StatusCode(statusCode, response);
-   }
+    protected IActionResult Success<T>(
+        T data,
+        string message = "Request completed successfully.",
+        int statusCode = StatusCodes.Status200OK)
+      {
+         var response = new ApiResponse<T>(
+               success: true,
+               message: message,
+               data: data);
 
-   protected IActionResult BadRequestResponse()
-   {
-      return ApiResponse(400, null);
-   }
+        return StatusCode(statusCode, response);
+      }
 
-   protected IActionResult InternalServerErrorResponse()
-   {
-      return ApiResponse(500, null);
-   }
+    protected IActionResult Created<T>(
+        T data,
+        string message = "Resource created successfully.")
+      {
+        var response = new ApiResponse<T>(
+            success: true,
+            message: message,
+            data: data);
 
-   protected IActionResult SuccessResponse()
-   {
-      return ApiResponse(200, null);
-   }
+        return StatusCode(
+            StatusCodes.Status201Created,
+            response);
+      }
 
-   protected IActionResult NotFoundResponse()
-   {
-      return ApiResponse(404, null);
-   }
-   
-   protected IActionResult UnAuthorizedResponse()
-   {
-      return ApiResponse(401, null);
-   }
+      protected IActionResult SuccessMessage(
+         string message = "Request completed successfully.",
+         int statusCode = StatusCodes.Status204NoContent)
+      {
+         var response = new ApiResponse(
+               success: true,
+               message: message);
+
+         return StatusCode(statusCode, response);
+      }
+
+      protected IActionResult CreatedMessage(
+         string message = "Resource created successfully.")
+      {
+         var response = new ApiResponse(
+               success: true,
+               message: message);
+
+         return StatusCode(
+             StatusCodes.Status201Created,
+             response);
+      }
+  
 }
+

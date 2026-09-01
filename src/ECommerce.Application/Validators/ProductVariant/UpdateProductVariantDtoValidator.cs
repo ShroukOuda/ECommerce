@@ -6,7 +6,6 @@ public class UpdateProductVariantDtoValidator : AbstractValidator<UpdateProductV
 {
     public UpdateProductVariantDtoValidator()
     {
-        RuleFor(x => x.Id).NotEmpty();
         RuleFor(x => x.Sku).NotEmpty().MaximumLength(100);
         RuleFor(x => x.VariantName).NotEmpty().MaximumLength(200);
         RuleFor(x => x.StockQuantity).GreaterThanOrEqualTo(0);

@@ -35,22 +35,29 @@ public class AddressService : IAddressService
         return _mapper.Map<GetAddressDTO>(address);
     }
 
-    public async Task AddAddressAsync(AddAddressDTO dto, CancellationToken ct = default)
+    public async Task<GetAddressDTO> AddAddressAsync(AddAddressDTO dto, CancellationToken ct = default)
     {
         var result = await _addValidator.ValidateAsync(dto, ct);
         if (!result.IsValid) throw new ValidationException(result.Errors);
         var address = _mapper.Map<Address>(dto);
         await _unitOfWork.GetRepository<Address, Guid>().AddAsync(address, ct);
         await _unitOfWork.SaveChangesAsync(ct);
+        return _mapper.Map<GetAddressDTO>(address);
     }
 
-    public async Task UpdateAddressAsync(UpdateAddressDTO dto, CancellationToken ct = default)
+    public async Task<GetAddressDTO> UpdateAddressAsync(Guid id, UpdateAddressDTO dto, CancellationToken ct = default)
     {
         var result = await _updateValidator.ValidateAsync(dto, ct);
         if (!result.IsValid) throw new ValidationException(result.Errors);
+
+         var spec = new AddressSpecification(id);
+        bool exists = await _unitOfWork.GetRepository<Address, Guid>().ExistsAsync(spec, ct);
+        if (!exists) throw new KeyNotFoundException($"Address with ID {id} not found.");
+       
         var address = _mapper.Map<Address>(dto);
         _unitOfWork.GetRepository<Address, Guid>().Update(address, ct);
         await _unitOfWork.SaveChangesAsync(ct);
+        return _mapper.Map<GetAddressDTO>(address);
     }
 
     public async Task DeleteAddressAsync(Guid id, CancellationToken ct = default)

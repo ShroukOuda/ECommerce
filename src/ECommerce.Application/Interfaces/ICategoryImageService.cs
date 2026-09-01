@@ -5,6 +5,7 @@ namespace ECommerce.Application.Interfaces;
 public interface ICategoryImageService
 {
     Task<CategoryImageDTO> UploadImageAsync(
+        Guid Id,
         UploadCategoryImageDTO dto, 
         CancellationToken ct = default);
     
@@ -17,6 +18,7 @@ public interface ICategoryImageService
         CancellationToken ct = default);
     
     Task<CategoryImageDTO?> GetImageByIdAsync(
+        Guid categoryId,
         Guid imageId,
         CancellationToken ct = default);
     Task DeleteCategoryImageAsync(

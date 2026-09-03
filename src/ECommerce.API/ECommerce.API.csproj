@@ -5,7 +5,7 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <RootNamespace>ECommerce.API</RootNamespace>
-        <EnableDefaultContentItems>false</EnableDefaultContentItems>
+        <EnableDefaultContentItems>true</EnableDefaultContentItems>
     </PropertyGroup>
 
     <ItemGroup>

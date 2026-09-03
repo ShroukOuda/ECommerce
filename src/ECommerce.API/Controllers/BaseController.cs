@@ -34,7 +34,7 @@ public abstract class BaseController : ControllerBase
 
       protected IActionResult SuccessMessage(
          string message = "Request completed successfully.",
-         int statusCode = StatusCodes.Status204NoContent)
+         int statusCode = StatusCodes.Status200OK)
       {
          var response = new ApiResponse(
                success: true,

@@ -3,6 +3,7 @@ using ECommerce.Application.Interfaces;
 
 namespace ECommerce.API.Controllers;
 
+[Route("api/v1/payments")]
 public class PaymentsController : BaseController
 {
     private readonly IPaymentService _paymentService;

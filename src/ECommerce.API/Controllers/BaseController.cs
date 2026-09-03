@@ -3,7 +3,6 @@ using ECommerce.Application.DTO.Common;
 namespace ECommerce.API.Controllers;
 
 [ApiController]
-[Route("api/v1/[controller]")]
 public abstract class BaseController : ControllerBase
 {
     protected IActionResult Success<T>(

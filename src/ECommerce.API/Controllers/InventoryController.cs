@@ -3,6 +3,7 @@ using ECommerce.Application.Interfaces;
 
 namespace ECommerce.API.Controllers;
 
+[Route("api/v1/inventory")]
 public class InventoryController : BaseController
 {
     private readonly IInventoryService _inventoryService;

@@ -3,6 +3,7 @@ using ECommerce.Application.Interfaces;
 
 namespace ECommerce.API.Controllers;
 
+[Route("api/v1/reviews")]
 public class ReviewsController : BaseController
 {
     private readonly IReviewService _reviewService;

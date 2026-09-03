@@ -3,6 +3,7 @@ using ECommerce.Application.Interfaces;
 
 namespace ECommerce.API.Controllers;
 
+[Route("api/v1/coupons")]
 public class CouponsController : BaseController
 {
     private readonly ICouponService _couponService;

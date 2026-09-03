@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure.Internal;
 
 namespace ECommerce.API.Controllers;
 
+[Route("api/v1/cart")]
 public class CartController : BaseController
 {
     private readonly ICartService _cartService;

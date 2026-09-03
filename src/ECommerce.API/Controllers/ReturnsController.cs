@@ -4,6 +4,7 @@ using ECommerce.Application.Interfaces;
 namespace ECommerce.API.Controllers;
 
 [Authorize(Roles = "Admin")]
+[Route("api/v1/admin/returns")]
 public class ReturnsController : BaseController
 {
     private readonly IReturnService _returnService;

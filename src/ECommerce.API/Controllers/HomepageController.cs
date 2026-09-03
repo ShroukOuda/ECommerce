@@ -3,6 +3,7 @@ using ECommerce.Application.DTO.Homepage;
 
 namespace ECommerce.API.Controllers;
 
+[Route("api/v1/homepage")]
 public class HomepageController : BaseController
 {
     private readonly IHomePageService _homePageService;

@@ -4,6 +4,7 @@ using ECommerce.Domain.Enums.Media;
 
 namespace ECommerce.API.Controllers;
 
+[Route("api/v1/brands")]
 public class BrandsController : BaseController
 {
     private readonly IBrandService _brandService;

@@ -4,6 +4,7 @@ using ECommerce.Application.Interfaces;
 namespace ECommerce.API.Controllers;
 
 [Authorize(Roles = "Customer")]
+[Route("api/v1/wishlist")]
 public class WishlistController : BaseController
 {
     private readonly IWishlistService _wishlistService;

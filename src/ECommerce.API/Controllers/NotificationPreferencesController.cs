@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace ECommerce.API.Controllers;
 
 [Authorize(Roles = "Admin")]
+[Route("api/v1/notification-preferences")]
 public class NotificationPreferencesController : BaseController
 {
     private readonly INotificationPreferenceAdminService _notificationPreferenceAdminService;

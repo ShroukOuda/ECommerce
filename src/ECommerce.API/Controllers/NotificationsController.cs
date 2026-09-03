@@ -6,7 +6,9 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace ECommerce.API.Controllers;
 
+[Route("api/v1/notifications")]
 [Authorize]
+
 public class NotificationsController : BaseController
 {
     private readonly INotificationService _notificationService;

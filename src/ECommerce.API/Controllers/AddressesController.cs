@@ -2,6 +2,7 @@ using ECommerce.Application.DTO.Address;
 
 namespace ECommerce.API.Controllers;
 
+[Route("api/v1/addresses")]
 public class AddressesController : BaseController
 {
     private readonly IAddressService _addressService;

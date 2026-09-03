@@ -3,6 +3,7 @@ using ECommerce.Application.Interfaces;
 
 namespace ECommerce.API.Controllers;
 
+[Route("api/v1/product-options")]
 public class ProductOptionsController : BaseController
 {
     private readonly IProductOptionService _productOptionService;

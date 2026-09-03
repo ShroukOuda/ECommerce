@@ -3,6 +3,7 @@ using ECommerce.Domain.Enums.Media;
 
 namespace ECommerce.API.Controllers;
 
+[Route("api/v1/categories")]
 public class CategoriesController : BaseController
 {
     private readonly ICategoryService _categoryService;

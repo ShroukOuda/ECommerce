@@ -3,6 +3,8 @@ using ECommerce.Application.Interfaces;
 
 namespace ECommerce.API.Controllers;
 
+
+[Route("api/v1/product-variants")]
 public class ProductVariantsController : BaseController
 {
     private readonly IProductVariantService _productVariantService;

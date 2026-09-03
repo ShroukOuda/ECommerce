@@ -5,11 +5,11 @@ namespace ECommerce.API.Controllers;
 
 [Route("api/v1/admin/shipping")]
 [Authorize(Roles = "Admin")]
-public class AdminShippingController : BaseController
+public class AdminShippingsController : BaseController
 {
     private readonly IShippingService _shippingService;
 
-    public AdminShippingController(IShippingService shippingService)
+    public AdminShippingsController(IShippingService shippingService)
     {
         _shippingService = shippingService;
     }

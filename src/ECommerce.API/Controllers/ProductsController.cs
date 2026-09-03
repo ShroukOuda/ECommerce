@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace ECommerce.API.Controllers;
 
-
+[Route("api/v1/products")]
 public class ProductsController : BaseController
 {
     private readonly IProductService _productService;

@@ -6,6 +6,7 @@ namespace ECommerce.API.Controllers;
 
 
 [Authorize]
+[Route("api/v1/user-sessions")]
 public class UserSessionsController : BaseController
 {
     private readonly IUserSessionService _sessionService;

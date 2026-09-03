@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace ECommerce.API.Controllers;
 
 
+[Route("api/v1/auth")]
 public class AuthenticationController : BaseController
 {
     private readonly IAuthenticationService _authService;

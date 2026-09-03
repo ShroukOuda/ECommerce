@@ -19,7 +19,7 @@ public class CartService : ICartService
         _addItemValidator = addItemValidator;
     }
 
-    public async Task<GetCartDTO> GetCartByIdAsync(Guid id, CancellationToken ct = default)
+    public async Task<GetCartDTO> GetCartByIdAsync(Guid id)
     {
         var spec = new CartDetailsSpecification(id);
         var cart = await _unitOfWork.GetRepository<Cart, Guid>().GetFirstOrDefaultAsync(spec);
@@ -27,53 +27,53 @@ public class CartService : ICartService
         return _mapper.Map<GetCartDTO>(cart);
     }
 
-    public async Task<GetCartDTO?> GetActiveCartByUserIdAsync(string userId, CancellationToken ct = default)
+    public async Task<GetCartDTO?> GetActiveCartByUserIdAsync(string userId)
     {
         var activeCartSpec = new CartByUserSpecification(userId, CartStatus.Active);
         var cart = await _unitOfWork.GetRepository<Cart, Guid>().GetFirstOrDefaultAsync(activeCartSpec);
         return cart is null ? null : _mapper.Map<GetCartDTO>(cart);
     }
 
-    public async Task<GetCartItemDTO> AddCartItemAsync(AddCartItemDTO dto, CancellationToken ct = default)
+    public async Task<GetCartItemDTO> AddCartItemAsync(AddCartItemDTO dto)
     {
-        var result = await _addItemValidator.ValidateAsync(dto, ct);
+        var result = await _addItemValidator.ValidateAsync(dto);
         if (!result.IsValid) throw new ValidationException(result.Errors);
 
         var item = _mapper.Map<CartItem>(dto);
-        await _unitOfWork.GetRepository<CartItem, Guid>().AddAsync(item, ct);
-        await _unitOfWork.SaveChangesAsync(ct);
+        await _unitOfWork.GetRepository<CartItem, Guid>().AddAsync(item);
+        await _unitOfWork.SaveChangesAsync();
         return _mapper.Map<GetCartItemDTO>(item);
     }
 
-    public async Task<GetCartItemDTO> UpdateCartItemAsync(Guid id, UpdateCartItemDTO dto, CancellationToken ct = default)
+    public async Task<GetCartItemDTO> UpdateCartItemAsync(Guid id, UpdateCartItemDTO dto)
     {
-        var item = await _unitOfWork.GetRepository<CartItem, Guid>().GetByIdAsync(id, ct);
+        var item = await _unitOfWork.GetRepository<CartItem, Guid>().GetByIdAsync(id);
         if (item is null) throw new KeyNotFoundException($"Cart item with ID {id} not found.");
         item.Quantity = dto.Quantity;
-        _unitOfWork.GetRepository<CartItem, Guid>().Update(item, ct);
-        await _unitOfWork.SaveChangesAsync(ct);
+        _unitOfWork.GetRepository<CartItem, Guid>().Update(item);
+        await _unitOfWork.SaveChangesAsync();
         return _mapper.Map<GetCartItemDTO>(item);
     }
 
-    public async Task RemoveCartItemAsync(Guid cartId, Guid cartItemId, CancellationToken ct = default)
+    public async Task RemoveCartItemAsync(Guid cartId, Guid cartItemId)
     {
         var spec = new CartItemSpecification(cartId, cartItemId);
         bool exist = await _unitOfWork.GetRepository<CartItem, Guid>().ExistsAsync(spec);
         if (!exist) throw new KeyNotFoundException($"Cart item with ID {cartItemId} not found.");
         var stub = new CartItem { Id = cartItemId };
-        _unitOfWork.GetRepository<CartItem, Guid>().Delete(stub, ct);
-        await _unitOfWork.SaveChangesAsync(ct);
+        _unitOfWork.GetRepository<CartItem, Guid>().Delete(stub);
+        await _unitOfWork.SaveChangesAsync();
     }
 
-    public async Task ClearCartAsync(Guid cartId, CancellationToken ct = default)
+    public async Task ClearCartAsync(Guid cartId)
     {
         var spec = new CartItemsByCartSpecification(cartId);
         var items = await _unitOfWork.GetRepository<CartItem, Guid>().GetAllAsync(spec);
 
         if (items.Any())
         {
-            _unitOfWork.GetRepository<CartItem, Guid>().DeleteRange(items, ct);
-            await _unitOfWork.SaveChangesAsync(ct);
+            _unitOfWork.GetRepository<CartItem, Guid>().DeleteRange(items);
+            await _unitOfWork.SaveChangesAsync();
         }
     }
 }

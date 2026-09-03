@@ -33,8 +33,7 @@ public class CategoryImageService : ICategoryImageService
     
     public async Task<CategoryImageDTO> UploadImageAsync(
         Guid Id,
-        UploadCategoryImageDTO dto,
-        CancellationToken ct = default)
+        UploadCategoryImageDTO dto)
     {
         var categorySpec = new CategorySpecification(Id);
 
@@ -63,7 +62,7 @@ public class CategoryImageService : ICategoryImageService
         try
         {
             var filePath = await _imageService.SaveAsync(
-                stream, dto.File.FileName, folderPath, ct);
+                stream, dto.File.FileName, folderPath);
 
             var image = new CategoryImage
             {
@@ -74,8 +73,8 @@ public class CategoryImageService : ICategoryImageService
                 UploadedAt = DateTime.UtcNow
             };
 
-            await _unitOfWork.GetRepository<CategoryImage, Guid>().AddAsync(image, ct);
-            await _unitOfWork.SaveChangesAsync(ct);
+            await _unitOfWork.GetRepository<CategoryImage, Guid>().AddAsync(image);
+            await _unitOfWork.SaveChangesAsync();
 
             _logger.LogInformation("{SubType} uploaded for Category {CategoryId}",
                 dto.SubType, Id);
@@ -90,8 +89,7 @@ public class CategoryImageService : ICategoryImageService
     }
     
     public async Task<IReadOnlyList<CategoryImageDTO>> GetCategoryImagesAsync(
-        Guid categoryId,
-        CancellationToken ct = default)
+        Guid categoryId)
     {
         var spec = new CategoryImageSpecification(categoryId);
         var image = await _unitOfWork.GetRepository<CategoryImage, Guid>()
@@ -101,8 +99,7 @@ public class CategoryImageService : ICategoryImageService
     
     public async Task<CategoryImageDTO?> GetCategoryImageBySubTypeAsync(
         Guid categoryId,
-        ImageSubType subType,
-        CancellationToken ct = default)
+        ImageSubType subType)
     {
         var spec = new CategoryImageSpecification(categoryId, subType);
         var image = await _unitOfWork.GetRepository<CategoryImage, Guid>()
@@ -112,29 +109,27 @@ public class CategoryImageService : ICategoryImageService
     
     public async Task DeleteCategoryImageAsync(
         Guid categoryId,
-        Guid imageId,
-        CancellationToken ct = default)
+        Guid imageId)
     {
         var spec = new CategoryImageSpecification(categoryId, imageId);
         var exist = await _unitOfWork.GetRepository<CategoryImage, Guid>().ExistsAsync(spec);
         if (!exist)
             throw new NotFoundException($"Image {imageId} not found for category {categoryId}");
 
-        var image = await _unitOfWork.GetRepository<CategoryImage, Guid>().GetByIdAsync(imageId, ct) 
+        var image = await _unitOfWork.GetRepository<CategoryImage, Guid>().GetByIdAsync(imageId) 
         ?? throw new NotFoundException($"Image {imageId} not found for category {categoryId}");
 
         
-        await _imageService.DeleteAsync(image.ImageUrl, ct);
-        _unitOfWork.GetRepository<CategoryImage, Guid>().Delete(image, ct);
-        await _unitOfWork.SaveChangesAsync(ct);
+        await _imageService.DeleteAsync(image.ImageUrl);
+        _unitOfWork.GetRepository<CategoryImage, Guid>().Delete(image);
+        await _unitOfWork.SaveChangesAsync();
 
         _logger.LogInformation("Category Image {ImageId} deleted from category {CategoryId}", 
             imageId, categoryId);
     }
     
     public async Task DeleteAllCategoryImagesAsync(
-        Guid categoryId,
-        CancellationToken ct = default)
+        Guid categoryId)
     {
         var spec = new CategoryImageSpecification(categoryId);
         var images = await _unitOfWork.GetRepository<CategoryImage, Guid>()
@@ -143,13 +138,13 @@ public class CategoryImageService : ICategoryImageService
         if (!images.Any()) return;
 
         foreach (var image in images)
-            await _imageService.DeleteAsync(image.ImageUrl, ct);
+            await _imageService.DeleteAsync(image.ImageUrl);
 
         var folderPath = $"categories/{categoryId}";
-        await _imageService.DeleteFolderAsync(folderPath, ct);
+        await _imageService.DeleteFolderAsync(folderPath);
 
-        _unitOfWork.GetRepository<CategoryImage, Guid>().DeleteRange(images, ct);
-        await _unitOfWork.SaveChangesAsync(ct);
+        _unitOfWork.GetRepository<CategoryImage, Guid>().DeleteRange(images);
+        await _unitOfWork.SaveChangesAsync();
 
         _logger.LogInformation("All {Count} photos deleted for Category {CategoryId}", 
             images.Count(), categoryId);
@@ -157,8 +152,7 @@ public class CategoryImageService : ICategoryImageService
     
     public async Task<CategoryImageDTO?> GetImageByIdAsync(
         Guid categoryId,
-        Guid imageId,
-        CancellationToken ct = default)
+        Guid imageId)
     {
         var spec = new CategoryImageSpecification(categoryId, imageId);
         var exist = await _unitOfWork.GetRepository<CategoryImage, Guid>().ExistsAsync(spec);

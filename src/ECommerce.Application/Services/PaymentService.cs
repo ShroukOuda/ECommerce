@@ -20,23 +20,23 @@ public class PaymentService : IPaymentService
         _createValidator = createValidator;
     }
 
-    public async Task<IEnumerable<GetPaymentDTO>> GetPaymentsByOrderIdAsync(Guid orderId, CancellationToken ct = default)
+    public async Task<IEnumerable<GetPaymentDTO>> GetPaymentsByOrderIdAsync(Guid orderId)
     {
         var spec = new PaymentsByOrderSpecification(orderId);
         var payments = await _unitOfWork.GetRepository<Payment, Guid>().GetAllAsync(spec);
         return _mapper.Map<IEnumerable<GetPaymentDTO>>(payments);
     }
 
-    public async Task<GetPaymentDTO> GetPaymentByIdAsync(Guid id, CancellationToken ct = default)
+    public async Task<GetPaymentDTO> GetPaymentByIdAsync(Guid id)
     {
-        var payment = await _unitOfWork.GetRepository<Payment, Guid>().GetByIdAsync(id, ct);
+        var payment = await _unitOfWork.GetRepository<Payment, Guid>().GetByIdAsync(id);
         if (payment is null) throw new KeyNotFoundException($"Payment with ID {id} not found.");
         return _mapper.Map<GetPaymentDTO>(payment);
     }
 
-    public async Task<GetPaymentDTO> CreatePaymentAsync(CreatePaymentDTO dto, CancellationToken ct = default)
+    public async Task<GetPaymentDTO> CreatePaymentAsync(CreatePaymentDTO dto)
     {
-        var result = await _createValidator.ValidateAsync(dto, ct);
+        var result = await _createValidator.ValidateAsync(dto);
         if (!result.IsValid) throw new ValidationException(result.Errors);
 
         var payment = new Payment
@@ -51,8 +51,8 @@ public class PaymentService : IPaymentService
             PaidAt = DateTime.UtcNow
         };
 
-        await _unitOfWork.GetRepository<Payment, Guid>().AddAsync(payment, ct);
-        await _unitOfWork.SaveChangesAsync(ct);
+        await _unitOfWork.GetRepository<Payment, Guid>().AddAsync(payment);
+        await _unitOfWork.SaveChangesAsync();
         return _mapper.Map<GetPaymentDTO>(payment);
     }
 }

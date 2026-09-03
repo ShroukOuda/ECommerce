@@ -36,7 +36,7 @@ public class OrderServiceTests
         var orders = new List<Order> { new() { Id = TestGuid.FromInt(1), OrderNumber = "ORD-001" } };
         var orderDtos = new List<GetOrderDTO> { new() { Id = TestGuid.FromInt(1), OrderNumber = "ORD-001" } };
 
-        _unitOfWorkMock.Setup(u => u.GetRepository<Order, Guid>().GetAllAsync(It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Order, Guid>().GetAllAsync())
             .ReturnsAsync(orders);
         _mapperMock.Setup(m => m.Map<IEnumerable<GetOrderDTO>>(orders))
             .Returns(orderDtos);
@@ -106,15 +106,15 @@ public class OrderServiceTests
 
         _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
-        _unitOfWorkMock.Setup(u => u.GetRepository<Order, Guid>().AddAsync(It.IsAny<Order>(), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Order, Guid>().AddAsync(It.IsAny<Order>()))
             .Returns(Task.CompletedTask);
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
         _mapperMock.Setup(m => m.Map<GetOrderDTO>(It.IsAny<Order>())).Returns(orderDto);
 
         var result = await _orderService.CreateOrderAsync(dto);
 
         result.Should().NotBeNull();
-        _unitOfWorkMock.Verify(u => u.GetRepository<Order, Guid>().AddAsync(It.IsAny<Order>(), It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.GetRepository<Order, Guid>().AddAsync(It.IsAny<Order>()), Times.Once);
     }
 
     [Fact]
@@ -137,13 +137,13 @@ public class OrderServiceTests
         var dto = new UpdateOrderStatusDTO { Id = TestGuid.FromInt(1), OrderStatus = "Shipped" };
         var order = new Order { Id = TestGuid.FromInt(1) };
 
-        _unitOfWorkMock.Setup(u => u.GetRepository<Order, Guid>().GetByIdAsync(TestGuid.FromInt(1), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Order, Guid>().GetByIdAsync(TestGuid.FromInt(1)))
             .ReturnsAsync(order);
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
         await _orderService.UpdateOrderStatusAsync(dto);
 
-        _unitOfWorkMock.Verify(u => u.GetRepository<Order, Guid>().Update(order, It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.GetRepository<Order, Guid>().Update(order), Times.Once);
     }
 
     [Fact]
@@ -151,7 +151,7 @@ public class OrderServiceTests
     {
         var dto = new UpdateOrderStatusDTO { Id = TestGuid.FromInt(999), OrderStatus = "Shipped" };
 
-        _unitOfWorkMock.Setup(u => u.GetRepository<Order, Guid>().GetByIdAsync(TestGuid.FromInt(999), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Order, Guid>().GetByIdAsync(TestGuid.FromInt(999)))
             .ReturnsAsync((Order?)null);
 
         var act = () => _orderService.UpdateOrderStatusAsync(dto);
@@ -165,7 +165,7 @@ public class OrderServiceTests
         var dto = new UpdateOrderStatusDTO { Id = TestGuid.FromInt(1), OrderStatus = "InvalidStatus" };
         var order = new Order { Id = TestGuid.FromInt(1) };
 
-        _unitOfWorkMock.Setup(u => u.GetRepository<Order, Guid>().GetByIdAsync(TestGuid.FromInt(1), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Order, Guid>().GetByIdAsync(TestGuid.FromInt(1)))
             .ReturnsAsync(order);
 
         var act = () => _orderService.UpdateOrderStatusAsync(dto);
@@ -178,20 +178,20 @@ public class OrderServiceTests
     {
 
         _unitOfWorkMock.Setup(u => u.GetRepository<Order, Guid>().ExistsAsync(
-            new OrderSpecification(TestGuid.FromInt(1)), It.IsAny<CancellationToken>()))
+            new OrderSpecification(TestGuid.FromInt(1))))
             .ReturnsAsync(true);
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
         await _orderService.DeleteOrderAsync(TestGuid.FromInt(1));
 
-        _unitOfWorkMock.Verify(u => u.GetRepository<Order, Guid>().Delete(It.IsAny<Order>(), It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.GetRepository<Order, Guid>().Delete(It.IsAny<Order>()), Times.Once);
     }
 
     [Fact]
     public async Task DeleteOrderAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
         _unitOfWorkMock.Setup(u => u.GetRepository<Order, Guid>().ExistsAsync(
-            new OrderSpecification(TestGuid.FromInt(999)), It.IsAny<CancellationToken>()))
+            new OrderSpecification(TestGuid.FromInt(999))))
             .ReturnsAsync(false);
 
         var act = () => _orderService.DeleteOrderAsync(TestGuid.FromInt(999));

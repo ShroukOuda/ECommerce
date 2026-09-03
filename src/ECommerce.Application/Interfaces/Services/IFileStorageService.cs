@@ -5,16 +5,12 @@ public interface IFileStorageService
     Task<string> SaveAsync(
         Stream content,
         string originalFileName,
-        string folder,
-        CancellationToken ct = default);
+        string folder);
     Task<IReadOnlyList<string>> SaveManyAsync(
         IEnumerable<(Stream Content, string FileName)> files,
-        string folder,
-        CancellationToken ct = default);
+        string folder);
     Task<bool> DeleteAsync(
-        string relativePath,
-        CancellationToken ct = default);
+        string relativePath);
     Task<bool> DeleteFolderAsync(
-        string folder,
-        CancellationToken ct = default);
+        string folder);
 }

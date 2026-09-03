@@ -4,10 +4,10 @@ namespace ECommerce.Application.Interfaces;
 
 public interface IProductVariantService
 {
-    Task<IEnumerable<GetProductVariantDTO>> GetVariantsByProductIdAsync(Guid productId, CancellationToken ct = default);
-    Task<GetProductVariantDTO> GetVariantByIdAsync(Guid id, CancellationToken ct = default);
-    Task<GetProductVariantDTO> AddVariantAsync(AddProductVariantDTO dto, CancellationToken ct = default);
-    Task<GetProductVariantDTO> UpdateVariantAsync(Guid id, UpdateProductVariantDTO dto, CancellationToken ct = default);
-    Task DeleteVariantAsync(Guid id, CancellationToken ct = default);
-    Task<GetProductVariantDTO> GetVariantBySKUAsync(Guid id, string sku, CancellationToken ct = default);
+    Task<IEnumerable<GetProductVariantDTO>> GetVariantsByProductIdAsync(Guid productId);
+    Task<GetProductVariantDTO> GetVariantByIdAsync(Guid id);
+    Task<GetProductVariantDTO> AddVariantAsync(AddProductVariantDTO dto);
+    Task<GetProductVariantDTO> UpdateVariantAsync(Guid id, UpdateProductVariantDTO dto);
+    Task DeleteVariantAsync(Guid id);
+    Task<GetProductVariantDTO> GetVariantBySKUAsync(Guid id, string sku);
 }

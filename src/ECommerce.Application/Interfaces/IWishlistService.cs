@@ -4,7 +4,7 @@ namespace ECommerce.Application.Interfaces;
 
 public interface IWishlistService
 {
-    Task<IEnumerable<GetWishlistDTO>> GetWishlistByUserIdAsync(string userId, CancellationToken ct = default);
-    Task<GetWishlistDTO> AddToWishlistAsync(AddWishlistDTO dto, CancellationToken ct = default);
-    Task RemoveFromWishlistAsync(Guid id, CancellationToken ct = default);
+    Task<IEnumerable<GetWishlistDTO>> GetWishlistByUserIdAsync(string userId);
+    Task<GetWishlistDTO> AddToWishlistAsync(AddWishlistDTO dto);
+    Task RemoveFromWishlistAsync(Guid id);
 }

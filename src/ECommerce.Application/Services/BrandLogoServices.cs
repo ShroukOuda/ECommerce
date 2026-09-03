@@ -34,8 +34,7 @@ public class BrandLogoService : IBrandLogoService
     
     public async Task<BrandLogoDTO> UploadlogoAsync(
         Guid brandId,
-        UploadBrandLogoDTO dto,
-        CancellationToken ct = default)
+        UploadBrandLogoDTO dto)
     {
         var brandSpec = new BrandSpecification(brandId);
 
@@ -64,7 +63,7 @@ public class BrandLogoService : IBrandLogoService
         try
         {
             var filePath = await _logoService.SaveAsync(
-                stream, dto.File.FileName, folderPath, ct);
+                stream, dto.File.FileName, folderPath);
 
             var logo = new BrandLogo
             {
@@ -75,8 +74,8 @@ public class BrandLogoService : IBrandLogoService
                 UploadedAt = DateTime.UtcNow
             };
 
-            await _unitOfWork.GetRepository<BrandLogo, Guid>().AddAsync(logo, ct);
-            await _unitOfWork.SaveChangesAsync(ct);
+            await _unitOfWork.GetRepository<BrandLogo, Guid>().AddAsync(logo);
+            await _unitOfWork.SaveChangesAsync();
 
             _logger.LogInformation("{SubType} uploaded for Brand {BrandId}",
                 dto.SubType, brandId);
@@ -91,8 +90,7 @@ public class BrandLogoService : IBrandLogoService
     }
     
     public async Task<IReadOnlyList<BrandLogoDTO>> GetBrandLogosAsync(
-        Guid BrandId,
-        CancellationToken ct = default)
+        Guid BrandId)
     {
         var spec = new BrandLogoSpecification(BrandId);
         var logo = await _unitOfWork.GetRepository<BrandLogo, Guid>()
@@ -102,8 +100,7 @@ public class BrandLogoService : IBrandLogoService
     
     public async Task<BrandLogoDTO?> GetBrandLogoBySubTypeAsync(
         Guid BrandId,
-        ImageSubType subType,
-        CancellationToken ct = default)
+        ImageSubType subType)
     {
         var spec = new BrandLogoSpecification(BrandId, subType);
         var logo = await _unitOfWork.GetRepository<BrandLogo, Guid>()
@@ -113,29 +110,27 @@ public class BrandLogoService : IBrandLogoService
     
     public async Task DeleteBrandLogoAsync(
         Guid brandId,
-        Guid logoId,
-        CancellationToken ct = default)
+        Guid logoId)
     {
         var spec = new BrandLogoSpecification(brandId, logoId);
         var exist = await _unitOfWork.GetRepository<BrandLogo, Guid>().ExistsAsync(spec);
         if (!exist)
             throw new NotFoundException($"Logo {logoId} not found for Brand {brandId}");
 
-        var logo = await _unitOfWork.GetRepository<BrandLogo, Guid>().GetByIdAsync(logoId, ct) 
+        var logo = await _unitOfWork.GetRepository<BrandLogo, Guid>().GetByIdAsync(logoId) 
         ?? throw new NotFoundException($"Logo {logoId} not found for Brand {brandId}");
 
         
-        await _logoService.DeleteAsync(logo.ImageUrl, ct);
-        _unitOfWork.GetRepository<BrandLogo, Guid>().Delete(logo, ct);
-        await _unitOfWork.SaveChangesAsync(ct);
+        await _logoService.DeleteAsync(logo.ImageUrl);
+        _unitOfWork.GetRepository<BrandLogo, Guid>().Delete(logo);
+        await _unitOfWork.SaveChangesAsync();
 
         _logger.LogInformation("Brand Logo {logoId} deleted from Brand {brandId}", 
             logoId, brandId);
     }
     
     public async Task DeleteAllBrandLogosAsync(
-        Guid BrandId,
-        CancellationToken ct = default)
+        Guid BrandId)
     {
         var spec = new BrandLogoSpecification(BrandId);
         var logos = await _unitOfWork.GetRepository<BrandLogo, Guid>()
@@ -144,13 +139,13 @@ public class BrandLogoService : IBrandLogoService
         if (!logos.Any()) return;
 
         foreach (var logo in logos)
-            await _logoService.DeleteAsync(logo.ImageUrl, ct);
+            await _logoService.DeleteAsync(logo.ImageUrl);
 
         var folderPath = $"categories/{BrandId}";
-        await _logoService.DeleteFolderAsync(folderPath, ct);
+        await _logoService.DeleteFolderAsync(folderPath);
 
-        _unitOfWork.GetRepository<BrandLogo, Guid>().DeleteRange(logos, ct);
-        await _unitOfWork.SaveChangesAsync(ct);
+        _unitOfWork.GetRepository<BrandLogo, Guid>().DeleteRange(logos);
+        await _unitOfWork.SaveChangesAsync();
 
         _logger.LogInformation("All {Count} photos deleted for Brand {BrandId}", 
             logos.Count(), BrandId);
@@ -158,11 +153,10 @@ public class BrandLogoService : IBrandLogoService
     
     public async Task<BrandLogoDTO?> GetLogoByIdAsync(
         Guid brandId,
-        Guid logoId,
-        CancellationToken ct = default)
+        Guid logoId)
     {
         var spec = new BrandLogoSpecification(brandId, logoId);
-        var exists = await _unitOfWork.GetRepository<BrandLogo, Guid>().ExistsAsync(spec, ct);
+        var exists = await _unitOfWork.GetRepository<BrandLogo, Guid>().ExistsAsync(spec);
         
         if (!exists) 
             throw new NotFoundException($"Logo {logoId} not found for Brand {brandId}");   

@@ -15,12 +15,11 @@ public class GenericRepository<TEntity, TKey> : IGenericRepository<TEntity, TKey
         _dbSet = context.Set<TEntity>();
     }
     
-    public  async Task<IReadOnlyList<TEntity>> GetAllAsync(
-        CancellationToken ct = default)
+    public  async Task<IReadOnlyList<TEntity>> GetAllAsync()
     {
         return await _dbSet
             .AsNoTracking()
-            .ToListAsync(ct);
+            .ToListAsync();
     }
 
     public async Task<IReadOnlyList<TEntity>> GetAllAsync(BaseSpecification<TEntity, TKey> specification)
@@ -32,10 +31,9 @@ public class GenericRepository<TEntity, TKey> : IGenericRepository<TEntity, TKey
 
 
     public  async Task<TEntity?> GetByIdAsync(
-        TKey id,
-        CancellationToken ct = default)
+        TKey id)
     {
-        return await _dbSet.FindAsync(new object[] { id },  ct);
+        return await _dbSet.FindAsync(new object[] { id });
     }
     
     public async Task<TEntity?> GetFirstOrDefaultAsync(BaseSpecification<TEntity, TKey> specification)
@@ -43,7 +41,7 @@ public class GenericRepository<TEntity, TKey> : IGenericRepository<TEntity, TKey
         return await SpecificationEvaluator.GetQuery(_dbSet, specification).FirstOrDefaultAsync();
     }
 
-    public  async Task AddAsync(TEntity entity, CancellationToken ct = default)
+    public  async Task AddAsync(TEntity entity)
     {
         if (entity is BaseEntity<TKey> baseEntity)
         {
@@ -51,11 +49,10 @@ public class GenericRepository<TEntity, TKey> : IGenericRepository<TEntity, TKey
             baseEntity.UpdatedAt = DateTime.UtcNow;
         }
 
-        await _dbSet.AddAsync(entity, ct);
+        await _dbSet.AddAsync(entity);
     }
     public  async Task AddRangeAsync(
-        IEnumerable<TEntity> entities,
-        CancellationToken ct = default)
+        IEnumerable<TEntity> entities)
     {
         var now = DateTime.UtcNow;
         foreach (var entity in entities)
@@ -67,9 +64,9 @@ public class GenericRepository<TEntity, TKey> : IGenericRepository<TEntity, TKey
             }
         }
 
-        await _dbSet.AddRangeAsync(entities, ct);
+        await _dbSet.AddRangeAsync(entities);
     }
-    public  void Update(TEntity entity, CancellationToken ct = default)
+    public  void Update(TEntity entity)
     {
         if (entity is BaseEntity<TKey> baseEntity)
         {
@@ -80,8 +77,7 @@ public class GenericRepository<TEntity, TKey> : IGenericRepository<TEntity, TKey
     }
     
     public  void UpdateRange(
-        IEnumerable<TEntity> entities,
-        CancellationToken ct = default)
+        IEnumerable<TEntity> entities)
     {
         var now = DateTime.UtcNow;
         foreach (var entity in entities)
@@ -96,29 +92,26 @@ public class GenericRepository<TEntity, TKey> : IGenericRepository<TEntity, TKey
         
     }
     
-    public  void Delete(TEntity entity, CancellationToken ct = default)
+    public  void Delete(TEntity entity)
     {
         _dbSet.Remove(entity);
        
     }
     public  void DeleteRange(
-        IEnumerable<TEntity> entities,
-        CancellationToken ct = default)
+        IEnumerable<TEntity> entities)
     {
         _dbSet.RemoveRange(entities);
         
     }
     
     public  async Task<bool> ExistsAsync(
-        BaseSpecification<TEntity, TKey> specification,
-        CancellationToken ct = default)
+        BaseSpecification<TEntity, TKey> specification)
     {
         return await SpecificationEvaluator.GetQuery(_dbSet, specification).AnyAsync();
     }
     
     public  async Task<int> CountAsync(
-        BaseSpecification<TEntity, TKey> specification,
-        CancellationToken ct = default)
+        BaseSpecification<TEntity, TKey> specification)
     {
         return await SpecificationEvaluator.GetQuery(_dbSet, specification).CountAsync();
     }

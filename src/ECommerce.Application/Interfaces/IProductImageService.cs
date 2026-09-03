@@ -6,25 +6,19 @@ public interface IProductImageService
 {
     Task<ProductImageDTO> UploadImageAsync(
         Guid productId,
-        UploadProductImageDTO dto, 
-        CancellationToken ct = default);
+        UploadProductImageDTO dto);
     Task<IReadOnlyList<ProductImageDTO>> GetProductImagesAsync(
-        Guid productId, 
-        CancellationToken ct = default);
+        Guid productId);
 
     Task DeleteProductImageAsync(
         Guid productId,
-        Guid imageId,
-        CancellationToken ct = default);
+        Guid imageId);
     Task DeleteAllProductImagesAsync(
-        Guid productId, 
-        CancellationToken ct = default);
+        Guid productId);
 
     Task<ProductImageDTO?> GetImageByIdAsync(
-        Guid imageId,
-        CancellationToken ct = default);
+        Guid imageId);
 
     Task<ProductImageDTO?> GetProductMainImageAsync(
-        Guid productId,
-        CancellationToken ct = default);
+        Guid productId);
 }

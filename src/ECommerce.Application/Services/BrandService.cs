@@ -24,54 +24,54 @@ public class BrandService : IBrandService
         _updateValidator = updateValidator;
     }
 
-    public async Task<IEnumerable<GetBrandDTO>> GetAllBrandsAsync(CancellationToken ct = default)
+    public async Task<IEnumerable<GetBrandDTO>> GetAllBrandsAsync()
     {
-        var brands = await _unitOfWork.GetRepository<Brand, Guid>().GetAllAsync(ct);
+        var brands = await _unitOfWork.GetRepository<Brand, Guid>().GetAllAsync();
         return _mapper.Map<IEnumerable<GetBrandDTO>>(brands);
     }
 
-    public async Task<GetBrandDTO> GetBrandByIdAsync(Guid id, CancellationToken ct = default)
+    public async Task<GetBrandDTO> GetBrandByIdAsync(Guid id)
     {
-        var brand = await _unitOfWork.GetRepository<Brand, Guid>().GetByIdAsync(id, ct);
+        var brand = await _unitOfWork.GetRepository<Brand, Guid>().GetByIdAsync(id);
         if (brand is null) throw new KeyNotFoundException($"Brand with ID {id} not found.");
         return _mapper.Map<GetBrandDTO>(brand);
     }
 
-    public async Task<GetBrandDTO> AddBrandAsync(AddBrandDTO dto, CancellationToken ct = default)
+    public async Task<GetBrandDTO> AddBrandAsync(AddBrandDTO dto)
     {
-        var result = await _addValidator.ValidateAsync(dto, ct);
+        var result = await _addValidator.ValidateAsync(dto);
         if (!result.IsValid) throw new ValidationException(result.Errors);
         var brand = _mapper.Map<Brand>(dto);
         brand.Slug = dto.Name.ToLower().Replace(" ", "-");
-        await _unitOfWork.GetRepository<Brand, Guid>().AddAsync(brand, ct);
-        await _unitOfWork.SaveChangesAsync(ct);
+        await _unitOfWork.GetRepository<Brand, Guid>().AddAsync(brand);
+        await _unitOfWork.SaveChangesAsync();
         return _mapper.Map<GetBrandDTO>(brand);
     }
 
-    public async Task<GetBrandDTO> UpdateBrandAsync(Guid id, UpdateBrandDTO dto, CancellationToken ct = default)
+    public async Task<GetBrandDTO> UpdateBrandAsync(Guid id, UpdateBrandDTO dto)
     {
 
-        var result = await _updateValidator.ValidateAsync(dto, ct);
+        var result = await _updateValidator.ValidateAsync(dto);
         if (!result.IsValid) throw new ValidationException(result.Errors);
 
         var spec = new BrandSpecification(id);
-        var existingBrand = await _unitOfWork.GetRepository<Brand, Guid>().ExistsAsync(spec, ct);
+        var existingBrand = await _unitOfWork.GetRepository<Brand, Guid>().ExistsAsync(spec);
         if (!existingBrand) throw new KeyNotFoundException($"Brand with ID {id} not found.");
         
         var brand = _mapper.Map<Brand>(dto);
         brand.Slug = dto.Name.ToLower().Replace(" ", "-");
-        _unitOfWork.GetRepository<Brand, Guid>().Update(brand, ct);
-        await _unitOfWork.SaveChangesAsync(ct);
+        _unitOfWork.GetRepository<Brand, Guid>().Update(brand);
+        await _unitOfWork.SaveChangesAsync();
         return _mapper.Map<GetBrandDTO>(brand);
     }
 
-    public async Task DeleteBrandAsync(Guid id, CancellationToken ct = default)
+    public async Task DeleteBrandAsync(Guid id)
     {
         var spec = new BrandSpecification(id);
-        bool exists = await _unitOfWork.GetRepository<Brand, Guid>().ExistsAsync(spec, ct);
+        bool exists = await _unitOfWork.GetRepository<Brand, Guid>().ExistsAsync(spec);
         if (!exists) throw new KeyNotFoundException($"Brand with ID {id} not found.");
         var stub = new Brand { Id = id };
-        _unitOfWork.GetRepository<Brand, Guid>().Delete(stub, ct);
-        await _unitOfWork.SaveChangesAsync(ct);
+        _unitOfWork.GetRepository<Brand, Guid>().Delete(stub);
+        await _unitOfWork.SaveChangesAsync();
     }
 }

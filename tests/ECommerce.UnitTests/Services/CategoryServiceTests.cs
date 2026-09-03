@@ -42,7 +42,7 @@ public class CategoryServiceTests
         // Arrange
         var categories = new List<Category> { new() { Id = TestGuid.FromInt(1), Name = "Electronics" } };
 
-        _unitOfWorkMock.Setup(u => u.GetRepository<Category, Guid>().GetAllAsync(It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Category, Guid>().GetAllAsync())
             .ReturnsAsync(categories);
 
         // Act
@@ -57,7 +57,7 @@ public class CategoryServiceTests
     public async Task GetCategoryByIdAsync_WhenNotFound_ShouldReturnNull()
     {
         // Arrange
-        _unitOfWorkMock.Setup(u => u.GetRepository<Category, Guid>().GetByIdAsync(TestGuid.FromInt(999), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Category, Guid>().GetByIdAsync(TestGuid.FromInt(999)))
             .ReturnsAsync((Category?)null);
 
         // Act

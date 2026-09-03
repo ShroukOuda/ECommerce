@@ -55,7 +55,7 @@ public class ProductVariantServiceTests
         var variant = new ProductVariant { Id = TestGuid.FromInt(1), Sku = "VAR-001" };
         var variantDto = new GetProductVariantDTO { Id = TestGuid.FromInt(1), Sku = "VAR-001" };
 
-        _unitOfWorkMock.Setup(u => u.GetRepository<ProductVariant, Guid>().GetByIdAsync(TestGuid.FromInt(1), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<ProductVariant, Guid>().GetByIdAsync(TestGuid.FromInt(1)))
             .ReturnsAsync(variant);
         _mapperMock.Setup(m => m.Map<GetProductVariantDTO>(variant)).Returns(variantDto);
 
@@ -68,7 +68,7 @@ public class ProductVariantServiceTests
     [Fact]
     public async Task GetVariantByIdAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
-        _unitOfWorkMock.Setup(u => u.GetRepository<ProductVariant, Guid>().GetByIdAsync(TestGuid.FromInt(999), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<ProductVariant, Guid>().GetByIdAsync(TestGuid.FromInt(999)))
             .ReturnsAsync((ProductVariant?)null);
 
         var act = () => _productVariantService.GetVariantByIdAsync(TestGuid.FromInt(999));
@@ -85,13 +85,13 @@ public class ProductVariantServiceTests
         _addValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
         _mapperMock.Setup(m => m.Map<ProductVariant>(dto)).Returns(variant);
-        _unitOfWorkMock.Setup(u => u.GetRepository<ProductVariant, Guid>().AddAsync(It.IsAny<ProductVariant>(), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<ProductVariant, Guid>().AddAsync(It.IsAny<ProductVariant>()))
             .Returns(Task.CompletedTask);
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
         await _productVariantService.AddVariantAsync(dto);
 
-        _unitOfWorkMock.Verify(u => u.GetRepository<ProductVariant, Guid>().AddAsync(variant, It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.GetRepository<ProductVariant, Guid>().AddAsync(variant), Times.Once);
     }
 
     [Fact]
@@ -109,16 +109,16 @@ public class ProductVariantServiceTests
         _addValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
         _mapperMock.Setup(m => m.Map<ProductVariant>(dto)).Returns(variant);
-        _unitOfWorkMock.Setup(u => u.GetRepository<ProductVariant, Guid>().AddAsync(It.IsAny<ProductVariant>(), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<ProductVariant, Guid>().AddAsync(It.IsAny<ProductVariant>()))
             .Returns(Task.CompletedTask);
-        _unitOfWorkMock.Setup(u => u.GetRepository<ProductVariantOptionValue, Guid>().AddAsync(It.IsAny<ProductVariantOptionValue>(), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<ProductVariantOptionValue, Guid>().AddAsync(It.IsAny<ProductVariantOptionValue>()))
             .Returns(Task.CompletedTask);
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
         await _productVariantService.AddVariantAsync(dto);
 
         _unitOfWorkMock.Verify(u => u.GetRepository<ProductVariantOptionValue, Guid>().AddAsync(
-            It.IsAny<ProductVariantOptionValue>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+            It.IsAny<ProductVariantOptionValue>()), Times.Exactly(2));
     }
 
     [Fact]
@@ -139,20 +139,20 @@ public class ProductVariantServiceTests
     public async Task DeleteVariantAsync_WhenExists_ShouldDeleteVariant()
     {
         _unitOfWorkMock.Setup(u => u.GetRepository<ProductVariant, Guid>().ExistsAsync(
-            new ProductVariantSpecification(TestGuid.FromInt(1)), It.IsAny<CancellationToken>()))
+            new ProductVariantSpecification(TestGuid.FromInt(1))))
             .ReturnsAsync(true);
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
         await _productVariantService.DeleteVariantAsync(TestGuid.FromInt(1));
 
-        _unitOfWorkMock.Verify(u => u.GetRepository<ProductVariant, Guid>().Delete(It.IsAny<ProductVariant>(), It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.GetRepository<ProductVariant, Guid>().Delete(It.IsAny<ProductVariant>()), Times.Once);
     }
 
     [Fact]
     public async Task DeleteVariantAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
         _unitOfWorkMock.Setup(u => u.GetRepository<ProductVariant, Guid>().ExistsAsync(
-            new ProductVariantSpecification(TestGuid.FromInt(999)), It.IsAny<CancellationToken>()))
+            new ProductVariantSpecification(TestGuid.FromInt(999))))
             .ReturnsAsync(false);
 
         var act = () => _productVariantService.DeleteVariantAsync(TestGuid.FromInt(999));

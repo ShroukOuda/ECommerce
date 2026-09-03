@@ -5,26 +5,22 @@ public interface INotificationEmailService
     Task SendEmailConfirmationAsync(
         string toEmail, 
         string toName, 
-        string confirmationLink, 
-        CancellationToken ct = default);
+        string confirmationLink);
     Task SendWelcomeEmailAsync(
         string toEmail, 
-        string toName, 
-        CancellationToken ct = default);
+        string toName);
     Task SendSecurityAlertAsync(
         string toEmail,
         string toName,
         string ipAddress,
         string deviceInfo,
         string loginTime,
-        string revokeAllLink,
-        CancellationToken ct = default);
+        string revokeAllLink);
  
     Task SendPasswordResetAsync(
         string toEmail,
         string toName,
-        string resetLink,
-        CancellationToken ct = default);
+        string resetLink);
 
     Task SendOrderConfirmationAsync(
         string  toEmail,
@@ -32,8 +28,7 @@ public interface INotificationEmailService
         string  orderNumber,
         decimal totalAmount,
         string  currency,
-        string  orderDetailsLink,
-        CancellationToken ct = default);
+        string  orderDetailsLink);
  
     Task SendOrderStatusUpdateAsync(
         string toEmail,
@@ -41,8 +36,7 @@ public interface INotificationEmailService
         string orderNumber,
         string oldStatus,
         string newStatus,
-        string orderDetailsLink,
-        CancellationToken ct = default);
+        string orderDetailsLink);
 
     
 }

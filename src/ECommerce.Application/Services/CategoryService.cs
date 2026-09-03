@@ -33,26 +33,26 @@ public class CategoryService : ICategoryService
         return _mapper.Map<IEnumerable<GetCategoryDTO>>(categories);
     }
 
-    public async Task<GetCategoryDetailDTO> GetCategoryByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<GetCategoryDetailDTO> GetCategoryByIdAsync(Guid id)
     {
-        var category = await _unitOfWork.GetRepository<Category, Guid>().GetByIdAsync(id, cancellationToken);
+        var category = await _unitOfWork.GetRepository<Category, Guid>().GetByIdAsync(id);
         if (category == null)
             throw new KeyNotFoundException($"Category with ID {id} not found.");
         return _mapper.Map<GetCategoryDetailDTO>(category);
     }
 
-    public async Task<GetCategoryDTO> AddCategoryAsync(AddCategoryDTO categoryDTO, CancellationToken cancellationToken = default)
+    public async Task<GetCategoryDTO> AddCategoryAsync(AddCategoryDTO categoryDTO)
     {
         var validationResult = await _addCategoryDtoValidator.ValidateAsync(categoryDTO);
         if (!validationResult.IsValid)
             throw new ValidationException(validationResult.Errors);
         var category = _mapper.Map<Category>(categoryDTO);
         await _unitOfWork.GetRepository<Category, Guid>().AddAsync(category);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync();
         return _mapper.Map<GetCategoryDTO>(category);
     }
 
-    public async Task<GetCategoryDTO> UpdateCategoryAsync(Guid id, UpdateCategoryDTO categoryDTO, CancellationToken cancellationToken = default)
+    public async Task<GetCategoryDTO> UpdateCategoryAsync(Guid id, UpdateCategoryDTO categoryDTO)
     {
         
         var validationResult = await _updateCategoryDtoValidator.ValidateAsync(categoryDTO);
@@ -65,11 +65,11 @@ public class CategoryService : ICategoryService
             throw new KeyNotFoundException($"Category with ID {id} not found.");
         var category = _mapper.Map<Category>(categoryDTO);
         _unitOfWork.GetRepository<Category, Guid>().Update(category);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync();
         return _mapper.Map<GetCategoryDTO>(category);
     }
 
-    public async Task DeleteCategoryAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task DeleteCategoryAsync(Guid id)
     {
         var spec = new CategorySpecification(id);
         bool exist = await _unitOfWork.GetRepository<Category, Guid>().ExistsAsync(spec);
@@ -77,9 +77,9 @@ public class CategoryService : ICategoryService
             throw new KeyNotFoundException($"Category with ID {id} not found.");
 
         var folderPath = $"categories/{id}";
-        await _fileStorageService.DeleteFolderAsync(folderPath, cancellationToken);
+        await _fileStorageService.DeleteFolderAsync(folderPath);
         Category categoryStub = new Category { Id = id };
-        _unitOfWork.GetRepository<Category, Guid>().Delete(categoryStub, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        _unitOfWork.GetRepository<Category, Guid>().Delete(categoryStub);
+        await _unitOfWork.SaveChangesAsync();
     }
 }

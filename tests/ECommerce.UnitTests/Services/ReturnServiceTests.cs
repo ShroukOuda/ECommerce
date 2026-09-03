@@ -86,15 +86,15 @@ public class ReturnServiceTests
 
         _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
-        _unitOfWorkMock.Setup(u => u.GetRepository<ReturnRequest, Guid>().AddAsync(It.IsAny<ReturnRequest>(), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<ReturnRequest, Guid>().AddAsync(It.IsAny<ReturnRequest>()))
             .Returns(Task.CompletedTask);
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
         _mapperMock.Setup(m => m.Map<GetReturnRequestDTO>(It.IsAny<ReturnRequest>())).Returns(returnDto);
 
         var result = await _returnService.CreateReturnRequestAsync(dto);
 
         result.Should().NotBeNull();
-        _unitOfWorkMock.Verify(u => u.GetRepository<ReturnRequest, Guid>().AddAsync(It.IsAny<ReturnRequest>(), It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.GetRepository<ReturnRequest, Guid>().AddAsync(It.IsAny<ReturnRequest>()), Times.Once);
     }
 
     [Fact]

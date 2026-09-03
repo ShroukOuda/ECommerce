@@ -18,16 +18,16 @@ public class WishlistService : IWishlistService
         _addValidator = addValidator;
     }
 
-    public async Task<IEnumerable<GetWishlistDTO>> GetWishlistByUserIdAsync(string userId, CancellationToken ct = default)
+    public async Task<IEnumerable<GetWishlistDTO>> GetWishlistByUserIdAsync(string userId)
     {
         var spec = new WishlistsByUserSpecification(userId);
         var items = await _unitOfWork.GetRepository<Wishlist, Guid>().GetAllAsync(spec);
         return _mapper.Map<IEnumerable<GetWishlistDTO>>(items);
     }
 
-    public async Task<GetWishlistDTO> AddToWishlistAsync(AddWishlistDTO dto, CancellationToken ct = default)
+    public async Task<GetWishlistDTO> AddToWishlistAsync(AddWishlistDTO dto)
     {
-        var result = await _addValidator.ValidateAsync(dto, ct);
+        var result = await _addValidator.ValidateAsync(dto);
         if (!result.IsValid) throw new ValidationException(result.Errors);
         
         var spec = new WishlistSpecification(dto.ProductId, dto.UserId);
@@ -35,12 +35,12 @@ public class WishlistService : IWishlistService
         if (exists) throw new InvalidOperationException("Product already in wishlist.");
         
         var wishlist = _mapper.Map<Wishlist>(dto);
-        await _unitOfWork.GetRepository<Wishlist, Guid>().AddAsync(wishlist, ct);
-        await _unitOfWork.SaveChangesAsync(ct);
+        await _unitOfWork.GetRepository<Wishlist, Guid>().AddAsync(wishlist);
+        await _unitOfWork.SaveChangesAsync();
         return _mapper.Map<GetWishlistDTO>(wishlist);
     }
 
-    public async Task RemoveFromWishlistAsync(Guid id, CancellationToken ct = default)
+    public async Task RemoveFromWishlistAsync(Guid id)
     {
         var spec = new WishlistSpecification(id);
         var exist = await _unitOfWork.GetRepository<Wishlist, Guid>().ExistsAsync(spec);
@@ -48,7 +48,7 @@ public class WishlistService : IWishlistService
         if (!exist) throw new KeyNotFoundException($"Wishlist item with ID {id} not found.");
 
         var stub = new Wishlist { Id = id};
-        _unitOfWork.GetRepository<Wishlist, Guid>().Delete(stub, ct);
-        await _unitOfWork.SaveChangesAsync(ct);
+        _unitOfWork.GetRepository<Wishlist, Guid>().Delete(stub);
+        await _unitOfWork.SaveChangesAsync();
     }
 }

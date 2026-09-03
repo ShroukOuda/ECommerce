@@ -139,8 +139,8 @@ public class NotificationPreferenceServiceTests
             IsEnabled = false
         });
 
-        _userPreferenceRepositoryMock.Verify(r => r.Update(It.Is<UserNotificationPreference>(x => x.Id == existing.Id && !x.IsEnabled), It.IsAny<CancellationToken>()), Times.Once);
-        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _userPreferenceRepositoryMock.Verify(r => r.Update(It.Is<UserNotificationPreference>(x => x.Id == existing.Id && !x.IsEnabled)), Times.Once);
+        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(), Times.Once);
     }
 
     [Fact]
@@ -173,7 +173,7 @@ public class NotificationPreferenceServiceTests
         _userPreferenceRepositoryMock.Verify(r => r.AddAsync(It.Is<UserNotificationPreference>(x =>
             x.UserId == "user-1" &&
             x.NotificationPreferenceId == preference.Id &&
-            !x.IsEnabled), It.IsAny<CancellationToken>()), Times.Once);
+            !x.IsEnabled)), Times.Once);
     }
 
     [Fact]
@@ -205,7 +205,7 @@ public class NotificationPreferenceServiceTests
 
         await _service.TurnOffAllAsync("user-1");
 
-        _userPreferenceRepositoryMock.Verify(r => r.Update(It.Is<UserNotificationPreference>(x => !x.IsEnabled), It.IsAny<CancellationToken>()), Times.Once);
+        _userPreferenceRepositoryMock.Verify(r => r.Update(It.Is<UserNotificationPreference>(x => !x.IsEnabled)), Times.Once);
     }
 
     [Fact]

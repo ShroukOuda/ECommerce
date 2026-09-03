@@ -93,13 +93,13 @@ public class CartServiceTests
         _addItemValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
         _mapperMock.Setup(m => m.Map<CartItem>(dto)).Returns(cartItem);
-        _unitOfWorkMock.Setup(u => u.GetRepository<CartItem, Guid>().AddAsync(It.IsAny<CartItem>(), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<CartItem, Guid>().AddAsync(It.IsAny<CartItem>()))
             .Returns(Task.CompletedTask);
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
         await _cartService.AddCartItemAsync(dto);
 
-        _unitOfWorkMock.Verify(u => u.GetRepository<CartItem, Guid>().AddAsync(cartItem, It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.GetRepository<CartItem, Guid>().AddAsync(cartItem), Times.Once);
     }
 
     [Fact]
@@ -122,14 +122,14 @@ public class CartServiceTests
         var dto = new UpdateCartItemDTO { Id = TestGuid.FromInt(1), Quantity = 5 };
         var item = new CartItem { Id = TestGuid.FromInt(1), Quantity = 2 };
 
-        _unitOfWorkMock.Setup(u => u.GetRepository<CartItem, Guid>().GetByIdAsync(TestGuid.FromInt(1), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<CartItem, Guid>().GetByIdAsync(TestGuid.FromInt(1)))
             .ReturnsAsync(item);
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
         await _cartService.UpdateCartItemAsync(dto);
 
         item.Quantity.Should().Be(5);
-        _unitOfWorkMock.Verify(u => u.GetRepository<CartItem, Guid>().Update(item, It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.GetRepository<CartItem, Guid>().Update(item), Times.Once);
     }
 
     [Fact]
@@ -137,7 +137,7 @@ public class CartServiceTests
     {
         var dto = new UpdateCartItemDTO { Id = TestGuid.FromInt(999), Quantity = 5 };
 
-        _unitOfWorkMock.Setup(u => u.GetRepository<CartItem, Guid>().GetByIdAsync(TestGuid.FromInt(999), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<CartItem, Guid>().GetByIdAsync(TestGuid.FromInt(999)))
             .ReturnsAsync((CartItem?)null);
 
         var act = () => _cartService.UpdateCartItemAsync(dto);
@@ -150,19 +150,19 @@ public class CartServiceTests
     {
         var item = new CartItem { Id = TestGuid.FromInt(1) };
 
-        _unitOfWorkMock.Setup(u => u.GetRepository<CartItem, Guid>().GetByIdAsync(TestGuid.FromInt(1), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<CartItem, Guid>().GetByIdAsync(TestGuid.FromInt(1)))
             .ReturnsAsync(item);
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
         await _cartService.RemoveCartItemAsync(TestGuid.FromInt(1));
 
-        _unitOfWorkMock.Verify(u => u.GetRepository<CartItem, Guid>().Delete(item, It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.GetRepository<CartItem, Guid>().Delete(item), Times.Once);
     }
 
     [Fact]
     public async Task RemoveCartItemAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
-        _unitOfWorkMock.Setup(u => u.GetRepository<CartItem, Guid>().GetByIdAsync(TestGuid.FromInt(999), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<CartItem, Guid>().GetByIdAsync(TestGuid.FromInt(999)))
             .ReturnsAsync((CartItem?)null);
 
         var act = () => _cartService.RemoveCartItemAsync(TestGuid.FromInt(999));
@@ -177,11 +177,11 @@ public class CartServiceTests
 
         _unitOfWorkMock.Setup(u => u.GetRepository<CartItem, Guid>().GetAllAsync(new CartItemsByCartSpecification(TestGuid.FromInt(1))))
             .ReturnsAsync(items);
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
         await _cartService.ClearCartAsync(TestGuid.FromInt(1));
 
-        _unitOfWorkMock.Verify(u => u.GetRepository<CartItem, Guid>().DeleteRange(items, It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.GetRepository<CartItem, Guid>().DeleteRange(items), Times.Once);
     }
 
     [Fact]
@@ -192,6 +192,6 @@ public class CartServiceTests
 
         await _cartService.ClearCartAsync(TestGuid.FromInt(1));
 
-        _unitOfWorkMock.Verify(u => u.GetRepository<CartItem, Guid>().DeleteRange(It.IsAny<IEnumerable<CartItem>>(), It.IsAny<CancellationToken>()), Times.Never);
+        _unitOfWorkMock.Verify(u => u.GetRepository<CartItem, Guid>().DeleteRange(It.IsAny<IEnumerable<CartItem>>()), Times.Never);
     }
 }

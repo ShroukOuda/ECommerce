@@ -51,7 +51,7 @@ public class PaymentServiceTests
         var payment = new Payment { Id = TestGuid.FromInt(1), Amount = 99.99m };
         var paymentDto = new GetPaymentDTO { Id = TestGuid.FromInt(1), Amount = 99.99m };
 
-        _unitOfWorkMock.Setup(u => u.GetRepository<Payment, Guid>().GetByIdAsync(TestGuid.FromInt(1), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Payment, Guid>().GetByIdAsync(TestGuid.FromInt(1)))
             .ReturnsAsync(payment);
         _mapperMock.Setup(m => m.Map<GetPaymentDTO>(payment)).Returns(paymentDto);
 
@@ -64,7 +64,7 @@ public class PaymentServiceTests
     [Fact]
     public async Task GetPaymentByIdAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
-        _unitOfWorkMock.Setup(u => u.GetRepository<Payment, Guid>().GetByIdAsync(TestGuid.FromInt(999), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Payment, Guid>().GetByIdAsync(TestGuid.FromInt(999)))
             .ReturnsAsync((Payment?)null);
 
         var act = () => _paymentService.GetPaymentByIdAsync(TestGuid.FromInt(999));
@@ -80,15 +80,15 @@ public class PaymentServiceTests
 
         _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
-        _unitOfWorkMock.Setup(u => u.GetRepository<Payment, Guid>().AddAsync(It.IsAny<Payment>(), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Payment, Guid>().AddAsync(It.IsAny<Payment>()))
             .Returns(Task.CompletedTask);
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
         _mapperMock.Setup(m => m.Map<GetPaymentDTO>(It.IsAny<Payment>())).Returns(paymentDto);
 
         var result = await _paymentService.CreatePaymentAsync(dto);
 
         result.Should().NotBeNull();
-        _unitOfWorkMock.Verify(u => u.GetRepository<Payment, Guid>().AddAsync(It.IsAny<Payment>(), It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.GetRepository<Payment, Guid>().AddAsync(It.IsAny<Payment>()), Times.Once);
     }
 
     [Fact]

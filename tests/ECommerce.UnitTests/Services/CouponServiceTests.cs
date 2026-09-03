@@ -39,7 +39,7 @@ public class CouponServiceTests
         var coupons = new List<Coupon> { new() { Id = TestGuid.FromInt(1), Code = "SAVE10" } };
         var couponDtos = new List<GetCouponDTO> { new() { Id = TestGuid.FromInt(1), Code = "SAVE10" } };
 
-        _unitOfWorkMock.Setup(u => u.GetRepository<Coupon, Guid>().GetAllAsync(It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Coupon, Guid>().GetAllAsync())
             .ReturnsAsync(coupons);
         _mapperMock.Setup(m => m.Map<IEnumerable<GetCouponDTO>>(coupons)).Returns(couponDtos);
 
@@ -55,7 +55,7 @@ public class CouponServiceTests
         var coupon = new Coupon { Id = TestGuid.FromInt(1), Code = "SAVE10" };
         var couponDto = new GetCouponDTO { Id = TestGuid.FromInt(1), Code = "SAVE10" };
 
-        _unitOfWorkMock.Setup(u => u.GetRepository<Coupon, Guid>().GetByIdAsync(TestGuid.FromInt(1), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Coupon, Guid>().GetByIdAsync(TestGuid.FromInt(1)))
             .ReturnsAsync(coupon);
         _mapperMock.Setup(m => m.Map<GetCouponDTO>(coupon)).Returns(couponDto);
 
@@ -68,7 +68,7 @@ public class CouponServiceTests
     [Fact]
     public async Task GetCouponByIdAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
-        _unitOfWorkMock.Setup(u => u.GetRepository<Coupon, Guid>().GetByIdAsync(TestGuid.FromInt(999), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Coupon, Guid>().GetByIdAsync(TestGuid.FromInt(999)))
             .ReturnsAsync((Coupon?)null);
 
         var act = () => _couponService.GetCouponByIdAsync(TestGuid.FromInt(999));
@@ -111,13 +111,13 @@ public class CouponServiceTests
         _addValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
         _mapperMock.Setup(m => m.Map<Coupon>(dto)).Returns(coupon);
-        _unitOfWorkMock.Setup(u => u.GetRepository<Coupon, Guid>().AddAsync(It.IsAny<Coupon>(), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Coupon, Guid>().AddAsync(It.IsAny<Coupon>()))
             .Returns(Task.CompletedTask);
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
         await _couponService.AddCouponAsync(dto);
 
-        _unitOfWorkMock.Verify(u => u.GetRepository<Coupon, Guid>().AddAsync(coupon, It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.GetRepository<Coupon, Guid>().AddAsync(coupon), Times.Once);
     }
 
     [Fact]
@@ -138,20 +138,20 @@ public class CouponServiceTests
     public async Task DeleteCouponAsync_WhenExists_ShouldDeleteCoupon()
     {
         _unitOfWorkMock.Setup(u => u.GetRepository<Coupon, Guid>().ExistsAsync(
-            new CouponSpecification(TestGuid.FromInt(1)), It.IsAny<CancellationToken>()))
+            new CouponSpecification(TestGuid.FromInt(1))))
             .ReturnsAsync(true);
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
         await _couponService.DeleteCouponAsync(TestGuid.FromInt(1));
 
-        _unitOfWorkMock.Verify(u => u.GetRepository<Coupon, Guid>().Delete(It.IsAny<Coupon>(), It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.GetRepository<Coupon, Guid>().Delete(It.IsAny<Coupon>()), Times.Once);
     }
 
     [Fact]
     public async Task DeleteCouponAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
         _unitOfWorkMock.Setup(u => u.GetRepository<Coupon, Guid>().ExistsAsync(
-            new CouponSpecification(TestGuid.FromInt(999)), It.IsAny<CancellationToken>()))
+            new CouponSpecification(TestGuid.FromInt(999))))
             .ReturnsAsync(false);
 
         var act = () => _couponService.DeleteCouponAsync(TestGuid.FromInt(999));

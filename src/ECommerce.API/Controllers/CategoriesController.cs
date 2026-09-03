@@ -44,9 +44,9 @@ public class CategoriesController : BaseController
     
     [HttpPost("{categoryId:guid}/images")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> UploadImage(Guid categoryId, [FromForm] UploadCategoryImageDTO dto, CancellationToken ct = default)
+    public async Task<IActionResult> UploadImage(Guid categoryId, [FromForm] UploadCategoryImageDTO dto)
     {
-        var image = await _categoryImageService.UploadImageAsync(categoryId, dto, ct);
+        var image = await _categoryImageService.UploadImageAsync(categoryId, dto);
         return Created(
             image,
             "Category image uploaded successfully.");
@@ -100,17 +100,17 @@ public class CategoriesController : BaseController
     
     [HttpDelete("{categoryId:guid}/images/{photoId:guid}")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> DeleteImage(Guid photoId, Guid categoryId, CancellationToken ct = default)
+    public async Task<IActionResult> DeleteImage(Guid photoId, Guid categoryId)
     {
-        await _categoryImageService.DeleteCategoryImageAsync(categoryId, photoId, ct);
+        await _categoryImageService.DeleteCategoryImageAsync(categoryId, photoId);
         return NoContent();
     }
 
     [HttpDelete("{categoryId:guid}/images")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> DeleteImages(Guid categoryId, CancellationToken ct = default)
+    public async Task<IActionResult> DeleteImages(Guid categoryId)
     {
-        await _categoryImageService.DeleteAllCategoryImagesAsync(categoryId, ct);
+        await _categoryImageService.DeleteAllCategoryImagesAsync(categoryId);
         return NoContent();
     }
 }

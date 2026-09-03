@@ -30,8 +30,7 @@ public class ProductService : IProductService
     
     
     public async Task<PaginatedResult<GetProductsDTO>> GetAllProductsAsync(
-        ProductSpecParams productSpecParams,
-        CancellationToken ct = default)
+        ProductSpecParams productSpecParams)
     {
         var productSpec = new ProductSpecification(productSpecParams);
         var products = await _unitOfWork.GetRepository<Product, Guid>().GetAllAsync(productSpec);
@@ -44,7 +43,7 @@ public class ProductService : IProductService
         return new PaginatedResult<GetProductsDTO>(mapProducts, totalItems, productSpecParams.PageNumber, productSpecParams.PageSize);
     }
 
-    public async Task<GetProductDetailsDTO> GetProductByIdAsync(Guid id, CancellationToken ct = default)
+    public async Task<GetProductDetailsDTO> GetProductByIdAsync(Guid id)
     {
         var spec = new ProductDetailsSpecification(id);
         var product = await _unitOfWork.GetRepository<Product, Guid>().GetFirstOrDefaultAsync(spec);
@@ -54,15 +53,14 @@ public class ProductService : IProductService
         product.ViewCount++;
         product.LastViewedAt = DateTime.UtcNow;
         
-        await _unitOfWork.SaveChangesAsync(ct);
+        await _unitOfWork.SaveChangesAsync();
         
         return _mapper.Map<GetProductDetailsDTO>(product);
     }
 
     public async Task<PaginatedResult<GetProductsDTO>> GetSimilarProductsAsync(
         Guid productId,
-        PaginationParams paginationParams,
-        CancellationToken ct = default)
+        PaginationParams paginationParams)
     {
         
         var repository = _unitOfWork.GetRepository<Product, Guid>();
@@ -92,7 +90,7 @@ public class ProductService : IProductService
             paginationParams.PageSize);
     }
 
-    public async Task<GetProductDetailsDTO> AddProductAsync(AddProductDTO productDTO, CancellationToken cancellationToken = default)
+    public async Task<GetProductDetailsDTO> AddProductAsync(AddProductDTO productDTO)
     {
         var validationResult = await _addProductDtoValidator.ValidateAsync(productDTO);
         if (!validationResult.IsValid)
@@ -100,15 +98,15 @@ public class ProductService : IProductService
     
         var product = _mapper.Map<Product>(productDTO);
         await _unitOfWork.GetRepository<Product, Guid>().AddAsync(product);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync();
 
         return _mapper.Map<GetProductDetailsDTO>(product);
        
     }
     
-    public async Task<GetProductDetailsDTO> UpdateProductAsync(Guid productId, UpdateProductDTO productDto, CancellationToken ct = default)
+    public async Task<GetProductDetailsDTO> UpdateProductAsync(Guid productId, UpdateProductDTO productDto)
     {
-        var validationResult = await _updateProductDtoValidator.ValidateAsync(productDto, ct);
+        var validationResult = await _updateProductDtoValidator.ValidateAsync(productDto);
         if (!validationResult.IsValid)
             throw new ValidationException(validationResult.Errors);
         
@@ -120,14 +118,14 @@ public class ProductService : IProductService
             throw new KeyNotFoundException($"Product with ID {productId} not found.");
 
         var product = _mapper.Map<Product>(productDto);
-        _unitOfWork.GetRepository<Product, Guid>().Update(product, ct);
-        await _unitOfWork.SaveChangesAsync(ct);
+        _unitOfWork.GetRepository<Product, Guid>().Update(product);
+        await _unitOfWork.SaveChangesAsync();
 
         return _mapper.Map<GetProductDetailsDTO>(product);
     
        
     }
-    public async Task DeleteProductAsync(Guid id, CancellationToken ct = default)
+    public async Task DeleteProductAsync(Guid id)
     {
         var spec = new ProductSpecification(id);
         bool exists = await _unitOfWork.GetRepository<Product, Guid>().ExistsAsync(spec);
@@ -135,10 +133,10 @@ public class ProductService : IProductService
             throw new KeyNotFoundException($"Product with ID {id} not found.");
 
         var folderPath = $"products/{id}";
-        await _fileStorageService.DeleteFolderAsync(folderPath, ct);
+        await _fileStorageService.DeleteFolderAsync(folderPath);
         Product productStub = new Product { Id = id };
-        _unitOfWork.GetRepository<Product, Guid>().Delete(productStub, ct);
-        await _unitOfWork.SaveChangesAsync(ct);
+        _unitOfWork.GetRepository<Product, Guid>().Delete(productStub);
+        await _unitOfWork.SaveChangesAsync();
     
     }
     

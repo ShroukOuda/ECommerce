@@ -55,7 +55,7 @@ public class AddressServiceTests
         var address = new Address { Id = TestGuid.FromInt(1), City = "Cairo" };
         var addressDto = new GetAddressDTO { Id = TestGuid.FromInt(1), City = "Cairo" };
 
-        _unitOfWorkMock.Setup(u => u.GetRepository<Address, Guid>().GetByIdAsync(TestGuid.FromInt(1), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Address, Guid>().GetByIdAsync(TestGuid.FromInt(1)))
             .ReturnsAsync(address);
         _mapperMock.Setup(m => m.Map<GetAddressDTO>(address)).Returns(addressDto);
 
@@ -68,7 +68,7 @@ public class AddressServiceTests
     [Fact]
     public async Task GetAddressByIdAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
-        _unitOfWorkMock.Setup(u => u.GetRepository<Address, Guid>().GetByIdAsync(TestGuid.FromInt(999), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Address, Guid>().GetByIdAsync(TestGuid.FromInt(999)))
             .ReturnsAsync((Address?)null);
 
         var act = () => _addressService.GetAddressByIdAsync(TestGuid.FromInt(999));
@@ -94,13 +94,13 @@ public class AddressServiceTests
         _addValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
         _mapperMock.Setup(m => m.Map<Address>(dto)).Returns(address);
-        _unitOfWorkMock.Setup(u => u.GetRepository<Address, Guid>().AddAsync(It.IsAny<Address>(), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Address, Guid>().AddAsync(It.IsAny<Address>()))
             .Returns(Task.CompletedTask);
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
         await _addressService.AddAddressAsync(dto);
 
-        _unitOfWorkMock.Verify(u => u.GetRepository<Address, Guid>().AddAsync(address, It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.GetRepository<Address, Guid>().AddAsync(address), Times.Once);
     }
 
     [Fact]
@@ -135,30 +135,30 @@ public class AddressServiceTests
         _updateValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
         _mapperMock.Setup(m => m.Map<Address>(dto)).Returns(address);
-        _unitOfWorkMock.Setup(u => u.GetRepository<Address, Guid>().Update(It.IsAny<Address>(), It.IsAny<CancellationToken>()));
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _unitOfWorkMock.Setup(u => u.GetRepository<Address, Guid>().Update(It.IsAny<Address>()));
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
         await _addressService.UpdateAddressAsync(dto);
 
-        _unitOfWorkMock.Verify(u => u.GetRepository<Address, Guid>().Update(address, It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.GetRepository<Address, Guid>().Update(address), Times.Once);
     }
 
     [Fact]
     public async Task DeleteAddressAsync_WhenExists_ShouldDeleteAddress()
     {
-        _unitOfWorkMock.Setup(u => u.GetRepository<Address, Guid>().ExistsAsync(new AddressSpecification(TestGuid.FromInt(1)), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Address, Guid>().ExistsAsync(new AddressSpecification(TestGuid.FromInt(1))))
             .ReturnsAsync(true);
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
         await _addressService.DeleteAddressAsync(TestGuid.FromInt(1));
 
-        _unitOfWorkMock.Verify(u => u.GetRepository<Address, Guid>().Delete(It.IsAny<Address>(), It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.GetRepository<Address, Guid>().Delete(It.IsAny<Address>()), Times.Once);
     }
 
     [Fact]
     public async Task DeleteAddressAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
-        _unitOfWorkMock.Setup(u => u.GetRepository<Address, Guid>().ExistsAsync(new AddressSpecification(TestGuid.FromInt(999)), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Address, Guid>().ExistsAsync(new AddressSpecification(TestGuid.FromInt(999))))
             .ReturnsAsync(false);
 
         var act = () => _addressService.DeleteAddressAsync(TestGuid.FromInt(999));

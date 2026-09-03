@@ -18,14 +18,14 @@ public class ReturnService : IReturnService
         _createValidator = createValidator;
     }
 
-    public async Task<IEnumerable<GetReturnRequestDTO>> GetReturnsByUserIdAsync(string userId, CancellationToken ct = default)
+    public async Task<IEnumerable<GetReturnRequestDTO>> GetReturnsByUserIdAsync(string userId)
     {
         var spec = new ReturnsByUserSpecification(userId);
         var returns = await _unitOfWork.GetRepository<ReturnRequest, Guid>().GetAllAsync(spec);
         return _mapper.Map<IEnumerable<GetReturnRequestDTO>>(returns);
     }
 
-    public async Task<GetReturnRequestDTO> GetReturnByIdAsync(Guid id, CancellationToken ct = default)
+    public async Task<GetReturnRequestDTO> GetReturnByIdAsync(Guid id)
     {
         var spec = new ReturnDetailsSpecification(id);
         var returnReq = await _unitOfWork.GetRepository<ReturnRequest, Guid>().GetFirstOrDefaultAsync(spec);
@@ -33,9 +33,9 @@ public class ReturnService : IReturnService
         return _mapper.Map<GetReturnRequestDTO>(returnReq);
     }
 
-    public async Task<GetReturnRequestDTO> CreateReturnRequestAsync(CreateReturnRequestDTO dto, CancellationToken ct = default)
+    public async Task<GetReturnRequestDTO> CreateReturnRequestAsync(CreateReturnRequestDTO dto)
     {
-        var result = await _createValidator.ValidateAsync(dto, ct);
+        var result = await _createValidator.ValidateAsync(dto);
         if (!result.IsValid) throw new ValidationException(result.Errors);
 
         var returnReq = new ReturnRequest
@@ -48,8 +48,8 @@ public class ReturnService : IReturnService
             RequestedDate = DateTime.UtcNow
         };
 
-        await _unitOfWork.GetRepository<ReturnRequest, Guid>().AddAsync(returnReq, ct);
-        await _unitOfWork.SaveChangesAsync(ct);
+        await _unitOfWork.GetRepository<ReturnRequest, Guid>().AddAsync(returnReq);
+        await _unitOfWork.SaveChangesAsync();
         return _mapper.Map<GetReturnRequestDTO>(returnReq);
     }
 }

@@ -27,8 +27,7 @@ public class FileStorageService : IFileStorageService
     public async Task<string> SaveAsync(
         Stream content,
         string originalFileName,
-        string folder,
-        CancellationToken ct)
+        string folder)
     {
         ArgumentNullException.ThrowIfNull(content);
         ArgumentNullException.ThrowIfNullOrWhiteSpace(originalFileName);
@@ -53,15 +52,14 @@ public class FileStorageService : IFileStorageService
             bufferSize: 81920,
             useAsync: true);
 
-        await content.CopyToAsync(stream, ct);
+        await content.CopyToAsync(stream);
         
         return relativePath.Replace("\\", "/");
     }
     
     public async Task<IReadOnlyList<string>> SaveManyAsync(
         IEnumerable<(Stream Content, string FileName)> files,
-        string folder,
-        CancellationToken ct)
+        string folder)
     {
         ArgumentNullException.ThrowIfNull(files);
         ArgumentNullException.ThrowIfNullOrWhiteSpace(folder);
@@ -70,13 +68,10 @@ public class FileStorageService : IFileStorageService
 
         foreach (var (content, fileName) in files)
         {
-            ct.ThrowIfCancellationRequested();
-
             var path = await SaveAsync(
                 content,
                 fileName,
-                folder,
-                ct);
+                folder);
 
             savedPaths.Add(path);
         }
@@ -85,8 +80,7 @@ public class FileStorageService : IFileStorageService
     }
     
     public Task<bool> DeleteAsync(
-        string relativePath,
-        CancellationToken ct)
+        string relativePath)
     {
         if (string.IsNullOrWhiteSpace(relativePath))
             return Task.FromResult(false);
@@ -113,8 +107,7 @@ public class FileStorageService : IFileStorageService
     }
 
     public Task<bool> DeleteFolderAsync(
-        string folder,
-        CancellationToken ct)
+        string folder)
     {
         if (string.IsNullOrWhiteSpace(folder))
             return Task.FromResult(false);

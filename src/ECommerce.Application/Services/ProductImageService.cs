@@ -33,8 +33,7 @@ public class ProductImageService : IProductImageService
 
     public async Task<ProductImageDTO> UploadImageAsync(
         Guid productId,
-        UploadProductImageDTO dto,
-        CancellationToken ct = default)
+        UploadProductImageDTO dto)
     {
         var productSpec = new ProductSpecification(productId);
         bool exist = await _unitOfWork.GetRepository<Product, Guid>().ExistsAsync(productSpec);
@@ -57,7 +56,7 @@ public class ProductImageService : IProductImageService
             throw new ValidationException(validationResult.Errors);
         
         if (dto.IsMain)
-            await ResetExistingMainImageAsync(productId, ct);
+            await ResetExistingMainImageAsync(productId);
 
         var folderPath = $"products/{productId}";
         await using var stream = dto.File.OpenReadStream();
@@ -65,7 +64,7 @@ public class ProductImageService : IProductImageService
         try
         {
             var filePath = await _fileStorageService.SaveAsync(
-                stream, dto.File.FileName, folderPath, ct);
+                stream, dto.File.FileName, folderPath);
             
             var image = new ProductImage
             {
@@ -76,8 +75,8 @@ public class ProductImageService : IProductImageService
                 UploadedAt = DateTime.Now
             };
             
-            await _unitOfWork.GetRepository<ProductImage, Guid>().AddAsync(image, ct);
-            await _unitOfWork.SaveChangesAsync(ct);
+            await _unitOfWork.GetRepository<ProductImage, Guid>().AddAsync(image);
+            await _unitOfWork.SaveChangesAsync();
             
             _logger.LogInformation(
                 "Photo uploaded for Product {ProductId}: {FilePath} (Main:{IsMain})",
@@ -93,8 +92,7 @@ public class ProductImageService : IProductImageService
 
 
     public async Task<IReadOnlyList<ProductImageDTO>> GetProductImagesAsync(
-        Guid productId,
-        CancellationToken ct = default)
+        Guid productId)
     {
         var spec = new ProductImageSpecification(productId);
         var images = await _unitOfWork.GetRepository<ProductImage, Guid>()
@@ -105,10 +103,9 @@ public class ProductImageService : IProductImageService
 
     public async Task SetMainImageAsync(
         Guid productId, 
-        Guid imageId, 
-        CancellationToken ct = default)
+        Guid imageId)
     {
-        var photo = await _unitOfWork.GetRepository<ProductImage, Guid>().GetByIdAsync(imageId, ct);
+        var photo = await _unitOfWork.GetRepository<ProductImage, Guid>().GetByIdAsync(imageId);
         
         if (photo == null || photo.ProductId != productId)
             throw new NotFoundException($"Photo {imageId} not found for product {productId}");
@@ -122,12 +119,12 @@ public class ProductImageService : IProductImageService
         if (existingMain != null && existingMain.Id != imageId)
         {
             existingMain.IsMain = false;
-            _unitOfWork.GetRepository<ProductImage, Guid>().Update(existingMain, ct);
+            _unitOfWork.GetRepository<ProductImage, Guid>().Update(existingMain);
         }
         
         photo.IsMain = true;
-        _unitOfWork.GetRepository<ProductImage, Guid>().Update(photo, ct);
-        await _unitOfWork.SaveChangesAsync(ct);
+        _unitOfWork.GetRepository<ProductImage, Guid>().Update(photo);
+        await _unitOfWork.SaveChangesAsync();
 
         _logger.LogInformation(
             "Photo {ImageId} set as main for Product {ProductId}", 
@@ -136,10 +133,9 @@ public class ProductImageService : IProductImageService
 
     public async Task DeleteProductImageAsync(
         Guid productId, 
-        Guid imageId, 
-        CancellationToken ct = default)
+        Guid imageId)
     {
-        var image = await _unitOfWork.GetRepository<ProductImage, Guid>().GetByIdAsync(imageId, ct);
+        var image = await _unitOfWork.GetRepository<ProductImage, Guid>().GetByIdAsync(imageId);
         if (image == null || image.ProductId != productId)
             throw new NotFoundException($"Photo {imageId} not found for product {productId}");
         
@@ -156,17 +152,16 @@ public class ProductImageService : IProductImageService
             }
         }
         
-        await _fileStorageService.DeleteAsync(image.ImageUrl, ct);
-        _unitOfWork.GetRepository<ProductImage, Guid>().Delete(image, ct);
-        await _unitOfWork.SaveChangesAsync(ct);
+        await _fileStorageService.DeleteAsync(image.ImageUrl);
+        _unitOfWork.GetRepository<ProductImage, Guid>().Delete(image);
+        await _unitOfWork.SaveChangesAsync();
 
         _logger.LogInformation("Product photo {ImageId} deleted from product {ProductId}", imageId, productId);
     }
     
 
     public async Task DeleteAllProductImagesAsync(
-        Guid productId, 
-        CancellationToken ct = default)
+        Guid productId)
     {
         var productSpec = new ProductSpecification(productId);
         var exist = await _unitOfWork.GetRepository<Product, Guid>().ExistsAsync(productSpec);
@@ -180,13 +175,13 @@ public class ProductImageService : IProductImageService
         if (!images.Any()) return;
 
         foreach (var image in images)
-            await _fileStorageService.DeleteAsync(image.ImageUrl, ct);
+            await _fileStorageService.DeleteAsync(image.ImageUrl);
 
         var folderPath = $"products/{productId}";
-        await _fileStorageService.DeleteFolderAsync(folderPath, ct);
+        await _fileStorageService.DeleteFolderAsync(folderPath);
 
-        _unitOfWork.GetRepository<ProductImage, Guid>().DeleteRange(images, ct);
-        await _unitOfWork.SaveChangesAsync(ct);
+        _unitOfWork.GetRepository<ProductImage, Guid>().DeleteRange(images);
+        await _unitOfWork.SaveChangesAsync();
 
         _logger.LogInformation(
             "All {Count} images deleted for Product {ProductId}",
@@ -194,17 +189,15 @@ public class ProductImageService : IProductImageService
     }
     
     public async Task<ProductImageDTO?> GetImageByIdAsync(
-        Guid imageId, 
-        CancellationToken ct = default)
+        Guid imageId)
     {
-        var image = await _unitOfWork.GetRepository<ProductImage, Guid>().GetByIdAsync(imageId, ct);
+        var image = await _unitOfWork.GetRepository<ProductImage, Guid>().GetByIdAsync(imageId);
         if (image == null) return null;
         return _mapper.Map<ProductImageDTO>(image);
     }
     
     public async Task<ProductImageDTO?> GetProductMainImageAsync(
-        Guid productId,
-        CancellationToken ct = default)
+        Guid productId)
     {
         var spec = new ProductImageSpecification(productId, true);
         var image = await _unitOfWork.GetRepository<ProductImage, Guid>()
@@ -214,8 +207,7 @@ public class ProductImageService : IProductImageService
     
 
     private async Task ResetExistingMainImageAsync(
-        Guid productId, 
-        CancellationToken ct)
+        Guid productId)
     {
         var spec = new ProductImageSpecification(productId, true);
         var existingMain = await _unitOfWork.GetRepository<ProductImage, Guid>()
@@ -225,7 +217,7 @@ public class ProductImageService : IProductImageService
         {
             existingMain.IsMain = false;
             existingMain.UploadedAt = DateTime.UtcNow; 
-            _unitOfWork.GetRepository<ProductImage, Guid>().Update(existingMain, ct);
+            _unitOfWork.GetRepository<ProductImage, Guid>().Update(existingMain);
         }
     }
 }

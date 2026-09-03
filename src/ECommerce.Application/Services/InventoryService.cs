@@ -25,14 +25,13 @@ public class InventoryService : IInventoryService
     }
 
     public async Task<IEnumerable<GetInventoryHistoryDTO>> GetHistoryByProductIdAsync(
-        Guid productId,
-        CancellationToken ct = default)
+        Guid productId)
     {
         var productSpec = new ProductSpecification(productId);
 
         var exists = await _unitOfWork
             .GetRepository<Product, Guid>()
-            .ExistsAsync(productSpec, ct);
+            .ExistsAsync(productSpec);
 
         if (!exists)
             throw new NotFoundException(
@@ -51,12 +50,11 @@ public class InventoryService : IInventoryService
     public async Task<GetInventoryHistoryDTO> AddInventoryHistoryAsync(
         Guid productId,
         string userId,
-        CreateInventoryHistoryDTO dto,
-        CancellationToken ct = default)
+        CreateInventoryHistoryDTO dto)
     {
         
         var result = await _createValidator
-            .ValidateAsync(dto, ct);
+            .ValidateAsync(dto);
 
         if (!result.IsValid)
             throw new ValidationException(result.Errors);
@@ -67,7 +65,7 @@ public class InventoryService : IInventoryService
 
 
         var product = await productRepository
-            .GetByIdAsync(productId, ct);
+            .GetByIdAsync(productId);
 
         if (product is null)
             throw new NotFoundException(
@@ -91,11 +89,11 @@ public class InventoryService : IInventoryService
 
         await _unitOfWork
             .GetRepository<InventoryHistory, Guid>()
-            .AddAsync(history, ct);
+            .AddAsync(history);
 
-        productRepository.Update(product, ct);
+        productRepository.Update(product);
 
-        await _unitOfWork.SaveChangesAsync(ct);
+        await _unitOfWork.SaveChangesAsync();
 
         return _mapper.Map<GetInventoryHistoryDTO>(history);
     }

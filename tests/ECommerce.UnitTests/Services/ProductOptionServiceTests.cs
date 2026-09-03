@@ -58,7 +58,7 @@ public class ProductOptionServiceTests
         var option = new ProductOption { Id = TestGuid.FromInt(1), Name = "Size" };
         var optionDto = new GetProductOptionDTO { Id = TestGuid.FromInt(1), Name = "Size" };
 
-        _unitOfWorkMock.Setup(u => u.GetRepository<ProductOption, Guid>().GetByIdAsync(TestGuid.FromInt(1), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<ProductOption, Guid>().GetByIdAsync(TestGuid.FromInt(1)))
             .ReturnsAsync(option);
         _mapperMock.Setup(m => m.Map<GetProductOptionDTO>(option)).Returns(optionDto);
 
@@ -71,7 +71,7 @@ public class ProductOptionServiceTests
     [Fact]
     public async Task GetOptionByIdAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
-        _unitOfWorkMock.Setup(u => u.GetRepository<ProductOption, Guid>().GetByIdAsync(TestGuid.FromInt(999), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<ProductOption, Guid>().GetByIdAsync(TestGuid.FromInt(999)))
             .ReturnsAsync((ProductOption?)null);
 
         var act = () => _productOptionService.GetOptionByIdAsync(TestGuid.FromInt(999));
@@ -88,13 +88,13 @@ public class ProductOptionServiceTests
         _addValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
         _mapperMock.Setup(m => m.Map<ProductOption>(dto)).Returns(option);
-        _unitOfWorkMock.Setup(u => u.GetRepository<ProductOption, Guid>().AddAsync(It.IsAny<ProductOption>(), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<ProductOption, Guid>().AddAsync(It.IsAny<ProductOption>()))
             .Returns(Task.CompletedTask);
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
         await _productOptionService.AddOptionAsync(dto);
 
-        _unitOfWorkMock.Verify(u => u.GetRepository<ProductOption, Guid>().AddAsync(option, It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.GetRepository<ProductOption, Guid>().AddAsync(option), Times.Once);
     }
 
     [Fact]
@@ -115,20 +115,20 @@ public class ProductOptionServiceTests
     public async Task DeleteOptionAsync_WhenExists_ShouldDeleteOption()
     {
         _unitOfWorkMock.Setup(u => u.GetRepository<ProductOption, Guid>().ExistsAsync(
-            new ProductOptionSpecification(TestGuid.FromInt(1)), It.IsAny<CancellationToken>()))
+            new ProductOptionSpecification(TestGuid.FromInt(1))))
             .ReturnsAsync(true);
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
         await _productOptionService.DeleteOptionAsync(TestGuid.FromInt(1));
 
-        _unitOfWorkMock.Verify(u => u.GetRepository<ProductOption, Guid>().Delete(It.IsAny<ProductOption>(), It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.GetRepository<ProductOption, Guid>().Delete(It.IsAny<ProductOption>()), Times.Once);
     }
 
     [Fact]
     public async Task DeleteOptionAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
         _unitOfWorkMock.Setup(u => u.GetRepository<ProductOption, Guid>().ExistsAsync(
-            new ProductOptionSpecification(TestGuid.FromInt(999)), It.IsAny<CancellationToken>()))
+            new ProductOptionSpecification(TestGuid.FromInt(999))))
             .ReturnsAsync(false);
 
         var act = () => _productOptionService.DeleteOptionAsync(TestGuid.FromInt(999));
@@ -145,33 +145,33 @@ public class ProductOptionServiceTests
         _addValueValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
         _mapperMock.Setup(m => m.Map<ProductOptionValue>(dto)).Returns(value);
-        _unitOfWorkMock.Setup(u => u.GetRepository<ProductOptionValue, Guid>().AddAsync(It.IsAny<ProductOptionValue>(), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<ProductOptionValue, Guid>().AddAsync(It.IsAny<ProductOptionValue>()))
             .Returns(Task.CompletedTask);
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
         await _productOptionService.AddOptionValueAsync(dto);
 
-        _unitOfWorkMock.Verify(u => u.GetRepository<ProductOptionValue, Guid>().AddAsync(value, It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.GetRepository<ProductOptionValue, Guid>().AddAsync(value), Times.Once);
     }
 
     [Fact]
     public async Task DeleteOptionValueAsync_WhenExists_ShouldDeleteValue()
     {
         _unitOfWorkMock.Setup(u => u.GetRepository<ProductOptionValue, Guid>().ExistsAsync(
-            new ProductOptionValueSpecification(TestGuid.FromInt(1)), It.IsAny<CancellationToken>()))
+            new ProductOptionValueSpecification(TestGuid.FromInt(1))))
             .ReturnsAsync(true);
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
         await _productOptionService.DeleteOptionValueAsync(TestGuid.FromInt(1));
 
-        _unitOfWorkMock.Verify(u => u.GetRepository<ProductOptionValue, Guid>().Delete(It.IsAny<ProductOptionValue>(), It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.GetRepository<ProductOptionValue, Guid>().Delete(It.IsAny<ProductOptionValue>()), Times.Once);
     }
 
     [Fact]
     public async Task DeleteOptionValueAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
         _unitOfWorkMock.Setup(u => u.GetRepository<ProductOptionValue, Guid>().ExistsAsync(
-            new ProductOptionValueSpecification(TestGuid.FromInt(999)), It.IsAny<CancellationToken>()))
+            new ProductOptionValueSpecification(TestGuid.FromInt(999))))
             .ReturnsAsync(false);
 
         var act = () => _productOptionService.DeleteOptionValueAsync(TestGuid.FromInt(999));

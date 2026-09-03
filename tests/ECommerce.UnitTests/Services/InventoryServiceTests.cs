@@ -54,13 +54,13 @@ public class InventoryServiceTests
         _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
         _mapperMock.Setup(m => m.Map<InventoryHistory>(dto)).Returns(history);
-        _unitOfWorkMock.Setup(u => u.GetRepository<InventoryHistory, Guid>().AddAsync(It.IsAny<InventoryHistory>(), It.IsAny<CancellationToken>()))
+        _unitOfWorkMock.Setup(u => u.GetRepository<InventoryHistory, Guid>().AddAsync(It.IsAny<InventoryHistory>()))
             .Returns(Task.CompletedTask);
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
         await _inventoryService.AddInventoryHistoryAsync(dto);
 
-        _unitOfWorkMock.Verify(u => u.GetRepository<InventoryHistory, Guid>().AddAsync(history, It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.GetRepository<InventoryHistory, Guid>().AddAsync(history), Times.Once);
     }
 
     [Fact]

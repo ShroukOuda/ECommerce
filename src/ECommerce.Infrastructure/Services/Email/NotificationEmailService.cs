@@ -26,8 +26,7 @@ public sealed class NotificationEmailService : INotificationEmailService
     public async Task SendEmailConfirmationAsync(
         string toEmail,
         string toName,                          
-        string confirmationLink,
-        CancellationToken ct = default)
+        string confirmationLink)
     {
         Validate(toEmail, toName);
 
@@ -49,14 +48,12 @@ public sealed class NotificationEmailService : INotificationEmailService
             toEmail:   toEmail,
             toName:    toName,
             subject:   $"Confirm your { _settings.AppName } email address",
-            htmlContent: html,
-            ct: ct);
+            htmlContent: html);
     }
 
     public async Task SendWelcomeEmailAsync(
         string toEmail,
-        string toName,
-        CancellationToken ct = default)
+        string toName)
     {
         Validate(toEmail, toName);
 
@@ -81,8 +78,7 @@ public sealed class NotificationEmailService : INotificationEmailService
             toEmail: toEmail,
             toName:  toName,
             subject:  $"Welcome to {_settings.AppName}!",
-            htmlContent: html,
-            ct: ct);
+            htmlContent: html);
     }
 
 
@@ -92,8 +88,7 @@ public sealed class NotificationEmailService : INotificationEmailService
         string ipAddress,
         string deviceInfo,
         string loginTime,
-        string revokeAllLink,
-        CancellationToken ct = default)
+        string revokeAllLink)
     {
         Validate(toEmail, toName);
 
@@ -122,16 +117,14 @@ public sealed class NotificationEmailService : INotificationEmailService
             toEmail:   toEmail,
             toName:    toName,
             subject:   "Security alert: new sign-in detected",
-            htmlContent: html,
-            ct: ct
+            htmlContent: html
         );
     }
 
     public async Task SendPasswordResetAsync(
         string toEmail,
         string toName,
-        string resetLink,
-        CancellationToken ct = default)
+        string resetLink)
     {
         Validate(toEmail, toName);
 
@@ -151,8 +144,7 @@ public sealed class NotificationEmailService : INotificationEmailService
             toEmail: toEmail,
             toName: toName,
             subject: $"Reset your {_settings.AppName} password",
-            htmlContent: html,
-            ct: ct);
+            htmlContent: html);
     }
 
 
@@ -162,8 +154,7 @@ public sealed class NotificationEmailService : INotificationEmailService
         string  orderNumber,
         decimal totalAmount,
         string  currency,
-        string  orderDetailsLink,
-        CancellationToken ct = default)
+        string  orderDetailsLink)
     {
         Validate(toEmail, toName);
 
@@ -186,8 +177,7 @@ public sealed class NotificationEmailService : INotificationEmailService
             toEmail: toEmail,
             toName: toName,
             subject: $"Order #{orderNumber} confirmed",
-            htmlContent: html,
-            ct: ct);
+            htmlContent: html);
     }
 
     public async Task SendOrderStatusUpdateAsync(
@@ -196,8 +186,7 @@ public sealed class NotificationEmailService : INotificationEmailService
         string orderNumber,
         string oldStatus,
         string newStatus,
-        string orderDetailsLink,
-        CancellationToken ct = default)
+        string orderDetailsLink)
     {
         Validate(toEmail, toName);
 
@@ -219,8 +208,7 @@ public sealed class NotificationEmailService : INotificationEmailService
             toEmail: toEmail,
             toName: toName,
             subject: $"Order #{orderNumber} is now {newStatus}",
-            htmlContent: html,
-            ct: ct);
+            htmlContent: html);
     }
 
 

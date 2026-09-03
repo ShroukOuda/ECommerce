@@ -7,27 +7,25 @@ public interface IGenericRepository<TEntity, TKey>
     where TEntity : BaseEntity<TKey> 
     where TKey : IEquatable<TKey>
 {
-    Task<IReadOnlyList<TEntity>> GetAllAsync(CancellationToken ct = default);
+    Task<IReadOnlyList<TEntity>> GetAllAsync();
     Task<IReadOnlyList<TEntity>> GetAllAsync(BaseSpecification<TEntity, TKey> specification);
-    Task<TEntity?> GetByIdAsync(TKey id, CancellationToken ct = default);
+    Task<TEntity?> GetByIdAsync(TKey id);
     Task<TEntity?> GetFirstOrDefaultAsync(BaseSpecification<TEntity, TKey> specification);
     
-    Task AddAsync(TEntity entity, CancellationToken ct = default);
-    Task AddRangeAsync(IEnumerable<TEntity> entities, CancellationToken ct = default);
+    Task AddAsync(TEntity entity);
+    Task AddRangeAsync(IEnumerable<TEntity> entities);
     
     
-    void Update(TEntity entity, CancellationToken ct = default);
-    void UpdateRange(IEnumerable<TEntity> entities, CancellationToken ct = default);
-    void Delete(TEntity entity, CancellationToken ct = default);
-    void DeleteRange(IEnumerable<TEntity> entities, CancellationToken ct = default);
+    void Update(TEntity entity);
+    void UpdateRange(IEnumerable<TEntity> entities);
+    void Delete(TEntity entity);
+    void DeleteRange(IEnumerable<TEntity> entities);
     
     
     Task<bool> ExistsAsync(
-        BaseSpecification<TEntity, TKey> specification,
-        CancellationToken ct = default);
+        BaseSpecification<TEntity, TKey> specification);
     Task<int> CountAsync(
-        BaseSpecification<TEntity, TKey> specification,
-        CancellationToken ct = default);
+        BaseSpecification<TEntity, TKey> specification);
     
     
     

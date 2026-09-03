@@ -70,9 +70,9 @@ public class ProductsController : BaseController
     
     [HttpPost("{productId:guid}/images")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> AddImage(Guid productId, [FromForm] UploadProductImageDTO dto, CancellationToken ct = default)
+    public async Task<IActionResult> AddImage(Guid productId, [FromForm] UploadProductImageDTO dto)
     {
-        var image = await _productImageService.UploadImageAsync(productId, dto, ct);
+        var image = await _productImageService.UploadImageAsync(productId, dto);
         return Created(
             image,
             "Product image uploaded successfully.");
@@ -98,7 +98,7 @@ public class ProductsController : BaseController
     
     [HttpDelete("{productId:guid}/images/{imageId:guid}")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> DeleteImage(Guid productId, Guid imageId, CancellationToken ct = default)
+    public async Task<IActionResult> DeleteImage(Guid productId, Guid imageId)
     {
         await _productImageService.DeleteProductImageAsync(productId, imageId);
         return NoContent();
@@ -106,16 +106,16 @@ public class ProductsController : BaseController
 
     [HttpDelete("{productId:guid}/images")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> DeleteImages(Guid productId, CancellationToken ct = default)
+    public async Task<IActionResult> DeleteImages(Guid productId)
     {
-        await _productImageService.DeleteAllProductImagesAsync(productId, ct);
+        await _productImageService.DeleteAllProductImagesAsync(productId);
         return NoContent();
     }
 
     [HttpGet("{productId:guid}/images")]
-    public async Task<IActionResult> GetProductImages(Guid productId, CancellationToken ct = default)
+    public async Task<IActionResult> GetProductImages(Guid productId)
     {
-        var images = await _productImageService.GetProductImagesAsync(productId, ct);
+        var images = await _productImageService.GetProductImagesAsync(productId);
         return Success(
             images,
             "Product images retrieved successfully.");

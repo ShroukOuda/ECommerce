@@ -14,7 +14,7 @@ public class SendGridEmailService : IEmailService
     public SendGridEmailService(IOptions<EmailSettings> emailSettings)
         => _emailSettings = emailSettings.Value;
 
-    public async Task SendAsync(string toEmail, string toName, string subject, string htmlBody, CancellationToken ct = default)
+    public async Task SendAsync(string toEmail, string toName, string subject, string htmlBody)
     {
         var client = new SendGridClient(_emailSettings.SendGridApiKey);
         var from = new EmailAddress(_emailSettings.SenderEmail, _emailSettings.SenderName);

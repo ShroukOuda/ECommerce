@@ -6,29 +6,23 @@ public interface IBrandLogoService
 {
     Task<BrandLogoDTO> UploadlogoAsync(
         Guid brandId,
-        UploadBrandLogoDTO dto, 
-        CancellationToken ct = default);
+        UploadBrandLogoDTO dto);
     
     Task<IReadOnlyList<BrandLogoDTO>> GetBrandLogosAsync(
-        Guid brandId, 
-        CancellationToken ct = default);
+        Guid brandId);
     Task<BrandLogoDTO?> GetBrandLogoBySubTypeAsync(
         Guid brandId, 
-        ImageSubType subType, 
-        CancellationToken ct = default);
+        ImageSubType subType);
     
     Task<BrandLogoDTO?> GetLogoByIdAsync(
         Guid brandId,
-        Guid logoId,
-        CancellationToken ct = default);
+        Guid logoId);
     Task DeleteBrandLogoAsync(
         Guid brandId,
-        Guid logoId,
-        CancellationToken ct = default);
+        Guid logoId);
 
     Task DeleteAllBrandLogosAsync(
-        Guid brandId,
-        CancellationToken ct = default);
+        Guid brandId);
 
  
 }

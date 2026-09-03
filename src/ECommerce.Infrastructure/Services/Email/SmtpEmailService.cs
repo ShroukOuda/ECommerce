@@ -12,7 +12,7 @@ public class SmtpEmailService : IEmailService
     public SmtpEmailService(IOptions<EmailSettings> emailSettings)
         => _emailSettings = emailSettings.Value;
 
-    public async Task SendAsync(string toEmail, string toName, string subject, string htmlBody, CancellationToken ct = default)
+    public async Task SendAsync(string toEmail, string toName, string subject, string htmlBody)
     {
         using var client = new SmtpClient(_emailSettings.SmtpHost, _emailSettings.SmtpPort)
         {

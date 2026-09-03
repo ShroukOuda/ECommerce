@@ -4,7 +4,7 @@ namespace ECommerce.Application.Interfaces;
 
 public interface IPaymentService
 {
-    Task<IEnumerable<GetPaymentDTO>> GetPaymentsByOrderIdAsync(Guid orderId, CancellationToken ct = default);
-    Task<GetPaymentDTO> GetPaymentByIdAsync(Guid id, CancellationToken ct = default);
-    Task<GetPaymentDTO> CreatePaymentAsync(CreatePaymentDTO dto, CancellationToken ct = default);
+    Task<IEnumerable<GetPaymentDTO>> GetPaymentsByOrderIdAsync(Guid orderId);
+    Task<GetPaymentDTO> GetPaymentByIdAsync(Guid id);
+    Task<GetPaymentDTO> CreatePaymentAsync(CreatePaymentDTO dto);
 }

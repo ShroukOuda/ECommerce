@@ -12,5 +12,11 @@ public class ShippingsByOrderSpecification : BaseSpecification<Shipping, Guid>
         AsNoTracking();
     }
 
+    public ShippingsByOrderSpecification(Guid orderId, string userId)
+        : base(s => s.OrderId == orderId && s.Order.UserId == userId)
+    {
+        AsNoTracking();
+    }
+
     
 }

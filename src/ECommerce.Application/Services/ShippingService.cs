@@ -19,37 +19,68 @@ public class ShippingService : IShippingService
         _createValidator = createValidator;
     }
 
-    public async Task<IEnumerable<GetShippingDTO>> GetShippingsByOrderIdAsync(Guid orderId, CancellationToken ct = default)
+    public async Task<IEnumerable<GetShippingDTO>> GetMyShippingsAsync(string userId)
+    {
+        var spec = new ShippingsByUserSpecification(userId);
+        var shippings = await _unitOfWork.GetRepository<Shipping, Guid>().GetAllAsync(spec);
+        return _mapper.Map<IEnumerable<GetShippingDTO>>(shippings);
+    }
+
+    public async Task<GetShippingDTO> GetMyShippingByIdAsync(Guid shippingId, string userId)
+    {
+        var spec = new ShippingsByUserSpecification(shippingId, userId);
+        var shipping = await _unitOfWork.GetRepository<Shipping, Guid>().GetFirstOrDefaultAsync(spec);
+        if (shipping is null) throw new KeyNotFoundException($"Shipping with ID {shippingId} not found for user {userId}.");
+        return _mapper.Map<GetShippingDTO>(shipping);
+    }
+
+    public async Task<GetShippingDTO> GetMyShippingByOrderIdAsync(Guid orderId, string userId)
+    {
+        var spec = new ShippingsByOrderSpecification(orderId, userId);
+        var shipping = await _unitOfWork.GetRepository<Shipping, Guid>().GetFirstOrDefaultAsync(spec);
+        if (shipping is null) throw new KeyNotFoundException($"Shipping for order ID {orderId} not found for user {userId}.");
+        return _mapper.Map<GetShippingDTO>(shipping);
+    }
+
+    public async Task<IEnumerable<GetShippingDTO>> GetAllShippingsAsync()
+    {
+        var shippings = await _unitOfWork.GetRepository<Shipping, Guid>().GetAllAsync(CancellationToken.None);
+        return _mapper.Map<IEnumerable<GetShippingDTO>>(shippings);
+    }
+
+    public async Task<IEnumerable<GetShippingDTO>> GetShippingsByOrderIdAsync(Guid orderId)
     {
         var spec = new ShippingsByOrderSpecification(orderId);
         var shippings = await _unitOfWork.GetRepository<Shipping, Guid>().GetAllAsync(spec);
         return _mapper.Map<IEnumerable<GetShippingDTO>>(shippings);
     }
 
-    public async Task<GetShippingDTO> GetShippingByIdAsync(Guid id, CancellationToken ct = default)
+    public async Task<GetShippingDTO> GetShippingByIdAsync(Guid id)
     {
-        var shipping = await _unitOfWork.GetRepository<Shipping, Guid>().GetByIdAsync(id, ct);
+        var shipping = await _unitOfWork.GetRepository<Shipping, Guid>().GetByIdAsync(id, CancellationToken.None);
         if (shipping is null) throw new KeyNotFoundException($"Shipping with ID {id} not found.");
         return _mapper.Map<GetShippingDTO>(shipping);
     }
 
-    public async Task<GetShippingDTO> CreateShippingAsync(CreateShippingDTO dto, CancellationToken ct = default)
+    public async Task<GetShippingDTO> CreateShippingAsync(CreateShippingDTO dto)
     {
-        var result = await _createValidator.ValidateAsync(dto, ct);
+        var result = await _createValidator.ValidateAsync(dto, CancellationToken.None);
         if (!result.IsValid) throw new ValidationException(result.Errors);
 
-        var shipping = new Shipping
-        {
-            OrderId = dto.OrderId,
-            AddressId = dto.AddressId,
-            Cost = dto.Cost,
-            Method = Enum.Parse<ShippingMethod>(dto.Method),
-            TrackingNumber = $"SHP-{Guid.NewGuid().ToString()[..8].ToUpper()}",
-            Status = ShippingStatus.Pending
-        };
+        var shipping = _mapper.Map<Shipping>(dto);
 
-        await _unitOfWork.GetRepository<Shipping, Guid>().AddAsync(shipping, ct);
-        await _unitOfWork.SaveChangesAsync(ct);
+        await _unitOfWork.GetRepository<Shipping, Guid>().AddAsync(shipping, CancellationToken.None);
+        await _unitOfWork.SaveChangesAsync(CancellationToken.None);
+        return _mapper.Map<GetShippingDTO>(shipping);
+    }
+
+    public async Task<GetShippingDTO> UpdateShippingAsync(Guid shippingId, UpdateShippingDTO dto)
+    {
+        var shipping = await _unitOfWork.GetRepository<Shipping, Guid>().GetByIdAsync(shippingId, CancellationToken.None);
+        if (shipping is null) throw new KeyNotFoundException($"Shipping with ID {shippingId} not found.");
+        _mapper.Map(dto, shipping);
+        _unitOfWork.GetRepository<Shipping, Guid>().Update(shipping);
+        await _unitOfWork.SaveChangesAsync(CancellationToken.None);
         return _mapper.Map<GetShippingDTO>(shipping);
     }
 }

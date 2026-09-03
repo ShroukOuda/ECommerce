@@ -22,7 +22,7 @@ public class CategoriesController : BaseController
             "Categories retrieved successfully.");
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
         var category = await _categoryService.GetCategoryByIdAsync(id);

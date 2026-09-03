@@ -35,7 +35,7 @@ public class UserSessionsController : BaseController
             "All sessions retrieved successfully.");
     }
 
-    [HttpGet("user/{userId:string}")]
+    [HttpGet("user/{userId}")]
     [Authorize(Roles = "Admin")]
 
     public async Task<IActionResult> GetSessionsForUser(string userId)

@@ -55,6 +55,6 @@ public class AddressesController : BaseController
     public async Task<IActionResult> Delete(Guid id)
     {
         await _addressService.DeleteAddressAsync(id);
-        return Ok(new ResponseAPI(200, "Address deleted successfully"));
+        return NoContent();
     }
 }

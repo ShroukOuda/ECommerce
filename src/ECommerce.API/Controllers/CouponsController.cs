@@ -32,7 +32,7 @@ public class CouponsController : BaseController
             "Coupon retrieved successfully.");
     }
 
-    [HttpGet("{code:string}")]
+    [HttpGet("{code}")]
     [Authorize(Roles = "Admin, Customer")]
     public async Task<IActionResult> GetByCode(string code)
     {

@@ -1,28 +1,11 @@
 # Wishlist API
 
-## Endpoints
+Wishlist endpoints for customers.
 
-### Get Wishlist by User
-```
-GET /api/Wishlist/get-by-user/{userId}
-```
-**Response:** `200 OK` - Array of wishlist items
+**Total Endpoints:** 3
 
-### Add to Wishlist
-```
-POST /api/Wishlist/add
-```
-**Body:**
-```json
-{
-  "productId": 0,
-  "userId": "string"
-}
-```
-**Response:** `200 OK` - `{ "statusCode": 200, "message": "Added to wishlist successfully" }`
-
-### Remove from Wishlist
-```
-DELETE /api/Wishlist/remove/{id}
-```
-**Response:** `200 OK` - `{ "statusCode": 200, "message": "Removed from wishlist successfully" }`
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/v1/wishlist` | Get the current user's wishlist |
+| `POST` | `/api/v1/wishlist` | Add an item to the wishlist |
+| `DELETE` | `/api/v1/wishlist/{id}` | Remove an item from the wishlist |

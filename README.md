@@ -1,6 +1,6 @@
-# MarketNest API
+# ECommerce API
 
-> A multi-vendor marketplace API for customers and sellers, built with ASP.NET Core 9, Clean Architecture, and SQL Server.
+> An e-commerce marketplace backend built with ASP.NET Core 9 and Clean Architecture. Supports product catalogs with variants and options, shopping carts, orders, coupons, reviews, wishlists, and a stock/subscription-based notification system, with JWT auth, refresh-token rotation, and role-based access for customers and admins. Built with EF Core, SQL Server, AutoMapper, and FluentValidation, with unit, integration, and architecture-enforcement test suites, and a Docker Compose setup for local development
 
 ## Quick Start
 
@@ -25,8 +25,8 @@ docker compose -f docker/docker-compose.yml up --build
 
 ```
 src/
-  ECommerce.Core/            # Entities, enums, interfaces, specifications
-  ECommerce.Application/     # DTOs, services, mapping, validators
+  ECommerce.Domain/          # Entities, enums, interfaces, Exceptions
+  ECommerce.Application/     # DTOs, services, mapping, validators, Specifications
   ECommerce.Infrastructure/  # EF Core, repositories, migrations, seed data
   ECommerce.API/             # Controllers, middleware, configuration
 tests/

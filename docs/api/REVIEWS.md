@@ -1,37 +1,12 @@
 # Reviews API
 
-## Endpoints
+Product review endpoints.
 
-### Get Reviews by Product
-```
-GET /api/Reviews/get-by-product/{productId}
-```
-**Response:** `200 OK` - Array of review objects
+**Total Endpoints:** 4
 
-### Get Review by ID
-```
-GET /api/Reviews/get-by-id/{id}
-```
-**Response:** `200 OK` - Review object
-
-### Add Review
-```
-POST /api/Reviews/add
-```
-**Body:**
-```json
-{
-  "rating": 5,
-  "title": "string",
-  "productId": 0,
-  "orderId": 0,
-  "userId": "string"
-}
-```
-**Response:** `200 OK` - `{ "statusCode": 200, "message": "Review added successfully" }`
-
-### Delete Review
-```
-DELETE /api/Reviews/delete/{id}
-```
-**Response:** `200 OK` - `{ "statusCode": 200, "message": "Review deleted successfully" }`
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/v1/reviews/product/{productId}` | Get reviews for a product |
+| `GET` | `/api/v1/reviews/{id}` | Get a review by ID |
+| `POST` | `/api/v1/reviews` | Create a review |
+| `DELETE` | `/api/v1/reviews/{id}` | Delete a review |

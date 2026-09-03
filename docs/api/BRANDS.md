@@ -1,56 +1,19 @@
 # Brands API
 
-## Endpoints
+Brand management and brand logo endpoints.
 
-### Get All Brands
-```
-GET /api/Brands/get-all
-```
-**Response:** `200 OK` - Array of brand objects
+**Total Endpoints:** 11
 
-### Get Brand by ID
-```
-GET /api/Brands/get-by-id/{id}
-```
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `id` | int | Brand ID |
-
-**Response:** `200 OK` - Brand object
-
-### Add Brand
-```
-POST /api/Brands/add
-```
-**Body:**
-```json
-{
-  "name": "string",
-  "description": "string",
-  "website": "string",
-  "logoUrl": "string"
-}
-```
-**Response:** `200 OK` - `{ "statusCode": 200, "message": "Brand added successfully" }`
-
-### Update Brand
-```
-PUT /api/Brands/update
-```
-**Body:**
-```json
-{
-  "id": 0,
-  "name": "string",
-  "description": "string",
-  "website": "string",
-  "logoUrl": "string"
-}
-```
-**Response:** `200 OK` - `{ "statusCode": 200, "message": "Brand updated successfully" }`
-
-### Delete Brand
-```
-DELETE /api/Brands/delete/{id}
-```
-**Response:** `200 OK` - `{ "statusCode": 200, "message": "Brand deleted successfully" }`
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/v1/brands` | List all brands |
+| `GET` | `/api/v1/brands/{id}` | Get a brand by ID |
+| `POST` | `/api/v1/brands` | Create a brand |
+| `PUT` | `/api/v1/brands/{id}` | Update a brand |
+| `DELETE` | `/api/v1/brands/{id}` | Delete a brand |
+| `POST` | `/api/v1/brands/{brandId}/logos` | Upload a brand logo |
+| `GET` | `/api/v1/brands/{brandId}/logos` | List brand logos |
+| `GET` | `/api/v1/brands/{brandId}/logos/{subType}` | Get a logo by subtype |
+| `GET` | `/api/v1/brands/{brandId}/logos/{id}` | Get a logo by ID |
+| `DELETE` | `/api/v1/brands/{brandId}/logos/{id}` | Delete a brand logo |
+| `DELETE` | `/api/v1/brands/{brandId}/logos` | Delete all brand logos |

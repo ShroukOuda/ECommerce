@@ -34,32 +34,6 @@ public class AdminCategoriesController : BaseController
             "Category image uploaded successfully.");
     }
     
-    [HttpGet("{categoryId:guid}/images")]
-    public async Task<IActionResult> GetCategoryImages(Guid categoryId)
-    {
-        var Images = await _categoryImageService.GetCategoryImagesAsync(categoryId);
-        return Success(
-            Images,
-            "Category images retrieved successfully.");
-    }
-
-    [HttpGet("{categoryId:guid}/images/sub-type")]
-    public async Task<IActionResult> GetCategoryImageBySubType([FromQuery] Guid categoryId, ImageSubType subType)
-    {
-        var Image = await _categoryImageService.GetCategoryImageBySubTypeAsync(categoryId, subType);
-        return Success(
-            Image,
-            "Category image retrieved successfully.");
-    }
-
-    [HttpGet("{categoryId:guid}/images/{id}")]
-    public async Task<IActionResult> GetCategoryImageById(Guid categoryId, Guid ImageId)
-    {
-        var Image = await _categoryImageService.GetImageByIdAsync(categoryId, ImageId);
-        return Success(
-            Image,
-            "Category image retrieved successfully.");
-    }
 
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateCategoryDTO categoryDto)

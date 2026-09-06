@@ -89,24 +89,6 @@ public class BrandLogoService : IBrandLogoService
         }
     }
     
-    public async Task<IReadOnlyList<BrandLogoDTO>> GetBrandLogosAsync(
-        Guid BrandId)
-    {
-        var spec = new BrandLogoSpecification(BrandId);
-        var logo = await _unitOfWork.GetRepository<BrandLogo, Guid>()
-            .GetAllAsync(spec);
-        return _mapper.Map<IReadOnlyList<BrandLogoDTO>>(logo);
-    }
-    
-    public async Task<BrandLogoDTO?> GetBrandLogoBySubTypeAsync(
-        Guid BrandId,
-        ImageSubType subType)
-    {
-        var spec = new BrandLogoSpecification(BrandId, subType);
-        var logo = await _unitOfWork.GetRepository<BrandLogo, Guid>()
-            .GetFirstOrDefaultAsync(spec);
-        return logo == null ? null : _mapper.Map<BrandLogoDTO>(logo);
-    }
     
     public async Task DeleteBrandLogoAsync(
         Guid brandId,
@@ -151,19 +133,5 @@ public class BrandLogoService : IBrandLogoService
             logos.Count(), BrandId);
     }
     
-    public async Task<BrandLogoDTO?> GetLogoByIdAsync(
-        Guid brandId,
-        Guid logoId)
-    {
-        var spec = new BrandLogoSpecification(brandId, logoId);
-        var exists = await _unitOfWork.GetRepository<BrandLogo, Guid>().ExistsAsync(spec);
-        
-        if (!exists) 
-            throw new NotFoundException($"Logo {logoId} not found for Brand {brandId}");   
-
-        var logo = await _unitOfWork.GetRepository<BrandLogo, Guid>().GetFirstOrDefaultAsync(spec);
-        return _mapper.Map<BrandLogoDTO>(logo);
-    }
-
 
 }

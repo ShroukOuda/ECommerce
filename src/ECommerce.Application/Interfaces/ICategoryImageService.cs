@@ -8,15 +8,6 @@ public interface ICategoryImageService
         Guid Id,
         UploadCategoryImageDTO dto);
     
-    Task<IReadOnlyList<CategoryImageDTO>> GetCategoryImagesAsync(
-        Guid categoryId);
-    Task<CategoryImageDTO?> GetCategoryImageBySubTypeAsync(
-        Guid categoryId, 
-        ImageSubType subType);
-    
-    Task<CategoryImageDTO?> GetImageByIdAsync(
-        Guid categoryId,
-        Guid imageId);
     Task DeleteCategoryImageAsync(
         Guid categoryId,
         Guid imageId);

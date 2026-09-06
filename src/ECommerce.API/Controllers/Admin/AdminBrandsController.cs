@@ -48,33 +48,6 @@ public class AdminBrandsController : BaseController
         return Created(logo, "Brand logo uploaded successfully");
     }
 
-    [HttpGet("{brandId:guid}/logos")]
-    public async Task<IActionResult> GetBrandLogos(Guid brandId)
-    {
-        var logos = await _brandLogoService.GetBrandLogosAsync(brandId);
-        return Success(
-            logos,
-            "Brand logos retrieved successfully.");
-    }
-
-    [HttpGet("{brandId:guid}/logos/{subType}")]
-    public async Task<IActionResult> GetBrandLogoBySubType([FromQuery] Guid brandId, ImageSubType subType)
-    {
-        var logo = await _brandLogoService.GetBrandLogoBySubTypeAsync(brandId, subType);
-        return Success(
-            logo,
-            "Brand logo retrieved successfully.");
-    }
-
-    [HttpGet("{brandId:guid}/logos/{id:guid}")]
-    public async Task<IActionResult> GetBrandLogoById(Guid brandId, Guid logoId)
-    {
-        var logo = await _brandLogoService.GetLogoByIdAsync(brandId, logoId);
-        return Success(
-            logo,
-            "Brand logo retrieved successfully.");
-    }
-
     [HttpDelete("{brandId:guid}/logos/{id:guid}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteBrandLogo(Guid brandId, Guid logoId)

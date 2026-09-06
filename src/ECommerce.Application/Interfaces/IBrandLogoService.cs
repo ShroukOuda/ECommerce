@@ -8,15 +8,6 @@ public interface IBrandLogoService
         Guid brandId,
         UploadBrandLogoDTO dto);
     
-    Task<IReadOnlyList<BrandLogoDTO>> GetBrandLogosAsync(
-        Guid brandId);
-    Task<BrandLogoDTO?> GetBrandLogoBySubTypeAsync(
-        Guid brandId, 
-        ImageSubType subType);
-    
-    Task<BrandLogoDTO?> GetLogoByIdAsync(
-        Guid brandId,
-        Guid logoId);
     Task DeleteBrandLogoAsync(
         Guid brandId,
         Guid logoId);

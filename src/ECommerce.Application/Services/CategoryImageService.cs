@@ -88,24 +88,6 @@ public class CategoryImageService : ICategoryImageService
         }
     }
     
-    public async Task<IReadOnlyList<CategoryImageDTO>> GetCategoryImagesAsync(
-        Guid categoryId)
-    {
-        var spec = new CategoryImageSpecification(categoryId);
-        var image = await _unitOfWork.GetRepository<CategoryImage, Guid>()
-            .GetAllAsync(spec);
-        return _mapper.Map<IReadOnlyList<CategoryImageDTO>>(image);
-    }
-    
-    public async Task<CategoryImageDTO?> GetCategoryImageBySubTypeAsync(
-        Guid categoryId,
-        ImageSubType subType)
-    {
-        var spec = new CategoryImageSpecification(categoryId, subType);
-        var image = await _unitOfWork.GetRepository<CategoryImage, Guid>()
-            .GetFirstOrDefaultAsync(spec);
-        return image == null ? null : _mapper.Map<CategoryImageDTO>(image);
-    }
     
     public async Task DeleteCategoryImageAsync(
         Guid categoryId,
@@ -149,18 +131,7 @@ public class CategoryImageService : ICategoryImageService
         _logger.LogInformation("All {Count} photos deleted for Category {CategoryId}", 
             images.Count(), categoryId);
     }
-    
-    public async Task<CategoryImageDTO?> GetImageByIdAsync(
-        Guid categoryId,
-        Guid imageId)
-    {
-        var spec = new CategoryImageSpecification(categoryId, imageId);
-        var exist = await _unitOfWork.GetRepository<CategoryImage, Guid>().ExistsAsync(spec);
-        if (!exist)
-            throw new NotFoundException($"Image {imageId} not found for category {categoryId}");
-        var image = await _unitOfWork.GetRepository<CategoryImage, Guid>().GetFirstOrDefaultAsync(spec);
-        return _mapper.Map<CategoryImageDTO>(image);
-    }
+
 
 
 }

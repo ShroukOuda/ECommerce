@@ -1,7 +1,7 @@
 using ECommerce.Application.DTO.Shipping;
 
 
-namespace ECommerce.API.Controllers;
+namespace ECommerce.API.Controllers.Admin;
 
 [Route("api/v1/admin/shipping")]
 [Authorize(Roles = "Admin")]

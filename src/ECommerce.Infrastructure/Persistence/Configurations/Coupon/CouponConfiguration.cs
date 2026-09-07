@@ -17,12 +17,6 @@ public class CouponConfiguration : IEntityTypeConfiguration<Domain.Entities.Coup
         builder.Property(c => c.Description)
             .HasMaxLength(500);
 
-        builder.Property(c => c.DiscountType)
-            .HasConversion<string>();
-
-        builder.Property(c => c.Status)
-            .HasConversion<string>();
-
         builder.Property(c => c.DiscountValue)
             .HasColumnType("decimal(18,2)");
 

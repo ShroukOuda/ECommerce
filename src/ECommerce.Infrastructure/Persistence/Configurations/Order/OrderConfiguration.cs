@@ -29,11 +29,6 @@ public class OrderConfigurations : IEntityTypeConfiguration<Domain.Entities.Orde
         builder.Property(o => o.Currency)
             .HasMaxLength(10);
 
-        builder.Property(o => o.OrderType)
-            .HasConversion<string>();
-
-        builder.Property(o => o.OrderStatus)
-            .HasConversion<string>();
 
         builder.HasOne(o => o.User)
             .WithMany(u => u.Orders)

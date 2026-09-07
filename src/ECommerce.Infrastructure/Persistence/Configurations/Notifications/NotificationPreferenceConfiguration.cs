@@ -11,13 +11,9 @@ public class NotificationPreferenceConfiguration : IEntityTypeConfiguration<Noti
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.Type)
-            .HasConversion<string>()
-            .HasMaxLength(50)
             .IsRequired();
 
         builder.Property(x => x.Channel)
-            .HasConversion<string>()
-            .HasMaxLength(30)
             .IsRequired();
 
         builder.Property(x => x.Title)

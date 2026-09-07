@@ -15,7 +15,7 @@ public class ReturnRequestConfiguration : IEntityTypeConfiguration<ReturnRequest
             .IsRequired()
             .HasMaxLength(50);
 
-        builder.Property(rr => rr.Reason)
+        builder.Property(rr => rr.RejectionReason)
             .IsRequired()
             .HasMaxLength(1000);
 
@@ -23,13 +23,10 @@ public class ReturnRequestConfiguration : IEntityTypeConfiguration<ReturnRequest
             .HasMaxLength(2000);
 
         builder.Property(rr => rr.Status)
-            .HasConversion<string>();
+            .IsRequired();
 
         builder.Property(rr => rr.RefundAmount)
             .HasColumnType("decimal(18,2)");
-
-        builder.Property(rr => rr.RefundMethod)
-            .HasMaxLength(100);
 
         builder.HasOne(rr => rr.Order)
             .WithMany(o => o.ReturnRequests)
@@ -44,6 +41,11 @@ public class ReturnRequestConfiguration : IEntityTypeConfiguration<ReturnRequest
         builder.HasMany(rr => rr.ReturnItems)
             .WithOne(ri => ri.ReturnRequest)
             .HasForeignKey(ri => ri.ReturnRequestId)
+            .OnDelete(DeleteBehavior.Cascade);
+        
+        builder.HasMany(rr => rr.ReturnHistories)
+            .WithOne(rh => rh.ReturnRequest)
+            .HasForeignKey(rh => rh.ReturnRequestId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

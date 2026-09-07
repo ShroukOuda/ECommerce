@@ -9,8 +9,6 @@ public class InventoryHistoryConfiguration : IEntityTypeConfiguration<InventoryH
     {
         builder.HasKey(ih => ih.Id);
 
-        builder.Property(ih => ih.ChangeType)
-            .HasConversion<string>();
 
         builder.Property(ih => ih.ReferencedId)
             .HasMaxLength(100);

@@ -1,10 +1,10 @@
 using ECommerce.Application.DTO.Return;
-using ECommerce.Application.Interfaces;
+
 
 namespace ECommerce.API.Controllers;
 
-[Authorize(Roles = "Admin")]
-[Route("api/v1/admin/returns")]
+[Authorize(Roles = "Customer")]
+[Route("api/v1/returns")]
 public class ReturnsController : BaseController
 {
     private readonly IReturnService _returnService;
@@ -14,32 +14,67 @@ public class ReturnsController : BaseController
         _returnService = returnService;
     }
 
-    private string currentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+    private string CurrentUserId =>
+        User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
-    [HttpGet()]
-    public async Task<IActionResult> GetByUser()
+
+    // GET: api/v1/returns
+    [HttpGet]
+    public async Task<IActionResult> GetMyReturns()
     {
-        var returns = await _returnService.GetReturnsByUserIdAsync(currentUserId);
+        var returns =
+            await _returnService.GetMyReturnsAsync(CurrentUserId);
+
         return Success(
             returns,
             "Returns retrieved successfully.");
     }
 
-    [HttpGet("{id:guid}")]
-    public async Task<IActionResult> GetById(Guid id)
+
+    // GET: api/v1/returns/{returnId}
+    [HttpGet("{returnId:guid}")]
+    public async Task<IActionResult> GetMyReturnById(
+        Guid returnId)
     {
-        var ret = await _returnService.GetReturnByIdAsync(id);
+        var result =
+            await _returnService.GetMyReturnByIdAsync(
+                returnId,
+                CurrentUserId);
+
         return Success(
-            ret,
+            result,
             "Return retrieved successfully.");
     }
 
-    [HttpPost("create")]
-    public async Task<IActionResult> Create(CreateReturnRequestDTO dto)
+
+    // POST: api/v1/returns
+    [HttpPost]
+    public async Task<IActionResult> CreateReturn(
+        [FromBody] CreateReturnRequestDTO dto)
     {
-        var ret = await _returnService.CreateReturnRequestAsync(dto);
+        var result =
+            await _returnService.CreateReturnAsync(
+                CurrentUserId,
+                dto);
+
         return Created(
-            ret,
+            result,
             "Return request created successfully.");
+    }
+
+
+    // PUT: api/v1/returns/{returnId}/cancel
+    [HttpPut("{returnId:guid}/cancel")]
+    public async Task<IActionResult> CancelReturn(
+        Guid returnId)
+    {
+        var result =
+            await _returnService.CancelReturnAsync(
+                returnId,
+                CurrentUserId);
+
+        return Success(
+            result,
+            "Return request cancelled successfully.");
     }
 }

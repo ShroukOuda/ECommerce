@@ -9,7 +9,7 @@ public class Category:BaseEntity<Guid>
     public string Slug { get; set; } = string.Empty;
     public string? Description { get; set; }
 
-    public CategoryStatus Status { get; set; } = CategoryStatus.Active;
+    public CategoryStatus Status { get; set; } 
     
     public Guid? ParentCategoryId { get; set; } 
 

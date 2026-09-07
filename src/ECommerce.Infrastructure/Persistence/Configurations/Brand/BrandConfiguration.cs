@@ -14,8 +14,7 @@ public class BrandConfiguration : IEntityTypeConfiguration<Domain.Entities.Brand
             .IsRequired()
             .HasMaxLength(100);
 
-        builder.Property(b => b.Status)
-            .HasConversion<string>();
+    
 
         builder.HasMany(b => b.BrandLogos)
             .WithOne(bl => bl.Brand)

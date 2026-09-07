@@ -21,9 +21,6 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
         builder.Property(x => x.Link)
             .HasMaxLength(500);
 
-        builder.Property(x => x.Type)
-            .HasConversion<string>()
-            .HasMaxLength(50);
 
         builder.Property(x => x.IsRead)
             .HasDefaultValue(false);

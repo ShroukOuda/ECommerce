@@ -9,6 +9,7 @@ public class ReturnDetailsSpecification : BaseSpecification<ReturnRequest, Guid>
         : base(r => r.Id == returnId)
     {
         AddInclude(r => r.ReturnItems);
+        AddInclude(r => r.ReturnHistories);
         AsNoTracking();
     }
 

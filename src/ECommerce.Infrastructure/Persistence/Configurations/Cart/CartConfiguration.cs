@@ -14,8 +14,6 @@ public class CartConfiguration : IEntityTypeConfiguration<Domain.Entities.Carts.
         builder.Property(c => c.DiscountAmount)
             .HasColumnType("decimal(18,2)");
 
-        builder.Property(c => c.Status)
-            .HasConversion<string>();
 
         builder.HasOne(c => c.User)
             .WithMany(u => u.Carts)

@@ -1,29 +1,35 @@
-
+using ECommerce.Domain.Entities;
 using ECommerce.Domain.Enums.Return;
 
 namespace ECommerce.Domain.Entities.Returns;
 
 public class ReturnRequest : BaseEntity<Guid>
 {
-    public string ReturnNumber { get; set; } = string.Empty; 
-    public string Reason { get; set; } = string.Empty;
+    public string ReturnNumber { get; set; } = string.Empty;
+
     public string? Description { get; set; }
-    public ReturnStatus Status { get; set; } = ReturnStatus.Requested;  
-    
+
+    public string? RejectionReason { get; set; }
+
+    public ReturnStatus Status { get; set; } = ReturnStatus.Requested;
+
     public decimal RefundAmount { get; set; }
-    public string? RefundMethod { get; set; }
-    public DateTime? RefundDate { get; set; }
-    
-    public DateTime RequestedDate { get; set; } = DateTime.Now;
-    public DateTime? ApprovedDate { get; set; }
-    public DateTime? CompletedDate { get; set; }
-    
-    //FK
+
+    public RefundMethod? RefundMethod { get; set; }
+
+
+    // Foreign Keys
     public Guid OrderId { get; set; }
+
+    //Customer who requested the return
     public string UserId { get; set; } = null!;
-    
-    //Navigation Properties
-    public  Order Order { get; set; } = null!;
-    public  User User { get; set; } = null!;
-    public  ICollection<ReturnItem> ReturnItems { get; set; } = new List<ReturnItem>();
+
+    // Navigation Properties
+    public Order Order { get; set; } = null!;
+
+    public User User { get; set; } = null!;
+
+    public ICollection<ReturnItem> ReturnItems { get; set; } = new List<ReturnItem>();
+
+    public ICollection<ReturnHistory> ReturnHistories { get; set; } = new List<ReturnHistory>();
 }

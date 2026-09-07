@@ -7,8 +7,6 @@ public class CreateReturnRequestDtoValidator : AbstractValidator<CreateReturnReq
     public CreateReturnRequestDtoValidator()
     {
         RuleFor(x => x.OrderId).NotEmpty();
-        RuleFor(x => x.UserId).NotEmpty();
-        RuleFor(x => x.Reason).NotEmpty().MaximumLength(1000);
         RuleFor(x => x.Items).NotEmpty().WithMessage("At least one return item is required.");
     }
 }

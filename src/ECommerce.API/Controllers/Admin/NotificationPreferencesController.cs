@@ -1,11 +1,11 @@
 using ECommerce.Application.DTO.Notification;
 using ECommerce.Application.Interfaces.Notifications;
-using Microsoft.AspNetCore.Authorization;
 
-namespace ECommerce.API.Controllers;
+
+namespace ECommerce.API.Controllers.Admin;
 
 [Authorize(Roles = "Admin")]
-[Route("api/v1/notification-preferences")]
+[Route("api/v1/admin/notification-preferences")]
 public class NotificationPreferencesController : BaseController
 {
     private readonly INotificationPreferenceAdminService _notificationPreferenceAdminService;

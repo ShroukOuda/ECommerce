@@ -70,6 +70,7 @@ public class AppDbContext : IdentityDbContext<User>
     //Return
     public  DbSet<ReturnRequest> ReturnRequests { get; set; }
     public  DbSet<ReturnItem> ReturnItems { get; set; }
+    public  DbSet<ReturnHistory> ReturnStatusHistories { get; set; }
     
     //Shipping
     public  DbSet<Shipping> Shippings { get; set; }

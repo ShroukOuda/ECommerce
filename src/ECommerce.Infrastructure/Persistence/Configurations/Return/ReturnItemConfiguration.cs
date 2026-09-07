@@ -17,7 +17,7 @@ public class ReturnItemConfiguration : IEntityTypeConfiguration<ReturnItem>
             .HasColumnType("decimal(18,2)");
 
         builder.Property(ri => ri.Status)
-            .HasConversion<string>();
+            .IsRequired();
 
         builder.HasOne(ri => ri.ReturnRequest)
             .WithMany(rr => rr.ReturnItems)

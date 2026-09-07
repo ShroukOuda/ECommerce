@@ -1,13 +1,12 @@
 using ECommerce.Application.DTO.Notification;
 using ECommerce.Application.DTO.Pagination;
 using ECommerce.Application.Interfaces.Notifications;
-using ECommerce.Domain.Enums.Notification;
-using Microsoft.AspNetCore.Authorization;
+
 
 namespace ECommerce.API.Controllers;
 
 [Route("api/v1/notifications")]
-[Authorize]
+[Authorize(Roles = "Admin, Customer")]
 
 public class NotificationsController : BaseController
 {

@@ -21,9 +21,7 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Domain.Entities.Ca
         builder.Property(c => c.Description)
             .HasMaxLength(500);
 
-        builder.Property(c => c.Status)
-            .HasConversion<string>()
-            .HasMaxLength(50);
+  
 
         // Self-referencing relationship
         builder.HasOne(c => c.ParentCategory)

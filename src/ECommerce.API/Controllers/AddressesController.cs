@@ -16,7 +16,7 @@ public class AddressesController : BaseController
         User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
     [HttpGet()]
-    [Authorize(Roles = "Admin, Customer")]
+    [Authorize(Roles = "Customer")]
     public async Task<IActionResult> GetMyAddresses()
     {
         var addresses = await _addressService.GetAddressesByUserIdAsync(CurrentUserId);
@@ -26,7 +26,7 @@ public class AddressesController : BaseController
     }
 
     [HttpGet("{id:guid}")]
-    [Authorize(Roles = "Admin, Customer")]
+    [Authorize(Roles = "Customer")]
     public async Task<IActionResult> GetById(Guid id)
     {
         var address = await _addressService.GetAddressByIdAsync(id);
@@ -36,7 +36,7 @@ public class AddressesController : BaseController
     }
 
     [HttpPost()]
-    [Authorize(Roles = "Admin, Customer")]
+    [Authorize(Roles = "Customer")]
     public async Task<IActionResult> Add(AddAddressDTO dto)
     {
         var address = await _addressService.AddAddressAsync(dto);
@@ -44,7 +44,7 @@ public class AddressesController : BaseController
     }
 
     [HttpPut("{id:guid}")]
-    [Authorize(Roles = "Admin, Customer")]
+    [Authorize(Roles = "Customer")]
     public async Task<IActionResult> Update(Guid id, UpdateAddressDTO dto)
     {
         var address = await _addressService.UpdateAddressAsync(id, dto);
@@ -52,7 +52,7 @@ public class AddressesController : BaseController
     }
 
     [HttpDelete("{id:guid}")]
-    [Authorize(Roles = "Admin, Customer")]
+    [Authorize(Roles = "Customer")]
     public async Task<IActionResult> Delete(Guid id)
     {
         await _addressService.DeleteAddressAsync(id);

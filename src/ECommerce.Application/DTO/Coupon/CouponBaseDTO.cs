@@ -1,10 +1,12 @@
+using ECommerce.Domain.Enums.Coupon;
+
 namespace ECommerce.Application.DTO.Coupon;
 
 public class CouponBaseDTO
 {
     public string Code { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
-    public string DiscountType { get; set; } = "Percentage";
+    public DiscountType DiscountType { get; set; } = DiscountType.Percentage;
     public decimal DiscountValue { get; set; }
     public decimal MinPurchaseAmount { get; set; }
     public decimal MaxDiscountAmount { get; set; }

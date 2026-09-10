@@ -16,8 +16,11 @@ public class ProductMapping : Profile
                 opt => opt.MapFrom(src=>src.Category.Name))
             .ForMember(dest=>dest.BrandName, 
                 opt => opt.MapFrom(src=>src.Brand.Name))
-            .ForMember(dest => dest.ProductMainImageUrl, 
-                opt => opt.MapFrom(src => src.ProductImages.First(i => i.IsMain).ImageUrl))
+            .ForMember(dest => dest.ProductMainImageUrl,
+                opt => opt.MapFrom(src => src.ProductImages
+                .Where(i => i.IsMain)
+                .Select(i => i.ImageUrl)
+                .FirstOrDefault()))
             .ForMember(dest=>dest.IsTopRated , 
                 opt => opt.MapFrom(src => src.ReviewCount > 10 && src.AverageRating >= 4.5m))
             .ForMember(dest=>dest.IsBestSeller , 

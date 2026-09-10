@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "Name": "Laptops",
+    "Slug": "laptops",
+    "Description": "Laptops and portable computers",
+    "Status": "Active",
+    "ParentCategoryId": null
+  },
+  {
+    "Id": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+    "Name": "Smartphones",
+    "Slug": "smartphones",
+    "Description": "Smartphones and mobile devices",
+    "Status": "Active",
+    "ParentCategoryId": null
+  },
+  {
+    "Id": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+    "Name": "Tablets",
+    "Slug": "tablets",
+    "Description": "Tablets and portable touchscreen devices",
+    "Status": "Active",
+    "ParentCategoryId": null
+  },
+  {
+    "Id": "dddddddd-dddd-dddd-dddd-dddddddddddd",
+    "Name": "Accessories",
+    "Slug": "accessories",
+    "Description": "Computer and mobile accessories",
+    "Status": "Active",
+    "ParentCategoryId": null
+  },
+  {
+    "Id": "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+    "Name": "Monitors",
+    "Slug": "monitors",
+    "Description": "Computer monitors and displays",
+    "Status": "Active",
+    "ParentCategoryId": null
+  }
+]

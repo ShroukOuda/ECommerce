@@ -9,10 +9,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace ECommerce.Infrastructure.Persistence.Migrations
+namespace ECommerce.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260907052803_InitialCreate")]
+    [Migration("20260910112726_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

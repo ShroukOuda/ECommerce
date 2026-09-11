@@ -9,6 +9,7 @@ public class OrdersByUserSpecification : BaseSpecification<Order, Guid>
         : base(o => o.UserId == userId)
     {
         AddInclude(o => o.OrderItems);
+        AddInclude(o => o.OrderStatusHistories);
         AddOrderByDescending(o => o.CreatedAt);
         AsNoTracking();
     }

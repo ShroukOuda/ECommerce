@@ -11,5 +11,6 @@ public class OrderSpecification : BaseSpecification<Order, Guid>
         AsNoTracking();
     }
 
+  
     
 }

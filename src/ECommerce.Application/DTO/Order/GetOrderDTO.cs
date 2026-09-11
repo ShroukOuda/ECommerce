@@ -1,6 +1,6 @@
 namespace ECommerce.Application.DTO.Order;
 
-public class GetOrderDTO
+public class GetOrderDTO 
 {
     public Guid Id { get; set; }
     public string OrderNumber { get; set; } = string.Empty;
@@ -11,7 +11,10 @@ public class GetOrderDTO
     public decimal ShippingCost { get; set; }
     public decimal TotalAmount { get; set; }
     public string Currency { get; set; } = string.Empty;
-    public string UserId { get; set; } = string.Empty;
+    public Guid? ShippingAddressId { get; set; }
+    public Guid? BillingAddressId { get; set; }
     public DateTime CreatedAt { get; set; }
     public List<GetOrderItemDTO> Items { get; set; } = new();
+    public List<GetOrderStatusHistoryDTO> StatusHistory { get; set; } = new();
+  
 }

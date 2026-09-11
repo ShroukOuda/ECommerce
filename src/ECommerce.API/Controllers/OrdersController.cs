@@ -1,9 +1,9 @@
 using ECommerce.Application.DTO.Order;
-using ECommerce.Application.Interfaces;
 
 namespace ECommerce.API.Controllers;
 
 [Route("api/v1/orders")]
+[Authorize]
 public class OrdersController : BaseController
 {
     private readonly IOrderService _orderService;
@@ -13,48 +13,60 @@ public class OrdersController : BaseController
         _orderService = orderService;
     }
 
-    private string currentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+    private string CurrentUserId =>
+        User.FindFirstValue(
+            ClaimTypes.NameIdentifier)!;
 
-    [HttpGet()]
+    // GET: api/v1/orders
+    [HttpGet]
     public async Task<IActionResult> GetMyOrders()
     {
-        var orders = await _orderService.GetOrdersByUserIdAsync(currentUserId);
+        var orders =
+            await _orderService.GetMyOrdersAsync(
+                CurrentUserId);
+
         return Success(
             orders,
             "Orders retrieved successfully.");
     }
 
+    // GET: api/v1/orders/{id}
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
-        var order = await _orderService.GetOrderByIdAsync(id);
+        var order =
+            await _orderService.GetMyOrderByIdAsync(
+                id,
+                CurrentUserId);
+
         return Success(
             order,
             "Order retrieved successfully.");
     }
 
-    [HttpPost()]
-    public async Task<IActionResult> Create(CreateOrderDTO dto)
+    // POST: api/v1/orders
+    [HttpPost]
+    public async Task<IActionResult> Create(
+        CreateOrderDTO dto)
     {
-        var order = await _orderService.CreateOrderAsync(dto);
+        var order =
+            await _orderService.CreateOrderAsync(
+                CurrentUserId,
+                dto);
+
         return Created(
             order,
             "Order created successfully.");
     }
 
-    [HttpPut("{id:guid}")]
-    public async Task<IActionResult> UpdateStatus(Guid id, UpdateOrderStatusDTO dto)
-    {
-        var order = await _orderService.UpdateOrderStatusAsync(id, dto);
-        return Success(
-            order,
-            "Order status updated successfully.");
-    }
-
+    // DELETE: api/v1/orders/{id}
     [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> Delete(Guid id)
+    public async Task<IActionResult> Cancel(Guid id)
     {
-        await _orderService.DeleteOrderAsync(id);
+        await _orderService.CancelOrderAsync(
+            id,
+            CurrentUserId);
+
         return NoContent();
     }
 }

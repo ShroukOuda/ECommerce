@@ -4,11 +4,11 @@ namespace ECommerce.API.Controllers.Admin;
 
 [Route("api/v1/admin/orders")]
 [Authorize(Roles = "Admin")]
-public class OrdersController : BaseController
+public class AdminOrdersController : BaseController
 {
     private readonly IOrderService _orderService;
 
-    public OrdersController(IOrderService orderService)
+    public AdminOrdersController(IOrderService orderService)
     {
         _orderService = orderService;
     }

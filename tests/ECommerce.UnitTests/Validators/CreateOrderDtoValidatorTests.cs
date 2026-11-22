@@ -13,9 +13,9 @@ public class CreateOrderDtoValidatorTests
     {
         var dto = new CreateOrderDTO
         {
-
+            CartId = TestGuid.FromInt(100),
             Currency = "USD",
-            Items = new List<CreateOrderItemDTO> { new() { ProductId = TestGuid.FromInt(1), Quantity = 2 } }
+            Items = new List<CreateOrderItemDTO> { new() { ProductId = TestGuid.FromInt(1), ProductVariantId = TestGuid.FromInt(2), Quantity = 2 } }
         };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeTrue();
@@ -29,6 +29,33 @@ public class CreateOrderDtoValidatorTests
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "Items");
+    }
+
+    [Fact]
+    public async Task Validate_WithEmptyCartId_ShouldFail()
+    {
+        var dto = new CreateOrderDTO
+        {
+            Currency = "USD",
+            Items = new List<CreateOrderItemDTO> { new() { ProductId = TestGuid.FromInt(1), ProductVariantId = TestGuid.FromInt(2), Quantity = 2 } }
+        };
+        var result = await _validator.ValidateAsync(dto);
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(e => e.PropertyName == "CartId");
+    }
+
+    [Fact]
+    public async Task Validate_WithEmptyProductVariantId_ShouldFail()
+    {
+        var dto = new CreateOrderDTO
+        {
+            CartId = TestGuid.FromInt(100),
+            Currency = "USD",
+            Items = new List<CreateOrderItemDTO> { new() { ProductId = TestGuid.FromInt(1), Quantity = 2 } }
+        };
+        var result = await _validator.ValidateAsync(dto);
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(e => e.PropertyName == "Items[0].ProductVariantId");
     }
 
     [Fact]

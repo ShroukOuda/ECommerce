@@ -2,8 +2,10 @@ using AutoMapper;
 using ECommerce.Application.DTO.Return;
 using ECommerce.Application.Interfaces;
 using ECommerce.Application.Services;
+using ECommerce.Application.Specifications.Coupons;
 using ECommerce.Application.Specifications.Orders;
 using ECommerce.Application.Specifications.Returns;
+using ECommerce.Domain.Entities.Coupons;
 using ECommerce.Domain.Entities.Orders;
 using ECommerce.Domain.Entities.Returns;
 using ECommerce.Domain.Enums.Return;
@@ -31,6 +33,12 @@ public class ReturnServiceTests
             _unitOfWorkMock.Object,
             _mapperMock.Object,
             _createValidatorMock.Object);
+
+        // Default: no coupons on the order. Individual refund
+        // tests override this setup.
+        _unitOfWorkMock.Setup(u => u.GetRepository<CouponUsage, Guid>()
+                .GetAllAsync(It.IsAny<CouponUsagesByOrderSpecification>()))
+            .ReturnsAsync(new List<CouponUsage>());
     }
 
     private void SetupGetReturn(ReturnRequest? returnRequest)
@@ -228,6 +236,180 @@ public class ReturnServiceTests
         var act = () => _returnService.CreateReturnAsync("user1", dto);
 
         await act.Should().ThrowAsync<ArgumentException>();
+    }
+
+    [Fact]
+    public async Task CreateReturnAsync_WithoutCoupon_ShouldRefundFullProRataLineValue()
+    {
+        var orderItemId = TestGuid.FromInt(1);
+        var dto = new CreateReturnRequestDTO
+        {
+            OrderId = TestGuid.FromInt(1),
+            Items = new List<CreateReturnItemDTO> { new() { OrderItemId = orderItemId, Quantity = 2, Reason = "Broken" } }
+        };
+        var order = new Order
+        {
+            Id = dto.OrderId,
+            UserId = "user1",
+            OrderItems = new List<OrderItem>
+            {
+                new() { Id = orderItemId, ProductId = TestGuid.FromInt(7), Quantity = 3, UnitPrice = 50m, TotalPrice = 150m }
+            }
+        };
+        var returnRequest = new ReturnRequest { OrderId = dto.OrderId };
+
+        _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ValidationResult());
+        _unitOfWorkMock.Setup(u => u.GetRepository<Order, Guid>()
+                .GetFirstOrDefaultAsync(It.IsAny<OrderDetailsSpecification>()))
+            .ReturnsAsync(order);
+        _unitOfWorkMock.Setup(u => u.GetRepository<ReturnItem, Guid>()
+                .GetAllAsync(It.IsAny<ReturnItemsByOrderSpecification>()))
+            .ReturnsAsync(new List<ReturnItem>());
+        _mapperMock.Setup(m => m.Map<ReturnRequest>(dto)).Returns(returnRequest);
+        _unitOfWorkMock.Setup(u => u.GetRepository<ReturnRequest, Guid>().AddAsync(It.IsAny<ReturnRequest>()))
+            .Returns(Task.CompletedTask);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+
+        await _returnService.CreateReturnAsync("user1", dto);
+
+        // 150 line value / 3 units * 2 returned = 100
+        returnRequest.ReturnItems.Should().ContainSingle()
+            .Which.RefundAmount.Should().Be(100m);
+        returnRequest.RefundAmount.Should().Be(100m);
+    }
+
+    [Fact]
+    public async Task CreateReturnAsync_WithCoupon_ShouldAllocateDiscountProportionally()
+    {
+        var orderItemId = TestGuid.FromInt(1);
+        var dto = new CreateReturnRequestDTO
+        {
+            OrderId = TestGuid.FromInt(1),
+            Items = new List<CreateReturnItemDTO> { new() { OrderItemId = orderItemId, Quantity = 1, Reason = "Broken" } }
+        };
+        var order = new Order
+        {
+            Id = dto.OrderId,
+            UserId = "user1",
+            OrderItems = new List<OrderItem>
+            {
+                new() { Id = orderItemId, ProductId = TestGuid.FromInt(7), Quantity = 2, UnitPrice = 50m, TotalPrice = 100m },
+                new() { Id = TestGuid.FromInt(2), ProductId = TestGuid.FromInt(8), Quantity = 1, UnitPrice = 100m, TotalPrice = 100m }
+            }
+        };
+        var returnRequest = new ReturnRequest { OrderId = dto.OrderId };
+
+        _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ValidationResult());
+        _unitOfWorkMock.Setup(u => u.GetRepository<Order, Guid>()
+                .GetFirstOrDefaultAsync(It.IsAny<OrderDetailsSpecification>()))
+            .ReturnsAsync(order);
+        _unitOfWorkMock.Setup(u => u.GetRepository<ReturnItem, Guid>()
+                .GetAllAsync(It.IsAny<ReturnItemsByOrderSpecification>()))
+            .ReturnsAsync(new List<ReturnItem>());
+        _unitOfWorkMock.Setup(u => u.GetRepository<CouponUsage, Guid>()
+                .GetAllAsync(It.IsAny<CouponUsagesByOrderSpecification>()))
+            .ReturnsAsync(new List<CouponUsage> { new() { OrderId = dto.OrderId, DiscountAmount = 40m } });
+        _mapperMock.Setup(m => m.Map<ReturnRequest>(dto)).Returns(returnRequest);
+        _unitOfWorkMock.Setup(u => u.GetRepository<ReturnRequest, Guid>().AddAsync(It.IsAny<ReturnRequest>()))
+            .Returns(Task.CompletedTask);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+
+        await _returnService.CreateReturnAsync("user1", dto);
+
+        // Subtotal 200, coupon 40 -> line share 20 -> line net 80 -> unit net 40
+        returnRequest.ReturnItems.Should().ContainSingle()
+            .Which.RefundAmount.Should().Be(40m);
+        returnRequest.RefundAmount.Should().Be(40m);
+    }
+
+    [Fact]
+    public async Task CreateReturnAsync_WhenDiscountExceedsLineValue_ShouldClampRefundToZero()
+    {
+        var orderItemId = TestGuid.FromInt(1);
+        var dto = new CreateReturnRequestDTO
+        {
+            OrderId = TestGuid.FromInt(1),
+            Items = new List<CreateReturnItemDTO> { new() { OrderItemId = orderItemId, Quantity = 1, Reason = "Broken" } }
+        };
+        var order = new Order
+        {
+            Id = dto.OrderId,
+            UserId = "user1",
+            OrderItems = new List<OrderItem>
+            {
+                new() { Id = orderItemId, ProductId = TestGuid.FromInt(7), Quantity = 1, UnitPrice = 10m, TotalPrice = 10m }
+            }
+        };
+        var returnRequest = new ReturnRequest { OrderId = dto.OrderId };
+
+        _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ValidationResult());
+        _unitOfWorkMock.Setup(u => u.GetRepository<Order, Guid>()
+                .GetFirstOrDefaultAsync(It.IsAny<OrderDetailsSpecification>()))
+            .ReturnsAsync(order);
+        _unitOfWorkMock.Setup(u => u.GetRepository<ReturnItem, Guid>()
+                .GetAllAsync(It.IsAny<ReturnItemsByOrderSpecification>()))
+            .ReturnsAsync(new List<ReturnItem>());
+        _unitOfWorkMock.Setup(u => u.GetRepository<CouponUsage, Guid>()
+                .GetAllAsync(It.IsAny<CouponUsagesByOrderSpecification>()))
+            .ReturnsAsync(new List<CouponUsage> { new() { OrderId = dto.OrderId, DiscountAmount = 50m } });
+        _mapperMock.Setup(m => m.Map<ReturnRequest>(dto)).Returns(returnRequest);
+        _unitOfWorkMock.Setup(u => u.GetRepository<ReturnRequest, Guid>().AddAsync(It.IsAny<ReturnRequest>()))
+            .Returns(Task.CompletedTask);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+
+        await _returnService.CreateReturnAsync("user1", dto);
+
+        returnRequest.ReturnItems.Should().ContainSingle()
+            .Which.RefundAmount.Should().Be(0m);
+        returnRequest.RefundAmount.Should().Be(0m);
+    }
+
+    [Fact]
+    public async Task CreateReturnAsync_WithMultipleItems_ShouldSumItemRefunds()
+    {
+        var firstItemId = TestGuid.FromInt(1);
+        var secondItemId = TestGuid.FromInt(2);
+        var dto = new CreateReturnRequestDTO
+        {
+            OrderId = TestGuid.FromInt(1),
+            Items = new List<CreateReturnItemDTO>
+            {
+                new() { OrderItemId = firstItemId, Quantity = 1, Reason = "Broken" },
+                new() { OrderItemId = secondItemId, Quantity = 1, Reason = "Wrong size" }
+            }
+        };
+        var order = new Order
+        {
+            Id = dto.OrderId,
+            UserId = "user1",
+            OrderItems = new List<OrderItem>
+            {
+                new() { Id = firstItemId, ProductId = TestGuid.FromInt(7), Quantity = 1, UnitPrice = 100m, TotalPrice = 100m },
+                new() { Id = secondItemId, ProductId = TestGuid.FromInt(8), Quantity = 2, UnitPrice = 25m, TotalPrice = 50m }
+            }
+        };
+        var returnRequest = new ReturnRequest { OrderId = dto.OrderId };
+
+        _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ValidationResult());
+        _unitOfWorkMock.Setup(u => u.GetRepository<Order, Guid>()
+                .GetFirstOrDefaultAsync(It.IsAny<OrderDetailsSpecification>()))
+            .ReturnsAsync(order);
+        _unitOfWorkMock.Setup(u => u.GetRepository<ReturnItem, Guid>()
+                .GetAllAsync(It.IsAny<ReturnItemsByOrderSpecification>()))
+            .ReturnsAsync(new List<ReturnItem>());
+        _mapperMock.Setup(m => m.Map<ReturnRequest>(dto)).Returns(returnRequest);
+        _unitOfWorkMock.Setup(u => u.GetRepository<ReturnRequest, Guid>().AddAsync(It.IsAny<ReturnRequest>()))
+            .Returns(Task.CompletedTask);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+
+        await _returnService.CreateReturnAsync("user1", dto);
+
+        // 100 + (50/2 * 1) = 125
+        returnRequest.RefundAmount.Should().Be(125m);
     }
 
     [Fact]

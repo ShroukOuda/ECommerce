@@ -120,6 +120,12 @@ public class ReturnService : IReturnService
         returnRequest.ReturnNumber = GenerateReturnNumber();
         returnRequest.ReturnItems = new List<ReturnItem>();
 
+        // Quantities and refund values already consumed within
+        // this request, so duplicate OrderItemId entries cannot
+        // bypass the limits checked against persisted returns.
+        var requestedQuantities = new Dictionary<Guid, int>();
+        var requestedRefunds = new Dictionary<Guid, decimal>();
+
         foreach (var item in dto.Items)
         {
             var orderItem = order.OrderItems
@@ -135,7 +141,12 @@ public class ReturnService : IReturnService
                 .Where(ri => ri.OrderItemId == item.OrderItemId)
                 .Sum(ri => ri.Quantity);
 
-            var remaining = orderItem.Quantity - alreadyReturned;
+            requestedQuantities.TryGetValue(
+                item.OrderItemId, out var requestedThisRequest);
+
+            var remaining = orderItem.Quantity
+                - alreadyReturned
+                - requestedThisRequest;
 
             if (item.Quantity > remaining)
             {
@@ -143,11 +154,36 @@ public class ReturnService : IReturnService
                     $"Requested quantity ({item.Quantity}) for order item {item.OrderItemId} exceeds the returnable quantity ({remaining}).");
             }
 
-            decimal refundAmount = CalculateRefundAmount(
+            // Cap the cumulative refunded value per line at its
+            // net paid value, so repeated partial refunds cannot
+            // exceed it through per-request rounding.
+            var alreadyRefunded = existingReturnItems
+                .Where(ri => ri.OrderItemId == item.OrderItemId)
+                .Sum(ri => ri.RefundAmount);
+
+            requestedRefunds.TryGetValue(
+                item.OrderItemId, out var refundedThisRequest);
+
+            decimal lineNetValue = CalculateLineNetValue(
                 orderItem,
-                item.Quantity,
                 totalCouponDiscount,
                 orderSubTotal);
+
+            decimal remainingRefundable = Math.Max(
+                0m,
+                lineNetValue - alreadyRefunded - refundedThisRequest);
+
+            decimal refundAmount = Math.Min(
+                CalculateRefundAmount(
+                    orderItem,
+                    item.Quantity,
+                    lineNetValue),
+                remainingRefundable);
+
+            requestedQuantities[item.OrderItemId] =
+                requestedThisRequest + item.Quantity;
+            requestedRefunds[item.OrderItemId] =
+                refundedThisRequest + refundAmount;
 
             returnRequest.ReturnItems.Add(new ReturnItem
             {
@@ -577,12 +613,15 @@ public class ReturnService : IReturnService
         return item;
     }
 
-    private static decimal CalculateRefundAmount(
+    private static decimal CalculateLineNetValue(
         OrderItem orderItem,
-        int returnedQuantity,
         decimal totalCouponDiscount,
         decimal orderSubTotal)
     {
+        // Line totals are gross: the coupon discount is only
+        // ever stored as a separate order-level CouponUsage, so
+        // subtracting its allocation here cannot double-count a
+        // discount already inside TotalPrice.
         decimal lineNet = orderItem.TotalPrice;
 
         if (totalCouponDiscount > 0 && orderSubTotal > 0)
@@ -598,11 +637,19 @@ public class ReturnService : IReturnService
             lineNet = Math.Max(0m, lineNet - allocatedDiscount);
         }
 
+        return lineNet;
+    }
+
+    private static decimal CalculateRefundAmount(
+        OrderItem orderItem,
+        int returnedQuantity,
+        decimal lineNetValue)
+    {
         if (orderItem.Quantity <= 0)
             return 0m;
 
         return Math.Round(
-            lineNet / orderItem.Quantity * returnedQuantity,
+            lineNetValue / orderItem.Quantity * returnedQuantity,
             2,
             MidpointRounding.AwayFromZero);
     }

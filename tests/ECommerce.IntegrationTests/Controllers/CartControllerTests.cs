@@ -15,7 +15,7 @@ public class CartControllerTests : IClassFixture<CustomWebApplicationFactory>
     [Fact]
     public async Task GetByUserId_ShouldReturnResponse()
     {
-        var response = await _client.GetAsync("/api/Cart/get-by-user/test-user-id");
+        var response = await _client.GetAsync("/api/v1/cart");
         // Cart may return OK with data, NoContent if no active cart, or error
         response.StatusCode.Should().BeOneOf(
             HttpStatusCode.OK, HttpStatusCode.NoContent, HttpStatusCode.NotFound, HttpStatusCode.InternalServerError);

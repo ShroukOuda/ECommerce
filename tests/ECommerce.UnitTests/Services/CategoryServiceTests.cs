@@ -44,6 +44,8 @@ public class CategoryServiceTests
 
         _unitOfWorkMock.Setup(u => u.GetRepository<Category, Guid>().GetAllAsync())
             .ReturnsAsync(categories);
+        _mapperMock.Setup(m => m.Map<IEnumerable<GetCategoryDTO>>(categories))
+            .Returns(new List<GetCategoryDTO> { new() { Id = TestGuid.FromInt(1), Name = "Electronics" } });
 
         // Act
         var result = await _categoryService.GetAllCategoriesAsync();
@@ -54,16 +56,16 @@ public class CategoryServiceTests
     }
 
     [Fact]
-    public async Task GetCategoryByIdAsync_WhenNotFound_ShouldReturnNull()
+    public async Task GetCategoryByIdAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
         // Arrange
         _unitOfWorkMock.Setup(u => u.GetRepository<Category, Guid>().GetByIdAsync(TestGuid.FromInt(999)))
             .ReturnsAsync((Category?)null);
 
         // Act
-        var result = await _categoryService.GetCategoryByIdAsync(TestGuid.FromInt(999));
+        var act = () => _categoryService.GetCategoryByIdAsync(TestGuid.FromInt(999));
 
         // Assert
-        result.Should().BeNull();
+        await act.Should().ThrowAsync<KeyNotFoundException>();
     }
 }

@@ -37,7 +37,7 @@ public class CartServiceTests
         var cart = new Cart { Id = TestGuid.FromInt(1), UserId = "user1" };
         var cartDto = new GetCartDTO { Id = TestGuid.FromInt(1), UserId = "user1" };
 
-        _unitOfWorkMock.Setup(u => u.GetRepository<Cart, Guid>().GetFirstOrDefaultAsync(new CartDetailsSpecification(TestGuid.FromInt(1))))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Cart, Guid>().GetFirstOrDefaultAsync(It.IsAny<CartDetailsSpecification>()))
             .ReturnsAsync(cart);
         _mapperMock.Setup(m => m.Map<GetCartDTO>(cart)).Returns(cartDto);
 
@@ -50,7 +50,7 @@ public class CartServiceTests
     [Fact]
     public async Task GetCartByIdAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
-        _unitOfWorkMock.Setup(u => u.GetRepository<Cart, Guid>().GetFirstOrDefaultAsync(new CartDetailsSpecification(TestGuid.FromInt(999))))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Cart, Guid>().GetFirstOrDefaultAsync(It.IsAny<CartDetailsSpecification>()))
             .ReturnsAsync((Cart?)null);
 
         var act = () => _cartService.GetCartByIdAsync(TestGuid.FromInt(999));
@@ -64,7 +64,7 @@ public class CartServiceTests
         var cart = new Cart { Id = TestGuid.FromInt(1), UserId = "user1" };
         var cartDto = new GetCartDTO { Id = TestGuid.FromInt(1), UserId = "user1" };
 
-        _unitOfWorkMock.Setup(u => u.GetRepository<Cart, Guid>().GetFirstOrDefaultAsync(new CartByUserSpecification("user1", CartStatus.Active)))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Cart, Guid>().GetFirstOrDefaultAsync(It.IsAny<CartByUserSpecification>()))
             .ReturnsAsync(cart);
         _mapperMock.Setup(m => m.Map<GetCartDTO>(cart)).Returns(cartDto);
 
@@ -76,7 +76,7 @@ public class CartServiceTests
     [Fact]
     public async Task GetActiveCartByUserIdAsync_WhenNoCart_ShouldReturnNull()
     {
-        _unitOfWorkMock.Setup(u => u.GetRepository<Cart, Guid>().GetFirstOrDefaultAsync(new CartByUserSpecification("user1", CartStatus.Active)))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Cart, Guid>().GetFirstOrDefaultAsync(It.IsAny<CartByUserSpecification>()))
             .ReturnsAsync((Cart?)null);
 
         var result = await _cartService.GetActiveCartByUserIdAsync("user1");
@@ -119,14 +119,14 @@ public class CartServiceTests
     [Fact]
     public async Task UpdateCartItemAsync_WhenItemExists_ShouldUpdate()
     {
-        var dto = new UpdateCartItemDTO { Id = TestGuid.FromInt(1), Quantity = 5 };
+        var dto = new UpdateCartItemDTO { Quantity = 5 };
         var item = new CartItem { Id = TestGuid.FromInt(1), Quantity = 2 };
 
         _unitOfWorkMock.Setup(u => u.GetRepository<CartItem, Guid>().GetByIdAsync(TestGuid.FromInt(1)))
             .ReturnsAsync(item);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
-        await _cartService.UpdateCartItemAsync(dto);
+        await _cartService.UpdateCartItemAsync(TestGuid.FromInt(1), dto);
 
         item.Quantity.Should().Be(5);
         _unitOfWorkMock.Verify(u => u.GetRepository<CartItem, Guid>().Update(item), Times.Once);
@@ -135,12 +135,12 @@ public class CartServiceTests
     [Fact]
     public async Task UpdateCartItemAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
-        var dto = new UpdateCartItemDTO { Id = TestGuid.FromInt(999), Quantity = 5 };
+        var dto = new UpdateCartItemDTO { Quantity = 5 };
 
         _unitOfWorkMock.Setup(u => u.GetRepository<CartItem, Guid>().GetByIdAsync(TestGuid.FromInt(999)))
             .ReturnsAsync((CartItem?)null);
 
-        var act = () => _cartService.UpdateCartItemAsync(dto);
+        var act = () => _cartService.UpdateCartItemAsync(TestGuid.FromInt(999), dto);
 
         await act.Should().ThrowAsync<KeyNotFoundException>();
     }
@@ -150,22 +150,23 @@ public class CartServiceTests
     {
         var item = new CartItem { Id = TestGuid.FromInt(1) };
 
-        _unitOfWorkMock.Setup(u => u.GetRepository<CartItem, Guid>().GetByIdAsync(TestGuid.FromInt(1)))
-            .ReturnsAsync(item);
+        _unitOfWorkMock.Setup(u => u.GetRepository<CartItem, Guid>().ExistsAsync(It.IsAny<CartItemSpecification>()))
+            .ReturnsAsync(true);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
-        await _cartService.RemoveCartItemAsync(TestGuid.FromInt(1));
+        await _cartService.RemoveCartItemAsync(TestGuid.FromInt(1), TestGuid.FromInt(1));
 
-        _unitOfWorkMock.Verify(u => u.GetRepository<CartItem, Guid>().Delete(item), Times.Once);
+        _unitOfWorkMock.Verify(u => u.GetRepository<CartItem, Guid>().Delete(
+            It.Is<CartItem>(c => c.Id == TestGuid.FromInt(1))), Times.Once);
     }
 
     [Fact]
     public async Task RemoveCartItemAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
-        _unitOfWorkMock.Setup(u => u.GetRepository<CartItem, Guid>().GetByIdAsync(TestGuid.FromInt(999)))
-            .ReturnsAsync((CartItem?)null);
+        _unitOfWorkMock.Setup(u => u.GetRepository<CartItem, Guid>().ExistsAsync(It.IsAny<CartItemSpecification>()))
+            .ReturnsAsync(false);
 
-        var act = () => _cartService.RemoveCartItemAsync(TestGuid.FromInt(999));
+        var act = () => _cartService.RemoveCartItemAsync(TestGuid.FromInt(1), TestGuid.FromInt(999));
 
         await act.Should().ThrowAsync<KeyNotFoundException>();
     }
@@ -175,7 +176,7 @@ public class CartServiceTests
     {
         var items = new List<CartItem> { new() { Id = TestGuid.FromInt(1) }, new() { Id = TestGuid.FromInt(2) } };
 
-        _unitOfWorkMock.Setup(u => u.GetRepository<CartItem, Guid>().GetAllAsync(new CartItemsByCartSpecification(TestGuid.FromInt(1))))
+        _unitOfWorkMock.Setup(u => u.GetRepository<CartItem, Guid>().GetAllAsync(It.IsAny<CartItemsByCartSpecification>()))
             .ReturnsAsync(items);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
@@ -187,7 +188,7 @@ public class CartServiceTests
     [Fact]
     public async Task ClearCartAsync_WhenNoItems_ShouldNotCallDelete()
     {
-        _unitOfWorkMock.Setup(u => u.GetRepository<CartItem, Guid>().GetAllAsync(new CartItemsByCartSpecification(TestGuid.FromInt(1))))
+        _unitOfWorkMock.Setup(u => u.GetRepository<CartItem, Guid>().GetAllAsync(It.IsAny<CartItemsByCartSpecification>()))
             .ReturnsAsync(new List<CartItem>());
 
         await _cartService.ClearCartAsync(TestGuid.FromInt(1));

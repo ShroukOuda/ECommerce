@@ -18,6 +18,8 @@ public static class ApplicationRegistration
         services.AddScoped<IProductImageService, ProductImageService>();
         services.AddScoped<ICategoryImageService, CategoryImageService>();
         services.AddScoped<IBrandService, BrandService>();
+        services.AddScoped<IBrandLogoService, BrandLogoService>();
+        services.AddScoped<IHomePageService, HomePageService>();
         services.AddScoped<IOrderService, OrderService>();
         services.AddScoped<ICartService, CartService>();
         services.AddScoped<ICouponService, CouponService>();

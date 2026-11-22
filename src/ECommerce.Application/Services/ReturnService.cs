@@ -2,8 +2,10 @@ using AutoMapper;
 using FluentValidation;
 using ECommerce.Application.DTO.Return;
 using ECommerce.Application.Interfaces;
+using ECommerce.Application.Specifications.Coupons;
 using ECommerce.Application.Specifications.Orders;
 using ECommerce.Application.Specifications.Returns;
+using ECommerce.Domain.Entities.Coupons;
 using ECommerce.Domain.Entities.Orders;
 using ECommerce.Domain.Entities.Returns;
 using ECommerce.Domain.Enums.Return;
@@ -94,6 +96,21 @@ public class ReturnService : IReturnService
             .GetAllAsync(
                 new ReturnItemsByOrderSpecification(dto.OrderId));
 
+        // Approved refund policy: refund the actual paid item
+        // value after allocated order-level coupon discounts,
+        // proportional to the returned quantity. Shipping is
+        // never refunded and no fees are added.
+        var couponUsages = await _unitOfWork
+            .GetRepository<CouponUsage, Guid>()
+            .GetAllAsync(
+                new CouponUsagesByOrderSpecification(dto.OrderId));
+
+        decimal totalCouponDiscount =
+            couponUsages.Sum(cu => cu.DiscountAmount);
+
+        decimal orderSubTotal =
+            order.OrderItems.Sum(oi => oi.TotalPrice);
+
         var returnRequest =
             _mapper.Map<ReturnRequest>(dto);
 
@@ -126,20 +143,25 @@ public class ReturnService : IReturnService
                     $"Requested quantity ({item.Quantity}) for order item {item.OrderItemId} exceeds the returnable quantity ({remaining}).");
             }
 
+            decimal refundAmount = CalculateRefundAmount(
+                orderItem,
+                item.Quantity,
+                totalCouponDiscount,
+                orderSubTotal);
+
             returnRequest.ReturnItems.Add(new ReturnItem
             {
                 OrderItemId = item.OrderItemId,
                 ProductId = orderItem.ProductId,
                 Quantity = item.Quantity,
                 Reason = item.Reason,
+                RefundAmount = refundAmount,
                 Status = ReturnItemStatus.Pending
             });
         }
 
-        // Refund amount is intentionally not calculated here:
-        // the refund policy (eligibility window, partial
-        // quantities, discount allocation) is an unresolved
-        // business decision.
+        returnRequest.RefundAmount =
+            returnRequest.ReturnItems.Sum(ri => ri.RefundAmount);
 
         // Initial history
         returnRequest.ReturnHistories.Add(
@@ -553,6 +575,36 @@ public class ReturnService : IReturnService
         }
 
         return item;
+    }
+
+    private static decimal CalculateRefundAmount(
+        OrderItem orderItem,
+        int returnedQuantity,
+        decimal totalCouponDiscount,
+        decimal orderSubTotal)
+    {
+        decimal lineNet = orderItem.TotalPrice;
+
+        if (totalCouponDiscount > 0 && orderSubTotal > 0)
+        {
+            // Allocate the order-level discount to this line in
+            // proportion to its share of the order subtotal.
+            decimal allocatedDiscount = Math.Round(
+                totalCouponDiscount *
+                (orderItem.TotalPrice / orderSubTotal),
+                2,
+                MidpointRounding.AwayFromZero);
+
+            lineNet = Math.Max(0m, lineNet - allocatedDiscount);
+        }
+
+        if (orderItem.Quantity <= 0)
+            return 0m;
+
+        return Math.Round(
+            lineNet / orderItem.Quantity * returnedQuantity,
+            2,
+            MidpointRounding.AwayFromZero);
     }
 
     private async Task SaveReturnAsync(

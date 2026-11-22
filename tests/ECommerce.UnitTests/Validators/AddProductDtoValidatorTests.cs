@@ -11,7 +11,7 @@ public class AddProductDtoValidatorTests
     [Fact]
     public async Task Validate_WithValidData_ShouldPass()
     {
-        var dto = new AddProductDTO { Name = "Laptop", BasePrice = 999m, StockQuantity = 10, SKU = "LAP-001", CategoryId = TestGuid.FromInt(1) };
+        var dto = new AddProductDTO { Name = "Laptop", BasePrice = 999m, SalePrice = 999m, StockQuantity = 10, SKU = "LAP-001", CategoryId = TestGuid.FromInt(1), BrandId = TestGuid.FromInt(1) };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeTrue();
     }
@@ -31,7 +31,7 @@ public class AddProductDtoValidatorTests
         var dto = new AddProductDTO { Name = "Laptop", BasePrice = 0, SKU = "LAP-001", CategoryId = TestGuid.FromInt(1) };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
-        result.Errors.Should().Contain(e => e.PropertyName == "Price");
+        result.Errors.Should().Contain(e => e.PropertyName == "BasePrice");
     }
 
     [Fact]

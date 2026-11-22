@@ -1,0 +1,63 @@
+using ECommerce.Application.DTO.Shipping;
+using ECommerce.Application.Validators.Shipping;
+using ECommerce.Domain.Enums.Shipping;
+using FluentAssertions;
+
+namespace ECommerce.UnitTests.Validators;
+
+public class CreateShippingDtoValidatorTests
+{
+    private readonly CreateShippingDtoValidator _validator = new();
+
+    [Fact]
+    public async Task Validate_WithValidData_ShouldPass()
+    {
+        var dto = new CreateShippingDTO { OrderId = TestGuid.FromInt(1), AddressId = TestGuid.FromInt(1), Cost = 9.99m, Method = ShippingMethod.Express };
+        var result = await _validator.ValidateAsync(dto);
+        result.IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Validate_WithOrderIdZero_ShouldFail()
+    {
+        var dto = new CreateShippingDTO { OrderId = Guid.Empty, AddressId = TestGuid.FromInt(1), Cost = 9.99m, Method = ShippingMethod.Express };
+        var result = await _validator.ValidateAsync(dto);
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(e => e.PropertyName == "OrderId");
+    }
+
+    [Fact]
+    public async Task Validate_WithAddressIdZero_ShouldFail()
+    {
+        var dto = new CreateShippingDTO { OrderId = TestGuid.FromInt(1), AddressId = Guid.Empty, Cost = 9.99m, Method = ShippingMethod.Express };
+        var result = await _validator.ValidateAsync(dto);
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(e => e.PropertyName == "AddressId");
+    }
+
+    [Fact]
+    public async Task Validate_WithNegativeCost_ShouldFail()
+    {
+        var dto = new CreateShippingDTO { OrderId = TestGuid.FromInt(1), AddressId = TestGuid.FromInt(1), Cost = -1, Method = ShippingMethod.Express };
+        var result = await _validator.ValidateAsync(dto);
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(e => e.PropertyName == "Cost");
+    }
+
+    [Fact]
+    public async Task Validate_WithZeroCost_ShouldPass()
+    {
+        var dto = new CreateShippingDTO { OrderId = TestGuid.FromInt(1), AddressId = TestGuid.FromInt(1), Cost = 0, Method = ShippingMethod.Express };
+        var result = await _validator.ValidateAsync(dto);
+        result.IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Validate_WithUndefinedMethod_ShouldFail()
+    {
+        var dto = new CreateShippingDTO { OrderId = TestGuid.FromInt(1), AddressId = TestGuid.FromInt(1), Cost = 9.99m, Method = (ShippingMethod)0 };
+        var result = await _validator.ValidateAsync(dto);
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(e => e.PropertyName == "Method");
+    }
+}

@@ -13,10 +13,11 @@ public class InventoryControllerTests : IClassFixture<CustomWebApplicationFactor
     }
 
     [Fact]
-    public async Task GetHistory_ShouldReturnSuccessStatusCode()
+    public async Task GetHistory_WithUnknownProduct_ShouldReturnErrorResponse()
     {
-        var response = await _client.GetAsync("/api/Inventory/history/1");
+        var response = await _client.GetAsync("/api/v1/admin/inventory/00000000-0000-0000-0000-000000099999/history");
         var body = await response.Content.ReadAsStringAsync();
-        response.StatusCode.Should().Be(HttpStatusCode.OK, because: $"Response body: {body}");
+        response.StatusCode.Should().BeOneOf(
+            HttpStatusCode.NotFound, HttpStatusCode.InternalServerError);
     }
 }

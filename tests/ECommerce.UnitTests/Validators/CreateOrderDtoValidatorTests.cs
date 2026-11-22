@@ -13,7 +13,7 @@ public class CreateOrderDtoValidatorTests
     {
         var dto = new CreateOrderDTO
         {
-            UserId = "user1",
+
             Currency = "USD",
             Items = new List<CreateOrderItemDTO> { new() { ProductId = TestGuid.FromInt(1), Quantity = 2 } }
         };
@@ -21,24 +21,11 @@ public class CreateOrderDtoValidatorTests
         result.IsValid.Should().BeTrue();
     }
 
-    [Fact]
-    public async Task Validate_WithEmptyUserId_ShouldFail()
-    {
-        var dto = new CreateOrderDTO
-        {
-            UserId = "",
-            Currency = "USD",
-            Items = new List<CreateOrderItemDTO> { new() { ProductId = TestGuid.FromInt(1), Quantity = 2 } }
-        };
-        var result = await _validator.ValidateAsync(dto);
-        result.IsValid.Should().BeFalse();
-        result.Errors.Should().Contain(e => e.PropertyName == "UserId");
-    }
 
     [Fact]
     public async Task Validate_WithEmptyItems_ShouldFail()
     {
-        var dto = new CreateOrderDTO { UserId = "user1", Currency = "USD", Items = new List<CreateOrderItemDTO>() };
+        var dto = new CreateOrderDTO { Currency = "USD", Items = new List<CreateOrderItemDTO>() };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "Items");
@@ -49,7 +36,7 @@ public class CreateOrderDtoValidatorTests
     {
         var dto = new CreateOrderDTO
         {
-            UserId = "user1",
+
             Currency = "",
             Items = new List<CreateOrderItemDTO> { new() { ProductId = TestGuid.FromInt(1), Quantity = 2 } }
         };

@@ -4,11 +4,11 @@
 
 | Project | Type | Tests | Description |
 |---------|------|-------|-------------|
-| `ECommerce.UnitTests` | Unit | 13 | Service logic & validator tests with Moq |
-| `ECommerce.IntegrationTests` | Integration | 2 | API endpoint tests with WebApplicationFactory |
+| `ECommerce.UnitTests` | Unit | 278 | Service logic & validator tests with Moq |
+| `ECommerce.IntegrationTests` | Integration | 33 | API endpoint tests with WebApplicationFactory |
 | `ECommerce.ArchitectureTests` | Architecture | 9 | Clean architecture enforcement with NetArchTest |
 
-**Total: 24 tests**
+**Total: 320 tests**
 
 ## Running Tests
 
@@ -54,10 +54,25 @@ dotnet test --verbosity normal
 
 ```
 Services/
-  BrandServiceTests.cs        # GetAll, GetById, Add, Delete, validation
-  CategoryServiceTests.cs     # GetAll, GetById, not-found handling
+  AddressServiceTests.cs        # CRUD, validation, not-found handling
+  BrandServiceTests.cs          # GetAll, GetById, Add, Delete, validation
+  CartServiceTests.cs           # Cart lookup, add/update/remove items, clear
+  CategoryServiceTests.cs       # GetAll, GetById, not-found handling
+  CouponServiceTests.cs         # CRUD, code lookup, validation
+  InventoryServiceTests.cs      # History lookup, stock adjustments, guards
+  NotificationEventServiceTests.cs
+  NotificationPreferenceServiceTests.cs
+  OrderServiceTests.cs          # Customer/admin flows, cancel and status rules
+  PaymentServiceTests.cs
+  ProductOptionServiceTests.cs  # Options and option values
+  ProductServiceTests.cs
+  ProductVariantServiceTests.cs
+  ReturnServiceTests.cs         # Customer requests and admin status machine
+  ReviewServiceTests.cs
+  ShippingServiceTests.cs
+  WishlistServiceTests.cs
 Validators/
-  AddBrandDtoValidatorTests.cs # Valid/invalid inputs, edge cases
+  Add*/Create*/Update*DtoValidatorTests.cs # Valid/invalid inputs, edge cases
 ```
 
 **Patterns used:**
@@ -70,8 +85,9 @@ Validators/
 
 ```
 Controllers/
-  BrandsControllerTests.cs     # GET /api/Brands/get-all, GET by invalid ID
+  *ControllerTests.cs          # One class per /api/v1/* controller
 CustomWebApplicationFactory.cs # In-memory DB setup, service overrides
+TestAuthenticationHandler.cs   # Authenticated test user (Admin + Customer roles)
 ```
 
 **Patterns used:**
@@ -94,6 +110,27 @@ ArchitectureTests.cs
   - Interfaces start with "I"
   - Controllers inherit BaseController
 ```
+
+## Recent Test-Suite Realignment (fix/unit-tests-and-controllers)
+
+The suite was rewritten to match the refactored order/returns/admin code:
+
+- Validator tests for `Update*DTO` no longer test an `Id` property: update DTOs
+  dropped `Id` (the id now comes from the route), and the validators dropped the
+  `Id` rules with it. The removed `WithZeroId` tests covered a rule that no longer exists.
+- `UserId` tests were removed from `CreateOrderDTO` / `AddReviewDTO` /
+  `CreateReturnRequestDTO` validator tests: user identity now comes from the JWT,
+  not the request body, so there is no `UserId` field to validate.
+- Coupon and shipping tests now use the `DiscountType` / `ShippingMethod` enums
+  instead of strings.
+- Inventory history tests were rewritten for the redesigned DTO
+  (`QuantityChange`, `InventoryChangeType`, optional `ProductVariantId`).
+- Integration tests now call the real `/api/v1/*` routes. Tests for endpoints
+  removed in the admin split (public coupon GETs, `/api/Homepage/banners`,
+  `/deals-today`, `/featured-collections`) were replaced with tests for the
+  endpoints that replaced them (coupon `validate`/`apply`, single `/api/v1/homepage`).
+- `ReturnServiceTests` and `OrderServiceTests` were rewritten to cover the new
+  customer/admin flows, including the return status machine and order cancel rules.
 
 ## Writing New Tests
 

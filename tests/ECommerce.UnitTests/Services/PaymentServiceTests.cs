@@ -36,7 +36,7 @@ public class PaymentServiceTests
         var payments = new List<Payment> { new() { Id = TestGuid.FromInt(1), OrderId = TestGuid.FromInt(1) } };
         var paymentDtos = new List<GetPaymentDTO> { new() { Id = TestGuid.FromInt(1), OrderId = TestGuid.FromInt(1) } };
 
-        _unitOfWorkMock.Setup(u => u.GetRepository<Payment, Guid>().GetAllAsync(new PaymentsByOrderSpecification(TestGuid.FromInt(1))))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Payment, Guid>().GetAllAsync(It.IsAny<PaymentsByOrderSpecification>()))
             .ReturnsAsync(payments);
         _mapperMock.Setup(m => m.Map<IEnumerable<GetPaymentDTO>>(payments)).Returns(paymentDtos);
 

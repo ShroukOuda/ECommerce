@@ -18,6 +18,7 @@ public class CouponServiceTests
     private readonly Mock<IMapper> _mapperMock;
     private readonly Mock<IValidator<AddCouponDTO>> _addValidatorMock;
     private readonly Mock<IValidator<UpdateCouponDTO>> _updateValidatorMock;
+    private readonly Mock<ICartService> _cartServiceMock;
     private readonly ICouponService _couponService;
 
     public CouponServiceTests()
@@ -26,9 +27,11 @@ public class CouponServiceTests
         _mapperMock = new Mock<IMapper>();
         _addValidatorMock = new Mock<IValidator<AddCouponDTO>>();
         _updateValidatorMock = new Mock<IValidator<UpdateCouponDTO>>();
+        _cartServiceMock = new Mock<ICartService>();
         _couponService = new CouponService(
             _unitOfWorkMock.Object,
             _mapperMock.Object,
+            _cartServiceMock.Object,
             _addValidatorMock.Object,
             _updateValidatorMock.Object);
     }
@@ -53,11 +56,11 @@ public class CouponServiceTests
     public async Task GetCouponByIdAsync_WhenExists_ShouldReturnCoupon()
     {
         var coupon = new Coupon { Id = TestGuid.FromInt(1), Code = "SAVE10" };
-        var couponDto = new GetCouponDTO { Id = TestGuid.FromInt(1), Code = "SAVE10" };
+        var couponDto = new GetCouponDetailsDTO { Id = TestGuid.FromInt(1), Code = "SAVE10" };
 
         _unitOfWorkMock.Setup(u => u.GetRepository<Coupon, Guid>().GetByIdAsync(TestGuid.FromInt(1)))
             .ReturnsAsync(coupon);
-        _mapperMock.Setup(m => m.Map<GetCouponDTO>(coupon)).Returns(couponDto);
+        _mapperMock.Setup(m => m.Map<GetCouponDetailsDTO>(coupon)).Returns(couponDto);
 
         var result = await _couponService.GetCouponByIdAsync(TestGuid.FromInt(1));
 
@@ -82,7 +85,7 @@ public class CouponServiceTests
         var coupon = new Coupon { Id = TestGuid.FromInt(1), Code = "SAVE10" };
         var couponDto = new GetCouponDTO { Id = TestGuid.FromInt(1), Code = "SAVE10" };
 
-        _unitOfWorkMock.Setup(u => u.GetRepository<Coupon, Guid>().GetFirstOrDefaultAsync(new CouponByCodeSpecification("SAVE10")))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Coupon, Guid>().GetFirstOrDefaultAsync(It.IsAny<CouponByCodeSpecification>()))
             .ReturnsAsync(coupon);
         _mapperMock.Setup(m => m.Map<GetCouponDTO>(coupon)).Returns(couponDto);
 
@@ -94,7 +97,7 @@ public class CouponServiceTests
     [Fact]
     public async Task GetCouponByCodeAsync_WhenNotFound_ShouldReturnNull()
     {
-        _unitOfWorkMock.Setup(u => u.GetRepository<Coupon, Guid>().GetFirstOrDefaultAsync(new CouponByCodeSpecification("INVALID")))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Coupon, Guid>().GetFirstOrDefaultAsync(It.IsAny<CouponByCodeSpecification>()))
             .ReturnsAsync((Coupon?)null);
 
         var result = await _couponService.GetCouponByCodeAsync("INVALID");
@@ -138,7 +141,7 @@ public class CouponServiceTests
     public async Task DeleteCouponAsync_WhenExists_ShouldDeleteCoupon()
     {
         _unitOfWorkMock.Setup(u => u.GetRepository<Coupon, Guid>().ExistsAsync(
-            new CouponSpecification(TestGuid.FromInt(1))))
+            It.IsAny<CouponSpecification>()))
             .ReturnsAsync(true);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
@@ -151,7 +154,7 @@ public class CouponServiceTests
     public async Task DeleteCouponAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
         _unitOfWorkMock.Setup(u => u.GetRepository<Coupon, Guid>().ExistsAsync(
-            new CouponSpecification(TestGuid.FromInt(999))))
+            It.IsAny<CouponSpecification>()))
             .ReturnsAsync(false);
 
         var act = () => _couponService.DeleteCouponAsync(TestGuid.FromInt(999));

@@ -3,8 +3,11 @@ using ECommerce.Application.DTO.Cart;
 using ECommerce.Application.Interfaces;
 using ECommerce.Application.Services;
 using ECommerce.Application.Specifications.Carts;
+using ECommerce.Application.Specifications.Products;
 using ECommerce.Domain.Entities.Carts;
+using ECommerce.Domain.Entities.Products;
 using ECommerce.Domain.Enums.Cart;
+using ECommerce.Domain.Enums.Product;
 using ECommerce.Domain.Interfaces.Repositories;
 using FluentAssertions;
 using FluentValidation;
@@ -85,21 +88,79 @@ public class CartServiceTests
     }
 
     [Fact]
-    public async Task AddCartItemAsync_WithValidData_ShouldAddItem()
+    public async Task AddCartItemAsync_WithValidData_ShouldAddItemWithCatalogPrice()
     {
-        var dto = new AddCartItemDTO { CartId = TestGuid.FromInt(1), ProductId = TestGuid.FromInt(1), Quantity = 2 };
+        var dto = new AddCartItemDTO { CartId = TestGuid.FromInt(1), ProductId = TestGuid.FromInt(1), VariantId = TestGuid.FromInt(2), Quantity = 2 };
         var cartItem = new CartItem { CartId = TestGuid.FromInt(1), ProductId = TestGuid.FromInt(1), Quantity = 2 };
+        var product = new Product
+        {
+            Id = TestGuid.FromInt(1),
+            Status = ProductStatus.Published,
+            BasePrice = 100m,
+            SalePrice = 80m // on sale
+        };
+        var variant = new ProductVariant
+        {
+            Id = TestGuid.FromInt(2),
+            ProductId = TestGuid.FromInt(1),
+            Status = ProductVariantStatus.Active,
+            PriceAdjustment = 10m
+        };
 
         _addItemValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
         _mapperMock.Setup(m => m.Map<CartItem>(dto)).Returns(cartItem);
+        _unitOfWorkMock.Setup(u => u.GetRepository<Product, Guid>().GetByIdAsync(dto.ProductId))
+            .ReturnsAsync(product);
+        _unitOfWorkMock.Setup(u => u.GetRepository<ProductVariant, Guid>()
+                .GetFirstOrDefaultAsync(It.IsAny<ProductVariantSpecification>()))
+            .ReturnsAsync(variant);
         _unitOfWorkMock.Setup(u => u.GetRepository<CartItem, Guid>().AddAsync(It.IsAny<CartItem>()))
             .Returns(Task.CompletedTask);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
         await _cartService.AddCartItemAsync(dto);
 
+        // 80 sale price + 10 variant adjustment, server-side
+        cartItem.Price.Should().Be(90m);
         _unitOfWorkMock.Verify(u => u.GetRepository<CartItem, Guid>().AddAsync(cartItem), Times.Once);
+    }
+
+    [Fact]
+    public async Task AddCartItemAsync_WhenProductNotPublished_ShouldThrowArgumentException()
+    {
+        var dto = new AddCartItemDTO { CartId = TestGuid.FromInt(1), ProductId = TestGuid.FromInt(1), VariantId = TestGuid.FromInt(2), Quantity = 1 };
+        var product = new Product { Id = TestGuid.FromInt(1), Status = ProductStatus.Draft };
+
+        _addItemValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ValidationResult());
+        _unitOfWorkMock.Setup(u => u.GetRepository<Product, Guid>().GetByIdAsync(dto.ProductId))
+            .ReturnsAsync(product);
+
+        var act = () => _cartService.AddCartItemAsync(dto);
+
+        await act.Should().ThrowAsync<ArgumentException>();
+        _unitOfWorkMock.Verify(u => u.GetRepository<CartItem, Guid>().AddAsync(It.IsAny<CartItem>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AddCartItemAsync_WhenVariantNotForProduct_ShouldThrowArgumentException()
+    {
+        var dto = new AddCartItemDTO { CartId = TestGuid.FromInt(1), ProductId = TestGuid.FromInt(1), VariantId = TestGuid.FromInt(2), Quantity = 1 };
+        var product = new Product { Id = TestGuid.FromInt(1), Status = ProductStatus.Published };
+        var variant = new ProductVariant { Id = TestGuid.FromInt(2), ProductId = TestGuid.FromInt(999), Status = ProductVariantStatus.Active };
+
+        _addItemValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ValidationResult());
+        _unitOfWorkMock.Setup(u => u.GetRepository<Product, Guid>().GetByIdAsync(dto.ProductId))
+            .ReturnsAsync(product);
+        _unitOfWorkMock.Setup(u => u.GetRepository<ProductVariant, Guid>()
+                .GetFirstOrDefaultAsync(It.IsAny<ProductVariantSpecification>()))
+            .ReturnsAsync(variant);
+
+        var act = () => _cartService.AddCartItemAsync(dto);
+
+        await act.Should().ThrowAsync<ArgumentException>();
     }
 
     [Fact]

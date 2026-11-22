@@ -10,7 +10,6 @@ public class UpdateProductVariantDtoValidatorTests
 
     private static UpdateProductVariantDTO CreateValidDto() => new()
     {
-        Id = TestGuid.FromInt(1),
         Sku = "SKU-001",
         VariantName = "Red Large",
         StockQuantity = 10,
@@ -25,15 +24,6 @@ public class UpdateProductVariantDtoValidatorTests
         result.IsValid.Should().BeTrue();
     }
 
-    [Fact]
-    public async Task Validate_WithIdZero_ShouldFail()
-    {
-        var dto = CreateValidDto();
-        dto.Id = Guid.Empty;
-        var result = await _validator.ValidateAsync(dto);
-        result.IsValid.Should().BeFalse();
-        result.Errors.Should().Contain(e => e.PropertyName == "Id");
-    }
 
     [Theory]
     [InlineData("")]

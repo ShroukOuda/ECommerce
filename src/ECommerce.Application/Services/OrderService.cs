@@ -2,9 +2,15 @@ using AutoMapper;
 using FluentValidation;
 using ECommerce.Application.DTO.Order;
 using ECommerce.Application.Interfaces;
+using ECommerce.Application.Specifications.Carts;
 using ECommerce.Application.Specifications.Orders;
+using ECommerce.Application.Specifications.Products;
+using ECommerce.Domain.Entities.Carts;
 using ECommerce.Domain.Entities.Orders;
+using ECommerce.Domain.Entities.Products;
+using ECommerce.Domain.Enums.Cart;
 using ECommerce.Domain.Enums.Order;
+using ECommerce.Domain.Enums.Product;
 using ECommerce.Domain.Interfaces.Repositories;
 
 namespace ECommerce.Application.Services;
@@ -79,6 +85,30 @@ public class OrderService : IOrderService
                 validationResult.Errors);
         }
 
+        // Checkout integrity: the cart must exist, belong to
+        // the ordering user and still be active. Cart discounts
+        // are intentionally NOT applied: the cart records only
+        // a discount amount, not which coupon produced it, so
+        // applying it here would leave no trace for refund
+        // calculations. See docs/TESTING.md.
+        var cart = await _unitOfWork
+            .GetRepository<Cart, Guid>()
+            .GetFirstOrDefaultAsync(
+                new CartDetailsSpecification(dto.CartId));
+
+        if (cart is null || cart.UserId != userId)
+        {
+            throw new KeyNotFoundException(
+                $"Cart with ID {dto.CartId} not found.");
+        }
+
+        if (cart.Status != CartStatus.Active ||
+            cart.ExpiresAt <= DateTime.UtcNow)
+        {
+            throw new InvalidOperationException(
+                "Cart is no longer active.");
+        }
+
         var order = new Order
         {
             UserId = userId,
@@ -100,6 +130,45 @@ public class OrderService : IOrderService
 
         foreach (var itemDto in dto.Items)
         {
+            // Trusted server-side pricing: catalog values only,
+            // never client-supplied prices or adjustments.
+            var product = await _unitOfWork
+                .GetRepository<Product, Guid>()
+                .GetByIdAsync(itemDto.ProductId);
+
+            if (product is null ||
+                product.Status != ProductStatus.Published)
+            {
+                throw new ArgumentException(
+                    $"Product {itemDto.ProductId} is not available.");
+            }
+
+            var variant = await _unitOfWork
+                .GetRepository<ProductVariant, Guid>()
+                .GetFirstOrDefaultAsync(
+                    new ProductVariantSpecification(
+                        itemDto.ProductVariantId));
+
+            if (variant is null ||
+                variant.ProductId != product.Id ||
+                variant.Status != ProductVariantStatus.Active)
+            {
+                throw new ArgumentException(
+                    $"Product variant {itemDto.ProductVariantId} is not available for product {product.Id}.");
+            }
+
+            if (variant.StockQuantity < itemDto.Quantity)
+            {
+                throw new ArgumentException(
+                    $"Insufficient stock for product variant {variant.Id}: requested {itemDto.Quantity}, available {variant.StockQuantity}.");
+            }
+
+            decimal unitPrice =
+                (product.IsOnSale
+                    ? product.SalePrice
+                    : product.BasePrice)
+                + variant.PriceAdjustment;
+
             var orderItem = new OrderItem
             {
                 ProductId = itemDto.ProductId,
@@ -107,27 +176,89 @@ public class OrderService : IOrderService
                 ProductVariantId =
                     itemDto.ProductVariantId,
 
+                ProductName = product.Name,
+
+                VariantName = variant.VariantName,
+
+                VariantAttributes = itemDto.VariantAttributes,
+
                 Quantity = itemDto.Quantity
             };
 
             foreach (var optionDto in itemDto.Options)
             {
+                var option = await _unitOfWork
+                    .GetRepository<ProductOption, Guid>()
+                    .GetFirstOrDefaultAsync(
+                        new ProductOptionSpecification(
+                            optionDto.ProductOptionId));
+
+                if (option is null ||
+                    option.ProductId != product.Id)
+                {
+                    throw new ArgumentException(
+                        $"Product option {optionDto.ProductOptionId} is not available for product {product.Id}.");
+                }
+
+                // Free-text options (no defined values) use the
+                // option's flat catalog price; options with
+                // defined values price from the matched value.
+                decimal optionPrice = option.PriceValue;
+
+                if (option.ProductOptionValues.Count > 0)
+                {
+                    var optionValue = option.ProductOptionValues
+                        .FirstOrDefault(v =>
+                            string.Equals(
+                                v.Value,
+                                optionDto.OptionValue,
+                                StringComparison.OrdinalIgnoreCase) ||
+                            string.Equals(
+                                v.Label,
+                                optionDto.OptionValue,
+                                StringComparison.OrdinalIgnoreCase));
+
+                    if (optionValue is null)
+                    {
+                        throw new ArgumentException(
+                            $"Option value '{optionDto.OptionValue}' is not available for option {option.Id}.");
+                    }
+
+                    optionPrice = optionValue.PriceValue;
+                }
+
                 orderItem.OrderItemOptions.Add(
                     new OrderItemOption
                     {
-                        OptionName =
-                            optionDto.OptionName,
+                        OptionName = option.Name,
 
-                        OptionValue =
-                            optionDto.OptionValue,
+                        OptionValue = optionDto.OptionValue,
 
-                        PriceAdjustment =
-                            optionDto.PriceAdjustment
+                        PriceAdjustment = optionPrice
                     });
+
+                unitPrice += optionPrice;
             }
+
+            orderItem.UnitPrice = unitPrice;
+            orderItem.TotalPrice =
+                unitPrice * itemDto.Quantity;
 
             order.OrderItems.Add(orderItem);
         }
+
+        order.SubTotal =
+            order.OrderItems.Sum(oi => oi.TotalPrice);
+
+        // No tax or shipping rules are configured anywhere in
+        // the project yet, so both default to zero until real
+        // rules are provided. Placeholders, not legal/tax
+        // determinations.
+        order.TaxAmount = 0m;
+        order.ShippingCost = 0m;
+        order.TotalAmount = order.SubTotal
+            + order.TaxAmount
+            + order.ShippingCost;
 
         order.OrderStatusHistories.Add(
             new OrderStatusHistory

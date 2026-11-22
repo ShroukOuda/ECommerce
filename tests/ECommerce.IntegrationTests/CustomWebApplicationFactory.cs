@@ -14,6 +14,8 @@ namespace ECommerce.IntegrationTests;
 
 public class CustomWebApplicationFactory : WebApplicationFactory<ECommerce.API.Program>
 {
+    private readonly string _databaseName = "TestDb_" + Guid.NewGuid().ToString("N");
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.ConfigureAppConfiguration((context, configBuilder) =>
@@ -47,10 +49,13 @@ public class CustomWebApplicationFactory : WebApplicationFactory<ECommerce.API.P
             services.RemoveAll<IDbContextOptionsConfiguration<AppDbContext>>();
             services.RemoveAll<AppDbContext>();
 
-            // Add fresh InMemory database
+            // Add fresh InMemory database. The name must be
+            // generated ONCE per factory instance: the options
+            // lambda runs per context creation, so a Guid here
+            // would give every scope a different empty store.
             services.AddDbContext<AppDbContext>(options =>
             {
-                options.UseInMemoryDatabase("TestDb_" + Guid.NewGuid().ToString("N"));
+                options.UseInMemoryDatabase(_databaseName);
             });
 
             // Replace IFileProvider

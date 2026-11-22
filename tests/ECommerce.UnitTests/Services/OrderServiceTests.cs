@@ -1,4 +1,5 @@
 using AutoMapper;
+using ECommerce.Application.DTO.Coupon;
 using ECommerce.Application.DTO.Order;
 using ECommerce.Application.DTO.Return;
 using ECommerce.Application.Interfaces;
@@ -29,6 +30,7 @@ public class OrderServiceTests
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<IMapper> _mapperMock;
     private readonly Mock<IValidator<CreateOrderDTO>> _createValidatorMock;
+    private readonly Mock<ICouponService> _couponServiceMock;
     private readonly IOrderService _orderService;
 
     public OrderServiceTests()
@@ -36,14 +38,16 @@ public class OrderServiceTests
         _unitOfWorkMock = new Mock<IUnitOfWork>();
         _mapperMock = new Mock<IMapper>();
         _createValidatorMock = new Mock<IValidator<CreateOrderDTO>>();
+        _couponServiceMock = new Mock<ICouponService>();
         _orderService = new OrderService(
             _unitOfWorkMock.Object,
             _mapperMock.Object,
-            _createValidatorMock.Object);
+            _createValidatorMock.Object,
+            _couponServiceMock.Object);
 
-        // Default checkout fixtures: an owned active cart, a
-        // published product, an active in-stock variant and a
-        // free-text option. Individual tests override these.
+        // Default checkout fixtures: an owned active cart with
+        // one priced item, a published product, an active
+        // in-stock variant. Individual tests override these.
         _unitOfWorkMock.Setup(u => u.GetRepository<Cart, Guid>()
                 .GetFirstOrDefaultAsync(It.IsAny<CartDetailsSpecification>()))
             .ReturnsAsync(DefaultCart());
@@ -53,9 +57,9 @@ public class OrderServiceTests
         _unitOfWorkMock.Setup(u => u.GetRepository<ProductVariant, Guid>()
                 .GetFirstOrDefaultAsync(It.IsAny<ProductVariantSpecification>()))
             .ReturnsAsync(DefaultVariant());
-        _unitOfWorkMock.Setup(u => u.GetRepository<ProductOption, Guid>()
-                .GetFirstOrDefaultAsync(It.IsAny<ProductOptionSpecification>()))
-            .ReturnsAsync(DefaultOption());
+        _unitOfWorkMock.Setup(u => u.GetRepository<Coupon, Guid>()
+                .GetFirstOrDefaultAsync(It.IsAny<CouponByCodeSpecification>()))
+            .ReturnsAsync(DefaultCoupon());
     }
 
     internal static Cart DefaultCart() => new()
@@ -63,7 +67,18 @@ public class OrderServiceTests
         Id = TestGuid.FromInt(100),
         UserId = "user1",
         Status = CartStatus.Active,
-        ExpiresAt = DateTime.UtcNow.AddDays(1)
+        ExpiresAt = DateTime.UtcNow.AddDays(1),
+        CartItems = new List<CartItem>
+        {
+            new()
+            {
+                Id = TestGuid.FromInt(101),
+                ProductId = TestGuid.FromInt(1),
+                VariantId = TestGuid.FromInt(2),
+                Quantity = 2,
+                Price = 100m
+            }
+        }
     };
 
     internal static Product DefaultProduct() => new()
@@ -85,12 +100,10 @@ public class OrderServiceTests
         PriceAdjustment = 0m
     };
 
-    internal static ProductOption DefaultOption() => new()
+    internal static Coupon DefaultCoupon() => new()
     {
-        Id = TestGuid.FromInt(3),
-        ProductId = TestGuid.FromInt(1),
-        Name = "Size",
-        PriceValue = 5m
+        Id = TestGuid.FromInt(20),
+        Code = "SAVE10"
     };
 
     internal static CreateOrderDTO DefaultCreateDto() => new()
@@ -98,21 +111,16 @@ public class OrderServiceTests
         CartId = TestGuid.FromInt(100),
         Currency = "USD",
         ShippingAddressId = TestGuid.FromInt(50),
-        BillingAddressId = TestGuid.FromInt(50),
-        Items = new List<CreateOrderItemDTO>
-        {
-            new()
-            {
-                ProductId = TestGuid.FromInt(1),
-                ProductVariantId = TestGuid.FromInt(2),
-                Quantity = 2,
-                Options = new List<CreateOrderItemOptionDTO>
-                {
-                    new() { ProductOptionId = TestGuid.FromInt(3), OptionValue = "L", PriceAdjustment = 999m }
-                }
-            }
-        }
+        BillingAddressId = TestGuid.FromInt(50)
     };
+
+    private void SetupValidCreate(Order? captured)
+    {
+    }
+
+    private void SetupCreateOrder(Order? _)
+    {
+    }
 
     // ---------------- Customer ----------------
 
@@ -144,17 +152,22 @@ public class OrderServiceTests
     }
 
     [Fact]
-    public async Task CreateOrderAsync_WithValidData_ShouldCreatePendingOrderWithHistory()
+    public async Task CreateOrderAsync_WithValidData_ShouldCreatePricedOrderFromCartAndConsumeIt()
     {
         var dto = DefaultCreateDto();
-        var orderDto = new GetOrderDTO { Id = TestGuid.FromInt(1) };
+        var cart = DefaultCart();
+        var variant = DefaultVariant();
 
+        _unitOfWorkMock.Setup(u => u.GetRepository<Cart, Guid>()
+                .GetFirstOrDefaultAsync(It.IsAny<CartDetailsSpecification>()))
+            .ReturnsAsync(cart);
+        _unitOfWorkMock.Setup(u => u.GetRepository<ProductVariant, Guid>()
+                .GetFirstOrDefaultAsync(It.IsAny<ProductVariantSpecification>()))
+            .ReturnsAsync(variant);
         _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
-        _unitOfWorkMock.Setup(u => u.GetRepository<Order, Guid>().AddAsync(It.IsAny<Order>()))
-            .Returns(Task.CompletedTask);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
-        _mapperMock.Setup(m => m.Map<GetOrderDTO>(It.IsAny<Order>())).Returns(orderDto);
+        _mapperMock.Setup(m => m.Map<GetOrderDTO>(It.IsAny<Order>())).Returns(new GetOrderDTO { Id = TestGuid.FromInt(1) });
 
         Order? captured = null;
         _unitOfWorkMock.Setup(u => u.GetRepository<Order, Guid>().AddAsync(It.IsAny<Order>()))
@@ -168,23 +181,30 @@ public class OrderServiceTests
         captured!.UserId.Should().Be("user1");
         captured.OrderStatus.Should().Be(OrderStatus.Pending);
         captured.OrderNumber.Should().StartWith("ORD-");
-        captured.OrderItems.Should().ContainSingle();
-        captured.OrderItems.First().OrderItemOptions.Should().ContainSingle();
-        // 100 base + 0 variant + 5 option = 105 per unit, qty 2
-        captured.OrderItems.First().UnitPrice.Should().Be(105m);
-        captured.OrderItems.First().TotalPrice.Should().Be(210m);
-        captured.SubTotal.Should().Be(210m);
-        captured.TotalAmount.Should().Be(210m);
-        // Client-supplied option price (999) must be ignored
-        captured.OrderItems.First().OrderItemOptions.First()
-            .PriceAdjustment.Should().Be(5m);
+        var line = captured.OrderItems.Should().ContainSingle().Subject;
+        line.UnitPrice.Should().Be(100m);
+        line.TotalPrice.Should().Be(200m);
+        line.ProductName.Should().Be("Test Product");
+        line.VariantName.Should().Be("Standard");
+        captured.SubTotal.Should().Be(200m);
+        captured.TaxAmount.Should().Be(0m);
+        captured.ShippingCost.Should().Be(0m);
+        captured.TotalAmount.Should().Be(200m);
         captured.OrderStatusHistories.Should().ContainSingle()
             .Which.OrderStatus.Should().Be(OrderStatus.Pending);
+
+        // Stock reserved at placement
+        variant.StockQuantity.Should().Be(8);
+        _unitOfWorkMock.Verify(u => u.GetRepository<ProductVariant, Guid>().Update(variant), Times.Once);
+
+        // Cart consumed to prevent replay
+        cart.Status.Should().Be(CartStatus.Converted);
+        _unitOfWorkMock.Verify(u => u.GetRepository<Cart, Guid>().Update(cart), Times.Once);
         _unitOfWorkMock.Verify(u => u.SaveChangesAsync(), Times.Once);
     }
 
     [Fact]
-    public async Task CreateOrderAsync_WhenProductOnSale_ShouldUseSalePricePlusVariantAndOptionValue()
+    public async Task CreateOrderAsync_WhenProductOnSale_ShouldUseSalePricePlusVariantAdjustment()
     {
         var dto = DefaultCreateDto();
         var product = DefaultProduct();
@@ -192,23 +212,14 @@ public class OrderServiceTests
         product.SalePrice = 80m; // on sale
         var variant = DefaultVariant();
         variant.PriceAdjustment = 10m;
-        var option = DefaultOption();
-        option.PriceValue = 99m; // ignored: option has values
-        option.ProductOptionValues = new List<ProductOptionValue>
-        {
-            new() { Value = "L", Label = "Large", PriceValue = 5m }
-        };
 
-        _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ValidationResult());
         _unitOfWorkMock.Setup(u => u.GetRepository<Product, Guid>().GetByIdAsync(It.IsAny<Guid>()))
             .ReturnsAsync(product);
         _unitOfWorkMock.Setup(u => u.GetRepository<ProductVariant, Guid>()
                 .GetFirstOrDefaultAsync(It.IsAny<ProductVariantSpecification>()))
             .ReturnsAsync(variant);
-        _unitOfWorkMock.Setup(u => u.GetRepository<ProductOption, Guid>()
-                .GetFirstOrDefaultAsync(It.IsAny<ProductOptionSpecification>()))
-            .ReturnsAsync(option);
+        _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ValidationResult());
         _mapperMock.Setup(m => m.Map<GetOrderDTO>(It.IsAny<Order>())).Returns(new GetOrderDTO());
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
@@ -219,13 +230,190 @@ public class OrderServiceTests
 
         await _orderService.CreateOrderAsync("user1", dto);
 
-        // 80 sale + 10 variant + 5 option value = 95 per unit
-        captured!.OrderItems.First().UnitPrice.Should().Be(95m);
-        captured.OrderItems.First().TotalPrice.Should().Be(190m);
-        captured.SubTotal.Should().Be(190m);
-        captured.TotalAmount.Should().Be(190m);
-        captured.OrderItems.First().ProductName.Should().Be("Test Product");
-        captured.OrderItems.First().VariantName.Should().Be("Standard");
+        // 80 sale + 10 variant = 90 per unit, qty 2
+        captured!.OrderItems.First().UnitPrice.Should().Be(90m);
+        captured.OrderItems.First().TotalPrice.Should().Be(180m);
+        captured.TotalAmount.Should().Be(180m);
+    }
+
+    [Fact]
+    public async Task CreateOrderAsync_WithVerifiableDiscount_ShouldApplyItAndRecordUsage()
+    {
+        var dto = DefaultCreateDto();
+        var cart = DefaultCart();
+        cart.DiscountAmount = 20m;
+        cart.CouponCode = "SAVE10";
+        var coupon = DefaultCoupon();
+
+        _unitOfWorkMock.Setup(u => u.GetRepository<Cart, Guid>()
+                .GetFirstOrDefaultAsync(It.IsAny<CartDetailsSpecification>()))
+            .ReturnsAsync(cart);
+        _unitOfWorkMock.Setup(u => u.GetRepository<Coupon, Guid>()
+                .GetFirstOrDefaultAsync(It.IsAny<CouponByCodeSpecification>()))
+            .ReturnsAsync(coupon);
+        _couponServiceMock.Setup(c => c.ValidateCouponAsync("user1", It.IsAny<ValidateCouponDTO>()))
+            .ReturnsAsync(new CouponResultDTO { Code = "SAVE10", DiscountAmount = 20m });
+        _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ValidationResult());
+        _mapperMock.Setup(m => m.Map<GetOrderDTO>(It.IsAny<Order>())).Returns(new GetOrderDTO());
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+
+        Order? captured = null;
+        _unitOfWorkMock.Setup(u => u.GetRepository<Order, Guid>().AddAsync(It.IsAny<Order>()))
+            .Callback<Order>(o => captured = o)
+            .Returns(Task.CompletedTask);
+        CouponUsage? usage = null;
+        _unitOfWorkMock.Setup(u => u.GetRepository<CouponUsage, Guid>().AddAsync(It.IsAny<CouponUsage>()))
+            .Callback<CouponUsage>(u => usage = u)
+            .Returns(Task.CompletedTask);
+
+        await _orderService.CreateOrderAsync("user1", dto);
+
+        captured!.TotalAmount.Should().Be(180m); // 200 - 20
+        usage.Should().NotBeNull();
+        usage!.CouponId.Should().Be(coupon.Id);
+        usage.OrderId.Should().Be(captured.Id);
+        usage.UserId.Should().Be("user1");
+        usage.DiscountAmount.Should().Be(20m);
+        coupon.UsedCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task CreateOrderAsync_WhenDiscountExceedsSubTotal_ShouldClampTotalAtZero()
+    {
+        var dto = DefaultCreateDto();
+        var cart = DefaultCart();
+        cart.DiscountAmount = 999m;
+        cart.CouponCode = "SAVE10";
+
+        _unitOfWorkMock.Setup(u => u.GetRepository<Cart, Guid>()
+                .GetFirstOrDefaultAsync(It.IsAny<CartDetailsSpecification>()))
+            .ReturnsAsync(cart);
+        _couponServiceMock.Setup(c => c.ValidateCouponAsync("user1", It.IsAny<ValidateCouponDTO>()))
+            .ReturnsAsync(new CouponResultDTO { Code = "SAVE10", DiscountAmount = 999m });
+        _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ValidationResult());
+        _mapperMock.Setup(m => m.Map<GetOrderDTO>(It.IsAny<Order>())).Returns(new GetOrderDTO());
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+
+        Order? captured = null;
+        _unitOfWorkMock.Setup(u => u.GetRepository<Order, Guid>().AddAsync(It.IsAny<Order>()))
+            .Callback<Order>(o => captured = o)
+            .Returns(Task.CompletedTask);
+        CouponUsage? usage = null;
+        _unitOfWorkMock.Setup(u => u.GetRepository<CouponUsage, Guid>().AddAsync(It.IsAny<CouponUsage>()))
+            .Callback<CouponUsage>(u => usage = u)
+            .Returns(Task.CompletedTask);
+
+        await _orderService.CreateOrderAsync("user1", dto);
+
+        captured!.TotalAmount.Should().Be(0m);
+        usage!.DiscountAmount.Should().Be(200m); // clamped to subtotal
+    }
+
+    [Fact]
+    public async Task CreateOrderAsync_WhenCartDiscountCannotBeVerified_ShouldRejectCheckout()
+    {
+        var dto = DefaultCreateDto();
+        var cart = DefaultCart();
+        cart.DiscountAmount = 20m;
+        cart.CouponCode = null; // no trace of which coupon
+
+        _unitOfWorkMock.Setup(u => u.GetRepository<Cart, Guid>()
+                .GetFirstOrDefaultAsync(It.IsAny<CartDetailsSpecification>()))
+            .ReturnsAsync(cart);
+        _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ValidationResult());
+
+        var act = () => _orderService.CreateOrderAsync("user1", dto);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+        _unitOfWorkMock.Verify(u => u.GetRepository<Order, Guid>().AddAsync(It.IsAny<Order>()), Times.Never);
+        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateOrderAsync_WhenAppliedCouponNoLongerExists_ShouldRejectCheckout()
+    {
+        var dto = DefaultCreateDto();
+        var cart = DefaultCart();
+        cart.DiscountAmount = 20m;
+        cart.CouponCode = "GONE";
+
+        _unitOfWorkMock.Setup(u => u.GetRepository<Cart, Guid>()
+                .GetFirstOrDefaultAsync(It.IsAny<CartDetailsSpecification>()))
+            .ReturnsAsync(cart);
+        _couponServiceMock.Setup(c => c.ValidateCouponAsync("user1", It.IsAny<ValidateCouponDTO>()))
+            .ReturnsAsync(new CouponResultDTO { Code = "GONE", DiscountAmount = 20m });
+        _unitOfWorkMock.Setup(u => u.GetRepository<Coupon, Guid>()
+                .GetFirstOrDefaultAsync(It.IsAny<CouponByCodeSpecification>()))
+            .ReturnsAsync((Coupon?)null);
+        _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ValidationResult());
+
+        var act = () => _orderService.CreateOrderAsync("user1", dto);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+        _unitOfWorkMock.Verify(u => u.GetRepository<Order, Guid>().AddAsync(It.IsAny<Order>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateOrderAsync_WhenCouponRevalidationFails_ShouldRejectCheckout()
+    {
+        var dto = DefaultCreateDto();
+        var cart = DefaultCart();
+        cart.DiscountAmount = 20m;
+        cart.CouponCode = "SAVE10";
+
+        _unitOfWorkMock.Setup(u => u.GetRepository<Cart, Guid>()
+                .GetFirstOrDefaultAsync(It.IsAny<CartDetailsSpecification>()))
+            .ReturnsAsync(cart);
+        _couponServiceMock.Setup(c => c.ValidateCouponAsync("user1", It.IsAny<ValidateCouponDTO>()))
+            .ThrowsAsync(new InvalidOperationException("This coupon has expired."));
+        _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ValidationResult());
+
+        var act = () => _orderService.CreateOrderAsync("user1", dto);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+        _unitOfWorkMock.Verify(u => u.GetRepository<Order, Guid>().AddAsync(It.IsAny<Order>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateOrderAsync_WhenCartEmpty_ShouldThrowInvalidOperationException()
+    {
+        var dto = DefaultCreateDto();
+        var cart = DefaultCart();
+        cart.CartItems.Clear();
+
+        _unitOfWorkMock.Setup(u => u.GetRepository<Cart, Guid>()
+                .GetFirstOrDefaultAsync(It.IsAny<CartDetailsSpecification>()))
+            .ReturnsAsync(cart);
+        _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ValidationResult());
+
+        var act = () => _orderService.CreateOrderAsync("user1", dto);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    [Fact]
+    public async Task CreateOrderAsync_WhenCartAlreadyConverted_ShouldRejectReplay()
+    {
+        var dto = DefaultCreateDto();
+        var cart = DefaultCart();
+        cart.Status = CartStatus.Converted;
+
+        _unitOfWorkMock.Setup(u => u.GetRepository<Cart, Guid>()
+                .GetFirstOrDefaultAsync(It.IsAny<CartDetailsSpecification>()))
+            .ReturnsAsync(cart);
+        _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ValidationResult());
+
+        var act = () => _orderService.CreateOrderAsync("user1", dto);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+        _unitOfWorkMock.Verify(u => u.GetRepository<Order, Guid>().AddAsync(It.IsAny<Order>()), Times.Never);
     }
 
     [Fact]
@@ -302,7 +490,7 @@ public class OrderServiceTests
     {
         var dto = DefaultCreateDto();
         var variant = DefaultVariant();
-        variant.StockQuantity = 1; // dto requests 2
+        variant.StockQuantity = 1; // cart requests 2
 
         _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
@@ -313,6 +501,7 @@ public class OrderServiceTests
         var act = () => _orderService.CreateOrderAsync("user1", dto);
 
         await act.Should().ThrowAsync<ArgumentException>();
+        _unitOfWorkMock.Verify(u => u.GetRepository<Order, Guid>().AddAsync(It.IsAny<Order>()), Times.Never);
     }
 
     [Fact]
@@ -322,11 +511,11 @@ public class OrderServiceTests
         var cart = DefaultCart();
         cart.UserId = "someone-else";
 
-        _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ValidationResult());
         _unitOfWorkMock.Setup(u => u.GetRepository<Cart, Guid>()
                 .GetFirstOrDefaultAsync(It.IsAny<CartDetailsSpecification>()))
             .ReturnsAsync(cart);
+        _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ValidationResult());
 
         var act = () => _orderService.CreateOrderAsync("user1", dto);
 
@@ -341,54 +530,15 @@ public class OrderServiceTests
         var cart = DefaultCart();
         cart.ExpiresAt = DateTime.UtcNow.AddMinutes(-1);
 
-        _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ValidationResult());
         _unitOfWorkMock.Setup(u => u.GetRepository<Cart, Guid>()
                 .GetFirstOrDefaultAsync(It.IsAny<CartDetailsSpecification>()))
             .ReturnsAsync(cart);
+        _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ValidationResult());
 
         var act = () => _orderService.CreateOrderAsync("user1", dto);
 
         await act.Should().ThrowAsync<InvalidOperationException>();
-    }
-
-    [Fact]
-    public async Task CreateOrderAsync_WhenOptionBelongsToAnotherProduct_ShouldThrowArgumentException()
-    {
-        var dto = DefaultCreateDto();
-        var option = DefaultOption();
-        option.ProductId = TestGuid.FromInt(999);
-
-        _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ValidationResult());
-        _unitOfWorkMock.Setup(u => u.GetRepository<ProductOption, Guid>()
-                .GetFirstOrDefaultAsync(It.IsAny<ProductOptionSpecification>()))
-            .ReturnsAsync(option);
-
-        var act = () => _orderService.CreateOrderAsync("user1", dto);
-
-        await act.Should().ThrowAsync<ArgumentException>();
-    }
-
-    [Fact]
-    public async Task CreateOrderAsync_WhenOptionValueNotInCatalog_ShouldThrowArgumentException()
-    {
-        var dto = DefaultCreateDto();
-        var option = DefaultOption();
-        option.ProductOptionValues = new List<ProductOptionValue>
-        {
-            new() { Value = "M", Label = "Medium", PriceValue = 0m }
-        };
-
-        _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ValidationResult());
-        _unitOfWorkMock.Setup(u => u.GetRepository<ProductOption, Guid>()
-                .GetFirstOrDefaultAsync(It.IsAny<ProductOptionSpecification>()))
-            .ReturnsAsync(option);
-
-        var act = () => _orderService.CreateOrderAsync("user1", dto);
-
-        await act.Should().ThrowAsync<ArgumentException>();
     }
 
     [Fact]
@@ -398,7 +548,6 @@ public class OrderServiceTests
         // level: order prices persisted by checkout are what
         // the refund calculation uses.
         var dto = DefaultCreateDto();
-        dto.Items[0].Options.Clear(); // 100 base, qty 2
 
         _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
@@ -461,10 +610,9 @@ public class OrderServiceTests
     public async Task CreateOrderAsync_WithInvalidData_ShouldThrowValidationException()
     {
         var dto = new CreateOrderDTO { Currency = "" };
-        var failures = new List<ValidationFailure> { new("Currency", "Currency is required") };
 
         _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ValidationResult(failures));
+            .ReturnsAsync(new ValidationResult(new[] { new ValidationFailure("Currency", "required") }));
 
         var act = () => _orderService.CreateOrderAsync("user1", dto);
 
@@ -472,12 +620,26 @@ public class OrderServiceTests
     }
 
     [Fact]
-    public async Task CancelOrderAsync_WhenPending_ShouldCancelAndAddHistory()
+    public async Task CancelOrderAsync_WhenPending_ShouldCancelAddHistoryAndRestock()
     {
-        var order = new Order { Id = TestGuid.FromInt(1), UserId = "user1", OrderStatus = OrderStatus.Pending };
+        var variant = DefaultVariant();
+        variant.StockQuantity = 8; // 2 were reserved at checkout
+        var order = new Order
+        {
+            Id = TestGuid.FromInt(1),
+            UserId = "user1",
+            OrderStatus = OrderStatus.Pending,
+            OrderItems = new List<OrderItem>
+            {
+                new() { ProductVariantId = variant.Id, Quantity = 2 }
+            }
+        };
 
         _unitOfWorkMock.Setup(u => u.GetRepository<Order, Guid>().GetFirstOrDefaultAsync(It.IsAny<OrderByUserSpecification>()))
             .ReturnsAsync(order);
+        _unitOfWorkMock.Setup(u => u.GetRepository<ProductVariant, Guid>()
+                .GetFirstOrDefaultAsync(It.IsAny<ProductVariantSpecification>()))
+            .ReturnsAsync(variant);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
         await _orderService.CancelOrderAsync(TestGuid.FromInt(1), "user1");
@@ -485,6 +647,8 @@ public class OrderServiceTests
         order.OrderStatus.Should().Be(OrderStatus.Cancelled);
         order.OrderStatusHistories.Should().ContainSingle()
             .Which.OrderStatus.Should().Be(OrderStatus.Cancelled);
+        variant.StockQuantity.Should().Be(10);
+        _unitOfWorkMock.Verify(u => u.GetRepository<ProductVariant, Guid>().Update(variant), Times.Once);
         _unitOfWorkMock.Verify(u => u.GetRepository<Order, Guid>().Update(order), Times.Once);
     }
 
@@ -616,5 +780,36 @@ public class OrderServiceTests
 
         order.OrderStatusHistories.Should().BeEmpty();
         _unitOfWorkMock.Verify(u => u.SaveChangesAsync(), Times.Never);
+    }
+
+    [Fact]
+    public async Task UpdateOrderStatusAsync_ToCancelled_ShouldRestock()
+    {
+        var dto = new UpdateOrderStatusDTO { OrderStatus = "Cancelled" };
+        var variant = DefaultVariant();
+        variant.StockQuantity = 8;
+        var order = new Order
+        {
+            Id = TestGuid.FromInt(1),
+            OrderStatus = OrderStatus.Processing,
+            OrderItems = new List<OrderItem>
+            {
+                new() { ProductVariantId = variant.Id, Quantity = 2 }
+            }
+        };
+
+        _unitOfWorkMock.Setup(u => u.GetRepository<Order, Guid>().GetFirstOrDefaultAsync(It.IsAny<OrderDetailsSpecification>()))
+            .ReturnsAsync(order);
+        _unitOfWorkMock.Setup(u => u.GetRepository<ProductVariant, Guid>()
+                .GetFirstOrDefaultAsync(It.IsAny<ProductVariantSpecification>()))
+            .ReturnsAsync(variant);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+        _mapperMock.Setup(m => m.Map<GetAdminOrderDTO>(It.IsAny<Order>())).Returns(new GetAdminOrderDTO());
+
+        await _orderService.UpdateOrderStatusAsync(TestGuid.FromInt(1), dto);
+
+        order.OrderStatus.Should().Be(OrderStatus.Cancelled);
+        variant.StockQuantity.Should().Be(10);
+        _unitOfWorkMock.Verify(u => u.GetRepository<ProductVariant, Guid>().Update(variant), Times.Once);
     }
 }

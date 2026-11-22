@@ -413,6 +413,138 @@ public class ReturnServiceTests
     }
 
     [Fact]
+    public async Task CreateReturnAsync_WithDuplicateOrderItemIdsExceedingQuantity_ShouldThrowArgumentException()
+    {
+        var orderItemId = TestGuid.FromInt(1);
+        var dto = new CreateReturnRequestDTO
+        {
+            OrderId = TestGuid.FromInt(1),
+            Items = new List<CreateReturnItemDTO>
+            {
+                new() { OrderItemId = orderItemId, Quantity = 2, Reason = "Broken" },
+                new() { OrderItemId = orderItemId, Quantity = 1, Reason = "Broken again" }
+            }
+        };
+        var order = new Order
+        {
+            Id = dto.OrderId,
+            UserId = "user1",
+            OrderItems = new List<OrderItem>
+            {
+                new() { Id = orderItemId, ProductId = TestGuid.FromInt(7), Quantity = 2 }
+            }
+        };
+
+        _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ValidationResult());
+        _unitOfWorkMock.Setup(u => u.GetRepository<Order, Guid>()
+                .GetFirstOrDefaultAsync(It.IsAny<OrderDetailsSpecification>()))
+            .ReturnsAsync(order);
+        _unitOfWorkMock.Setup(u => u.GetRepository<ReturnItem, Guid>()
+                .GetAllAsync(It.IsAny<ReturnItemsByOrderSpecification>()))
+            .ReturnsAsync(new List<ReturnItem>());
+        _mapperMock.Setup(m => m.Map<ReturnRequest>(dto)).Returns(new ReturnRequest { OrderId = dto.OrderId });
+
+        // Each entry alone fits the remaining quantity (2), but
+        // combined they exceed it.
+        var act = () => _returnService.CreateReturnAsync("user1", dto);
+
+        await act.Should().ThrowAsync<ArgumentException>();
+        _unitOfWorkMock.Verify(u => u.GetRepository<ReturnRequest, Guid>().AddAsync(It.IsAny<ReturnRequest>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateReturnAsync_RepeatedPartialRefunds_ShouldNotExceedLineNetValue()
+    {
+        var orderItemId = TestGuid.FromInt(1);
+        var dto = new CreateReturnRequestDTO
+        {
+            OrderId = TestGuid.FromInt(1),
+            Items = new List<CreateReturnItemDTO> { new() { OrderItemId = orderItemId, Quantity = 1, Reason = "Broken" } }
+        };
+        var order = new Order
+        {
+            Id = dto.OrderId,
+            UserId = "user1",
+            OrderItems = new List<OrderItem>
+            {
+                new() { Id = orderItemId, ProductId = TestGuid.FromInt(7), Quantity = 2, UnitPrice = 0.025m, TotalPrice = 0.05m }
+            }
+        };
+        var returnRequest = new ReturnRequest { OrderId = dto.OrderId };
+
+        _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ValidationResult());
+        _unitOfWorkMock.Setup(u => u.GetRepository<Order, Guid>()
+                .GetFirstOrDefaultAsync(It.IsAny<OrderDetailsSpecification>()))
+            .ReturnsAsync(order);
+        _unitOfWorkMock.Setup(u => u.GetRepository<ReturnItem, Guid>()
+                .GetAllAsync(It.IsAny<ReturnItemsByOrderSpecification>()))
+            .ReturnsAsync(new List<ReturnItem>
+            {
+                // A previous return already refunded 0.03 (the
+                // rounded half of the 0.05 line).
+                new() { OrderItemId = orderItemId, Quantity = 1, RefundAmount = 0.03m }
+            });
+        _mapperMock.Setup(m => m.Map<ReturnRequest>(dto)).Returns(returnRequest);
+        _unitOfWorkMock.Setup(u => u.GetRepository<ReturnRequest, Guid>().AddAsync(It.IsAny<ReturnRequest>()))
+            .Returns(Task.CompletedTask);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+
+        await _returnService.CreateReturnAsync("user1", dto);
+
+        // Rounded per-request refund would be 0.03 again; capped
+        // at the remaining 0.02 of the 0.05 line.
+        returnRequest.ReturnItems.Should().ContainSingle()
+            .Which.RefundAmount.Should().Be(0.02m);
+        returnRequest.RefundAmount.Should().Be(0.02m);
+    }
+
+    [Fact]
+    public async Task CreateReturnAsync_DuplicateEntriesInOneRequest_ShouldCapCombinedRefundAtLineNetValue()
+    {
+        var orderItemId = TestGuid.FromInt(1);
+        var dto = new CreateReturnRequestDTO
+        {
+            OrderId = TestGuid.FromInt(1),
+            Items = new List<CreateReturnItemDTO>
+            {
+                new() { OrderItemId = orderItemId, Quantity = 1, Reason = "Broken" },
+                new() { OrderItemId = orderItemId, Quantity = 1, Reason = "Also broken" }
+            }
+        };
+        var order = new Order
+        {
+            Id = dto.OrderId,
+            UserId = "user1",
+            OrderItems = new List<OrderItem>
+            {
+                new() { Id = orderItemId, ProductId = TestGuid.FromInt(7), Quantity = 2, UnitPrice = 0.025m, TotalPrice = 0.05m }
+            }
+        };
+        var returnRequest = new ReturnRequest { OrderId = dto.OrderId };
+
+        _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ValidationResult());
+        _unitOfWorkMock.Setup(u => u.GetRepository<Order, Guid>()
+                .GetFirstOrDefaultAsync(It.IsAny<OrderDetailsSpecification>()))
+            .ReturnsAsync(order);
+        _unitOfWorkMock.Setup(u => u.GetRepository<ReturnItem, Guid>()
+                .GetAllAsync(It.IsAny<ReturnItemsByOrderSpecification>()))
+            .ReturnsAsync(new List<ReturnItem>());
+        _mapperMock.Setup(m => m.Map<ReturnRequest>(dto)).Returns(returnRequest);
+        _unitOfWorkMock.Setup(u => u.GetRepository<ReturnRequest, Guid>().AddAsync(It.IsAny<ReturnRequest>()))
+            .Returns(Task.CompletedTask);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+
+        await _returnService.CreateReturnAsync("user1", dto);
+
+        // 0.03 + capped 0.02 = the full 0.05 line value, no more.
+        returnRequest.ReturnItems.Should().HaveCount(2);
+        returnRequest.RefundAmount.Should().Be(0.05m);
+    }
+
+    [Fact]
     public async Task CreateReturnAsync_WithInvalidData_ShouldThrowValidationException()
     {
         var dto = new CreateReturnRequestDTO { OrderId = Guid.Empty };

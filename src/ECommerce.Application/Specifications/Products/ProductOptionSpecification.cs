@@ -9,6 +9,7 @@ public class ProductOptionSpecification : BaseSpecification<ProductOption, Guid>
     public ProductOptionSpecification(Guid productOptionId)
         : base(po => po.Id == productOptionId)
     {
+        AddInclude(po => po.ProductOptionValues);
         AsNoTracking();
     }
     

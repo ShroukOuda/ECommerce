@@ -237,13 +237,12 @@ public class ProductServiceTests
     {
         var dto = new UpdateProductDTO
         {
-            Id = TestGuid.FromInt(1),
             Name = "Updated Laptop"
         };
 
         var product = new Product
         {
-            Id = dto.Id,
+            Id = TestGuid.FromInt(1),
             Name = dto.Name
         };
 
@@ -270,7 +269,7 @@ public class ProductServiceTests
             .Setup(u => u.SaveChangesAsync())
             .ReturnsAsync(1);
 
-        await _productService.UpdateProductAsync(dto);
+        await _productService.UpdateProductAsync(TestGuid.FromInt(1), dto);
 
         repositoryMock.Verify(
             r => r.Update(It.IsAny<Product>()),
@@ -285,7 +284,6 @@ public class ProductServiceTests
     {
         var dto = new UpdateProductDTO
         {
-            Id = TestGuid.FromInt(1),
             Name = "" // Invalid name
         };
 
@@ -298,7 +296,7 @@ public class ProductServiceTests
             .Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult(failures));
 
-        var act = () => _productService.UpdateProductAsync(dto);
+        var act = () => _productService.UpdateProductAsync(TestGuid.FromInt(999), dto);
 
         await act.Should().ThrowAsync<ValidationException>();
     }
@@ -308,7 +306,6 @@ public class ProductServiceTests
     {
         var dto = new UpdateProductDTO
         {
-            Id = TestGuid.FromInt(999),
             Name = "Non-existent Product"
         };
 
@@ -326,7 +323,7 @@ public class ProductServiceTests
             .Setup(u => u.GetRepository<Product, Guid>())
             .Returns(repositoryMock.Object);
 
-        var act = () => _productService.UpdateProductAsync(dto);
+        var act = () => _productService.UpdateProductAsync(TestGuid.FromInt(1), dto);
 
         await act.Should().ThrowAsync<KeyNotFoundException>();
     }  

@@ -36,7 +36,7 @@ public class ReviewServiceTests
         var reviews = new List<ProductReview> { new() { Id = TestGuid.FromInt(1), Rating = 5 } };
         var reviewDtos = new List<GetReviewDTO> { new() { Id = TestGuid.FromInt(1), Rating = 5 } };
 
-        _unitOfWorkMock.Setup(u => u.GetRepository<ProductReview, Guid>().GetAllAsync(new ReviewByProductSpecification(TestGuid.FromInt(1))))
+        _unitOfWorkMock.Setup(u => u.GetRepository<ProductReview, Guid>().GetAllAsync(It.IsAny<ReviewByProductSpecification>()))
             .ReturnsAsync(reviews);
         _mapperMock.Setup(m => m.Map<IEnumerable<GetReviewDTO>>(reviews)).Returns(reviewDtos);
 
@@ -76,7 +76,7 @@ public class ReviewServiceTests
     [Fact]
     public async Task AddReviewAsync_WithValidData_ShouldAddReview()
     {
-        var dto = new AddReviewDTO { Rating = 5, Title = "Great!", ProductId = TestGuid.FromInt(1), OrderId = TestGuid.FromInt(1), UserId = "user1" };
+        var dto = new AddReviewDTO { Rating = 5, Title = "Great!", ProductId = TestGuid.FromInt(1) , OrderId = TestGuid.FromInt(1) };
         var review = new ProductReview { Rating = 5 };
 
         _addValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
@@ -86,7 +86,7 @@ public class ReviewServiceTests
             .Returns(Task.CompletedTask);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
-        await _reviewService.AddReviewAsync(dto);
+        await _reviewService.AddReviewAsync("user1", dto);
 
         _unitOfWorkMock.Verify(u => u.GetRepository<ProductReview, Guid>().AddAsync(review), Times.Once);
     }
@@ -100,7 +100,7 @@ public class ReviewServiceTests
         _addValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult(failures));
 
-        var act = () => _reviewService.AddReviewAsync(dto);
+        var act = () => _reviewService.AddReviewAsync("user1", dto);
 
         await act.Should().ThrowAsync<ValidationException>();
     }
@@ -109,11 +109,11 @@ public class ReviewServiceTests
     public async Task DeleteReviewAsync_WhenExists_ShouldDeleteReview()
     {
         _unitOfWorkMock.Setup(u => u.GetRepository<ProductReview, Guid>().ExistsAsync(
-            new ReviewSpecification(TestGuid.FromInt(1))))
+            It.IsAny<ReviewByUserSpecification>()))
             .ReturnsAsync(true);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
-        await _reviewService.DeleteReviewAsync(TestGuid.FromInt(1));
+        await _reviewService.DeleteReviewAsync("user1", TestGuid.FromInt(1));
 
         _unitOfWorkMock.Verify(u => u.GetRepository<ProductReview, Guid>().Delete(It.IsAny<ProductReview>()), Times.Once);
     }
@@ -122,10 +122,10 @@ public class ReviewServiceTests
     public async Task DeleteReviewAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
         _unitOfWorkMock.Setup(u => u.GetRepository<ProductReview, Guid>().ExistsAsync(
-            new ReviewSpecification(TestGuid.FromInt(999))))
+            It.IsAny<ReviewByUserSpecification>()))
             .ReturnsAsync(false);
 
-        var act = () => _reviewService.DeleteReviewAsync(TestGuid.FromInt(999));
+        var act = () => _reviewService.DeleteReviewAsync("user1", TestGuid.FromInt(999));
 
         await act.Should().ThrowAsync<KeyNotFoundException>();
     }

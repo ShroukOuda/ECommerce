@@ -1,14 +1,18 @@
 using AutoMapper;
 using FluentValidation;
+using ECommerce.Application.DTO.Coupon;
 using ECommerce.Application.DTO.Order;
 using ECommerce.Application.Interfaces;
 using ECommerce.Application.Specifications.Carts;
 using ECommerce.Application.Specifications.Orders;
+using ECommerce.Application.Specifications.Coupons;
 using ECommerce.Application.Specifications.Products;
 using ECommerce.Domain.Entities.Carts;
+using ECommerce.Domain.Entities.Coupons;
 using ECommerce.Domain.Entities.Orders;
 using ECommerce.Domain.Entities.Products;
 using ECommerce.Domain.Enums.Cart;
+using ECommerce.Domain.Enums.Inventory;
 using ECommerce.Domain.Enums.Order;
 using ECommerce.Domain.Enums.Product;
 using ECommerce.Domain.Interfaces.Repositories;
@@ -20,15 +24,18 @@ public class OrderService : IOrderService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly IValidator<CreateOrderDTO> _createValidator;
+    private readonly ICouponService _couponService;
 
     public OrderService(
         IUnitOfWork unitOfWork,
         IMapper mapper,
-        IValidator<CreateOrderDTO> createValidator)
+        IValidator<CreateOrderDTO> createValidator,
+        ICouponService couponService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _createValidator = createValidator;
+        _couponService = couponService;
     }
 
     // =========================================================
@@ -85,12 +92,9 @@ public class OrderService : IOrderService
                 validationResult.Errors);
         }
 
-        // Checkout integrity: the cart must exist, belong to
-        // the ordering user and still be active. Cart discounts
-        // are intentionally NOT applied: the cart records only
-        // a discount amount, not which coupon produced it, so
-        // applying it here would leave no trace for refund
-        // calculations. See docs/TESTING.md.
+        // Checkout converts the cart: items, quantities and
+        // prices all come from the server-side cart and catalog,
+        // never from client-supplied order lines.
         var cart = await _unitOfWork
             .GetRepository<Cart, Guid>()
             .GetFirstOrDefaultAsync(
@@ -109,8 +113,18 @@ public class OrderService : IOrderService
                 "Cart is no longer active.");
         }
 
+        if (cart.CartItems.Count == 0)
+        {
+            throw new InvalidOperationException(
+                "Cannot checkout an empty cart.");
+        }
+
         var order = new Order
         {
+            // Generated here so the coupon usage can reference
+            // the order before it is saved.
+            Id = Guid.NewGuid(),
+
             UserId = userId,
 
             OrderNumber =
@@ -128,39 +142,40 @@ public class OrderService : IOrderService
             BillingAddressId = dto.BillingAddressId
         };
 
-        foreach (var itemDto in dto.Items)
+        var variantRepository =
+            _unitOfWork.GetRepository<ProductVariant, Guid>();
+
+        foreach (var cartItem in cart.CartItems)
         {
-            // Trusted server-side pricing: catalog values only,
-            // never client-supplied prices or adjustments.
+            // Trusted server-side pricing: catalog values only.
             var product = await _unitOfWork
                 .GetRepository<Product, Guid>()
-                .GetByIdAsync(itemDto.ProductId);
+                .GetByIdAsync(cartItem.ProductId);
 
             if (product is null ||
                 product.Status != ProductStatus.Published)
             {
                 throw new ArgumentException(
-                    $"Product {itemDto.ProductId} is not available.");
+                    $"Product {cartItem.ProductId} is not available.");
             }
 
-            var variant = await _unitOfWork
-                .GetRepository<ProductVariant, Guid>()
+            var variant = await variantRepository
                 .GetFirstOrDefaultAsync(
                     new ProductVariantSpecification(
-                        itemDto.ProductVariantId));
+                        cartItem.VariantId));
 
             if (variant is null ||
                 variant.ProductId != product.Id ||
                 variant.Status != ProductVariantStatus.Active)
             {
                 throw new ArgumentException(
-                    $"Product variant {itemDto.ProductVariantId} is not available for product {product.Id}.");
+                    $"Product variant {cartItem.VariantId} is not available for product {product.Id}.");
             }
 
-            if (variant.StockQuantity < itemDto.Quantity)
+            if (variant.StockQuantity < cartItem.Quantity)
             {
                 throw new ArgumentException(
-                    $"Insufficient stock for product variant {variant.Id}: requested {itemDto.Quantity}, available {variant.StockQuantity}.");
+                    $"Insufficient stock for product variant {variant.Id}: requested {cartItem.Quantity}, available {variant.StockQuantity}.");
             }
 
             decimal unitPrice =
@@ -169,82 +184,31 @@ public class OrderService : IOrderService
                     : product.BasePrice)
                 + variant.PriceAdjustment;
 
-            var orderItem = new OrderItem
+            order.OrderItems.Add(new OrderItem
             {
-                ProductId = itemDto.ProductId,
+                ProductId = cartItem.ProductId,
 
-                ProductVariantId =
-                    itemDto.ProductVariantId,
+                ProductVariantId = cartItem.VariantId,
 
                 ProductName = product.Name,
 
                 VariantName = variant.VariantName,
 
-                VariantAttributes = itemDto.VariantAttributes,
+                VariantAttributes = variant.Attributes,
 
-                Quantity = itemDto.Quantity
-            };
+                Quantity = cartItem.Quantity,
 
-            foreach (var optionDto in itemDto.Options)
-            {
-                var option = await _unitOfWork
-                    .GetRepository<ProductOption, Guid>()
-                    .GetFirstOrDefaultAsync(
-                        new ProductOptionSpecification(
-                            optionDto.ProductOptionId));
+                UnitPrice = unitPrice,
 
-                if (option is null ||
-                    option.ProductId != product.Id)
-                {
-                    throw new ArgumentException(
-                        $"Product option {optionDto.ProductOptionId} is not available for product {product.Id}.");
-                }
+                TotalPrice = unitPrice * cartItem.Quantity
+            });
 
-                // Free-text options (no defined values) use the
-                // option's flat catalog price; options with
-                // defined values price from the matched value.
-                decimal optionPrice = option.PriceValue;
-
-                if (option.ProductOptionValues.Count > 0)
-                {
-                    var optionValue = option.ProductOptionValues
-                        .FirstOrDefault(v =>
-                            string.Equals(
-                                v.Value,
-                                optionDto.OptionValue,
-                                StringComparison.OrdinalIgnoreCase) ||
-                            string.Equals(
-                                v.Label,
-                                optionDto.OptionValue,
-                                StringComparison.OrdinalIgnoreCase));
-
-                    if (optionValue is null)
-                    {
-                        throw new ArgumentException(
-                            $"Option value '{optionDto.OptionValue}' is not available for option {option.Id}.");
-                    }
-
-                    optionPrice = optionValue.PriceValue;
-                }
-
-                orderItem.OrderItemOptions.Add(
-                    new OrderItemOption
-                    {
-                        OptionName = option.Name,
-
-                        OptionValue = optionDto.OptionValue,
-
-                        PriceAdjustment = optionPrice
-                    });
-
-                unitPrice += optionPrice;
-            }
-
-            orderItem.UnitPrice = unitPrice;
-            orderItem.TotalPrice =
-                unitPrice * itemDto.Quantity;
-
-            order.OrderItems.Add(orderItem);
+            // Stock is reserved at placement; cancelling a
+            // pending order restocks symmetrically.
+            variant.StockQuantity -= cartItem.Quantity;
+            if (variant.StockQuantity == 0)
+                variant.StockStatus = StockStatus.OutOfStock;
+            variantRepository.Update(variant);
         }
 
         order.SubTotal =
@@ -256,9 +220,72 @@ public class OrderService : IOrderService
         // determinations.
         order.TaxAmount = 0m;
         order.ShippingCost = 0m;
-        order.TotalAmount = order.SubTotal
+
+        // An applied cart discount must be verifiable end to
+        // end: revalidate the recorded coupon under the current
+        // coupon rules against the live cart, then record the
+        // usage. An unverifiable discount rejects checkout
+        // rather than silently charging the undiscounted total.
+        decimal discount = 0m;
+
+        if (cart.DiscountAmount > 0)
+        {
+            if (string.IsNullOrWhiteSpace(cart.CouponCode))
+            {
+                throw new InvalidOperationException(
+                    "The cart has a discount that cannot be verified. Re-apply the coupon before checkout.");
+            }
+
+            var couponResult =
+                await _couponService.ValidateCouponAsync(
+                    userId,
+                    new ValidateCouponDTO
+                    {
+                        CartId = cart.Id,
+                        Code = cart.CouponCode
+                    });
+
+            var coupon = await _unitOfWork
+                .GetRepository<Coupon, Guid>()
+                .GetFirstOrDefaultAsync(
+                    new CouponByCodeSpecification(cart.CouponCode));
+
+            if (coupon is null)
+            {
+                throw new InvalidOperationException(
+                    "The coupon applied to this cart no longer exists. Re-apply a valid coupon before checkout.");
+            }
+
+            discount = Math.Min(
+                couponResult.DiscountAmount,
+                order.SubTotal);
+
+            coupon.UsedCount += 1;
+            _unitOfWork
+                .GetRepository<Coupon, Guid>()
+                .Update(coupon);
+
+            await _unitOfWork
+                .GetRepository<CouponUsage, Guid>()
+                .AddAsync(new CouponUsage
+                {
+                    CouponId = coupon.Id,
+                    OrderId = order.Id,
+                    UserId = userId,
+                    DiscountAmount = discount
+                });
+        }
+
+        order.TotalAmount = Math.Max(
+                0m,
+                order.SubTotal - discount)
             + order.TaxAmount
             + order.ShippingCost;
+
+        // Consuming the cart prevents replaying it into a
+        // second order.
+        cart.Status = CartStatus.Converted;
+        _unitOfWork.GetRepository<Cart, Guid>().Update(cart);
 
         order.OrderStatusHistories.Add(
             new OrderStatusHistory
@@ -309,11 +336,41 @@ public class OrderService : IOrderService
                 OrderStatus = OrderStatus.Cancelled
             });
 
+        await RestockOrderAsync(order);
+
         _unitOfWork
             .GetRepository<Order, Guid>()
             .Update(order);
 
         await _unitOfWork.SaveChangesAsync();
+    }
+
+    // Restores the variant stock reserved at placement. Only
+    // called when an order transitions into Cancelled.
+    private async Task RestockOrderAsync(Order order)
+    {
+        var variantRepository =
+            _unitOfWork.GetRepository<ProductVariant, Guid>();
+
+        foreach (var item in order.OrderItems)
+        {
+            var variant = await variantRepository
+                .GetFirstOrDefaultAsync(
+                    new ProductVariantSpecification(
+                        item.ProductVariantId));
+
+            if (variant is null)
+                continue;
+
+            variant.StockQuantity += item.Quantity;
+            if (variant.StockStatus == StockStatus.OutOfStock &&
+                variant.StockQuantity > 0)
+            {
+                variant.StockStatus = StockStatus.InStock;
+            }
+
+            variantRepository.Update(variant);
+        }
     }
 
     // =========================================================
@@ -384,6 +441,9 @@ public class OrderService : IOrderService
         {
             return _mapper.Map<GetAdminOrderDTO>(order);
         }
+
+        if (newStatus == OrderStatus.Cancelled)
+            await RestockOrderAsync(order);
 
         order.OrderStatus = newStatus;
 

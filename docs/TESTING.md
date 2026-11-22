@@ -4,11 +4,11 @@
 
 | Project | Type | Tests | Description |
 |---------|------|-------|-------------|
-| `ECommerce.UnitTests` | Unit | 288 | Service logic & validator tests with Moq |
+| `ECommerce.UnitTests` | Unit | 291 | Service logic & validator tests with Moq |
 | `ECommerce.IntegrationTests` | Integration | 67 | API endpoint tests with WebApplicationFactory |
 | `ECommerce.ArchitectureTests` | Architecture | 9 | Clean architecture enforcement with NetArchTest |
 
-**Total: 364 tests**
+**Total: 367 tests**
 
 ## Running Tests
 
@@ -242,7 +242,9 @@ open coverage/report/index.html
 
 **Return creation integrity:** `ReturnService.CreateReturnAsync` now verifies the order exists and belongs to the requesting user (KeyNotFoundException otherwise), that every returned item belongs to the order, and that requested quantities do not exceed purchased minus already-returned quantities (excluding rejected/cancelled returns). Return items are constructed server-side with the ProductId taken from the order item. The validator now also requires a non-empty OrderItemId and Quantity > 0 per item.
 
-**Refund calculation (approved policy):** `ReturnService.CreateReturnAsync` computes each return item's refund as the paid line value (`OrderItem.TotalPrice`) minus its proportional share of the order's coupon discount (allocated by line share of the subtotal, clamped at zero), divided by purchased quantity and multiplied by the returned quantity. Shipping is never refunded, order-level tax is not allocated into item refunds, and no fees are added. `ReturnRequest.RefundAmount` is the sum of its item refunds. Caveat: the current `CreateOrderAsync` does not populate order prices (order creation is mid-refactor), so refund amounts are only non-zero once checkout persists line totals; the formula is fully covered by unit tests with priced orders.
+**Refund calculation (approved policy):** `ReturnService.CreateReturnAsync` computes each return item's refund as the paid line value (`OrderItem.TotalPrice`) minus its proportional share of the order's coupon discount (allocated by line share of the subtotal, clamped at zero), divided by purchased quantity and multiplied by the returned quantity. Shipping is never refunded, order-level tax is not allocated into item refunds, and no fees are added. `ReturnRequest.RefundAmount` is the sum of its item refunds. Money-bearing hardening: duplicate `OrderItemId` entries in one request are accounted cumulatively so they cannot bypass the per-line quantity limit; the cumulative refunded value per line is capped at the line's net paid value (across prior requests and within the same request), so repeated partial refunds cannot exceed it through per-request rounding. Line totals are gross by contract: the coupon discount only ever exists as a separate order-level `CouponUsage` (cart subtotal math and `CouponUsage.DiscountAmount` confirm it), so allocating it in the refund cannot double-subtract a discount baked into `TotalPrice`.
+
+**Refund blocker - order pricing is not implemented:** refunds are zero for orders placed by the current code because the whole pricing pipeline is missing, not just order totals. `AddCartItemDTO` has no price and `CartItem.Price` is never populated (default-mapped to 0); `CreateOrderAsync` sets no `UnitPrice`/`TotalPrice`/`SubTotal`/`TaxAmount`/`ShippingCost`/`TotalAmount`; no tax rate or shipping cost source exists anywhere; option `PriceAdjustment` is taken from the client DTO; and nothing records a `CouponUsage` at order placement. Persisting actual paid totals requires decisions/rules that do not exist in the codebase (tax rate, shipping pricing, trusted server-side option pricing, cart-vs-DTO item source, coupon recording), so it is held rather than invented. The refund formula is fully unit-tested with priced orders and activates unchanged once checkout persists line totals and coupon usages.
 
 **Removed tautological tests:** `VariantSelectorsControllerTests` asserted only "OK or NotFound" against routes that have no controller; removed as coverage evidence (variant selectors are DTO shapes used inside product-option flows).
 

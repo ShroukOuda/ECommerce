@@ -33,8 +33,6 @@ public class BrandsControllerTests : IClassFixture<CustomWebApplicationFactory>
         var response = await _client.GetAsync("/api/v1/brands/00000000-0000-0000-0000-000000099999");
 
         // Assert
-        // The ExceptionsMiddleware will catch the KeyNotFoundException
-        // and return a 404 or handle it accordingly
-        response.StatusCode.Should().BeOneOf(HttpStatusCode.NotFound, HttpStatusCode.InternalServerError);
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 }

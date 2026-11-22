@@ -1,3 +1,4 @@
+using ECommerce.Domain.Enums.Shipping;
 using AutoMapper;
 using ECommerce.Application.DTO.Shipping;
 using ECommerce.Application.Interfaces;
@@ -36,7 +37,7 @@ public class ShippingServiceTests
         var shippings = new List<Shipping> { new() { Id = TestGuid.FromInt(1), OrderId = TestGuid.FromInt(1) } };
         var shippingDtos = new List<GetShippingDTO> { new() { Id = TestGuid.FromInt(1), OrderId = TestGuid.FromInt(1) } };
 
-        _unitOfWorkMock.Setup(u => u.GetRepository<Shipping, Guid>().GetAllAsync(new ShippingsByOrderSpecification(TestGuid.FromInt(1))))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Shipping, Guid>().GetAllAsync(It.IsAny<ShippingsByOrderSpecification>()))
             .ReturnsAsync(shippings);
         _mapperMock.Setup(m => m.Map<IEnumerable<GetShippingDTO>>(shippings)).Returns(shippingDtos);
 
@@ -75,7 +76,7 @@ public class ShippingServiceTests
     [Fact]
     public async Task CreateShippingAsync_WithValidData_ShouldCreateShipping()
     {
-        var dto = new CreateShippingDTO { OrderId = TestGuid.FromInt(1), AddressId = TestGuid.FromInt(1), Method = "Standard", Cost = 9.99m };
+        var dto = new CreateShippingDTO { OrderId = TestGuid.FromInt(1), AddressId = TestGuid.FromInt(1), Method = ShippingMethod.Standard, Cost = 9.99m };
         var shippingDto = new GetShippingDTO { Id = TestGuid.FromInt(1) };
 
         _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))

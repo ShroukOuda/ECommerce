@@ -15,7 +15,7 @@ public class OrdersControllerTests : IClassFixture<CustomWebApplicationFactory>
     [Fact]
     public async Task GetByUserId_WithValidUserId_ShouldReturnSuccessOrEmpty()
     {
-        var response = await _client.GetAsync("/api/Orders/get-by-user/test-user-id");
+        var response = await _client.GetAsync("/api/v1/orders");
         var body = await response.Content.ReadAsStringAsync();
         response.StatusCode.Should().Be(HttpStatusCode.OK, because: $"Response body: {body}");
     }
@@ -23,7 +23,7 @@ public class OrdersControllerTests : IClassFixture<CustomWebApplicationFactory>
     [Fact]
     public async Task GetById_WithInvalidId_ShouldReturnErrorResponse()
     {
-        var response = await _client.GetAsync("/api/Orders/get-by-id/99999");
+        var response = await _client.GetAsync("/api/v1/orders/00000000-0000-0000-0000-000000099999");
         response.StatusCode.Should().BeOneOf(HttpStatusCode.NotFound, HttpStatusCode.InternalServerError);
     }
 }

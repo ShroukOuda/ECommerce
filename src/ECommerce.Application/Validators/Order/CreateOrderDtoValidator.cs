@@ -8,12 +8,7 @@ public class CreateOrderDtoValidator : AbstractValidator<CreateOrderDTO>
     {
         RuleFor(x => x.Currency).NotEmpty().MaximumLength(10);
         RuleFor(x => x.CartId).NotEmpty();
-        RuleFor(x => x.Items).NotEmpty().WithMessage("Order must have at least one item.");
-        RuleForEach(x => x.Items).ChildRules(item =>
-        {
-            item.RuleFor(i => i.ProductId).NotEmpty();
-            item.RuleFor(i => i.ProductVariantId).NotEmpty();
-            item.RuleFor(i => i.Quantity).GreaterThan(0);
-        });
+        // Order items are sourced from the cart server-side at
+        // checkout; the Items collection on the DTO is unused.
     }
 }

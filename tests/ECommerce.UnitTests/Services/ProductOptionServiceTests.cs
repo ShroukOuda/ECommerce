@@ -42,7 +42,7 @@ public class ProductOptionServiceTests
         var options = new List<ProductOption> { new() { Id = TestGuid.FromInt(1), Name = "Color" } };
         var optionDtos = new List<GetProductOptionDTO> { new() { Id = TestGuid.FromInt(1), Name = "Color" } };
 
-        _unitOfWorkMock.Setup(u => u.GetRepository<ProductOption, Guid>().GetAllAsync(new ProductOptionsByProductSpecification(TestGuid.FromInt(1))))
+        _unitOfWorkMock.Setup(u => u.GetRepository<ProductOption, Guid>().GetAllAsync(It.IsAny<ProductOptionsByProductSpecification>()))
             .ReturnsAsync(options);
         _mapperMock.Setup(m => m.Map<IEnumerable<GetProductOptionDTO>>(options)).Returns(optionDtos);
 
@@ -115,7 +115,7 @@ public class ProductOptionServiceTests
     public async Task DeleteOptionAsync_WhenExists_ShouldDeleteOption()
     {
         _unitOfWorkMock.Setup(u => u.GetRepository<ProductOption, Guid>().ExistsAsync(
-            new ProductOptionSpecification(TestGuid.FromInt(1))))
+            It.IsAny<ProductOptionSpecification>()))
             .ReturnsAsync(true);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
@@ -128,7 +128,7 @@ public class ProductOptionServiceTests
     public async Task DeleteOptionAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
         _unitOfWorkMock.Setup(u => u.GetRepository<ProductOption, Guid>().ExistsAsync(
-            new ProductOptionSpecification(TestGuid.FromInt(999))))
+            It.IsAny<ProductOptionSpecification>()))
             .ReturnsAsync(false);
 
         var act = () => _productOptionService.DeleteOptionAsync(TestGuid.FromInt(999));
@@ -139,17 +139,20 @@ public class ProductOptionServiceTests
     [Fact]
     public async Task AddOptionValueAsync_WithValidData_ShouldAddValue()
     {
-        var dto = new AddProductOptionValueDTO { Value = "Red", Label = "Red", OptionId = TestGuid.FromInt(1) };
+        var dto = new AddProductOptionValueDTO { Value = "Red", Label = "Red" };
         var value = new ProductOptionValue { Value = "Red" };
 
         _addValueValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
+        _unitOfWorkMock.Setup(u => u.GetRepository<ProductOption, Guid>().ExistsAsync(
+            It.IsAny<ProductOptionSpecification>()))
+            .ReturnsAsync(true);
         _mapperMock.Setup(m => m.Map<ProductOptionValue>(dto)).Returns(value);
         _unitOfWorkMock.Setup(u => u.GetRepository<ProductOptionValue, Guid>().AddAsync(It.IsAny<ProductOptionValue>()))
             .Returns(Task.CompletedTask);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
-        await _productOptionService.AddOptionValueAsync(dto);
+        await _productOptionService.AddOptionValueAsync(TestGuid.FromInt(1), dto);
 
         _unitOfWorkMock.Verify(u => u.GetRepository<ProductOptionValue, Guid>().AddAsync(value), Times.Once);
     }
@@ -158,11 +161,11 @@ public class ProductOptionServiceTests
     public async Task DeleteOptionValueAsync_WhenExists_ShouldDeleteValue()
     {
         _unitOfWorkMock.Setup(u => u.GetRepository<ProductOptionValue, Guid>().ExistsAsync(
-            new ProductOptionValueSpecification(TestGuid.FromInt(1))))
+            It.IsAny<ProductOptionValueSpecification>()))
             .ReturnsAsync(true);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
-        await _productOptionService.DeleteOptionValueAsync(TestGuid.FromInt(1));
+        await _productOptionService.DeleteOptionValueAsync(TestGuid.FromInt(1), TestGuid.FromInt(2));
 
         _unitOfWorkMock.Verify(u => u.GetRepository<ProductOptionValue, Guid>().Delete(It.IsAny<ProductOptionValue>()), Times.Once);
     }
@@ -171,10 +174,10 @@ public class ProductOptionServiceTests
     public async Task DeleteOptionValueAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
         _unitOfWorkMock.Setup(u => u.GetRepository<ProductOptionValue, Guid>().ExistsAsync(
-            new ProductOptionValueSpecification(TestGuid.FromInt(999))))
+            It.IsAny<ProductOptionValueSpecification>()))
             .ReturnsAsync(false);
 
-        var act = () => _productOptionService.DeleteOptionValueAsync(TestGuid.FromInt(999));
+        var act = () => _productOptionService.DeleteOptionValueAsync(TestGuid.FromInt(1), TestGuid.FromInt(999));
 
         await act.Should().ThrowAsync<KeyNotFoundException>();
     }

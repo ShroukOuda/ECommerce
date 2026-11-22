@@ -1,5 +1,6 @@
 using ECommerce.Application.DTO.Inventory;
 using ECommerce.Application.Validators.Inventory;
+using ECommerce.Domain.Enums.Inventory;
 using FluentAssertions;
 
 namespace ECommerce.UnitTests.Validators;
@@ -11,45 +12,40 @@ public class CreateInventoryHistoryDtoValidatorTests
     [Fact]
     public async Task Validate_WithValidData_ShouldPass()
     {
-        var dto = new CreateInventoryHistoryDTO { ProductId = TestGuid.FromInt(1), NewQuantity = 10, ChangeType = "Addition" };
+        var dto = new CreateInventoryHistoryDTO { ProductVariantId = TestGuid.FromInt(1), QuantityChange = 10, ChangeType = InventoryChangeType.Restock };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeTrue();
     }
 
     [Fact]
-    public async Task Validate_WithProductIdZero_ShouldFail()
+    public async Task Validate_WithoutProductVariantId_ShouldPass()
     {
-        var dto = new CreateInventoryHistoryDTO { ProductId = Guid.Empty, NewQuantity = 10, ChangeType = "Addition" };
-        var result = await _validator.ValidateAsync(dto);
-        result.IsValid.Should().BeFalse();
-        result.Errors.Should().Contain(e => e.PropertyName == "ProductId");
-    }
-
-    [Fact]
-    public async Task Validate_WithNegativeNewQuantity_ShouldFail()
-    {
-        var dto = new CreateInventoryHistoryDTO { ProductId = TestGuid.FromInt(1), NewQuantity = -1, ChangeType = "Addition" };
-        var result = await _validator.ValidateAsync(dto);
-        result.IsValid.Should().BeFalse();
-        result.Errors.Should().Contain(e => e.PropertyName == "NewQuantity");
-    }
-
-    [Fact]
-    public async Task Validate_WithZeroNewQuantity_ShouldPass()
-    {
-        var dto = new CreateInventoryHistoryDTO { ProductId = TestGuid.FromInt(1), NewQuantity = 0, ChangeType = "Addition" };
+        var dto = new CreateInventoryHistoryDTO { QuantityChange = -3, ChangeType = InventoryChangeType.Adjustment };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeTrue();
     }
 
-    [Theory]
-    [InlineData("")]
-    [InlineData(null)]
-    public async Task Validate_WithEmptyChangeType_ShouldFail(string? changeType)
+    [Fact]
+    public async Task Validate_WithUndefinedChangeType_ShouldFail()
     {
-        var dto = new CreateInventoryHistoryDTO { ProductId = TestGuid.FromInt(1), NewQuantity = 10, ChangeType = changeType! };
+        var dto = new CreateInventoryHistoryDTO { ProductVariantId = TestGuid.FromInt(1), QuantityChange = 10, ChangeType = (InventoryChangeType)0 };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "ChangeType");
+    }
+
+    [Theory]
+    [InlineData(InventoryChangeType.Purchase)]
+    [InlineData(InventoryChangeType.Restock)]
+    [InlineData(InventoryChangeType.Adjustment)]
+    [InlineData(InventoryChangeType.Return)]
+    [InlineData(InventoryChangeType.Damage)]
+    [InlineData(InventoryChangeType.Expired)]
+    [InlineData(InventoryChangeType.Transfer)]
+    public async Task Validate_WithDefinedChangeType_ShouldPass(InventoryChangeType changeType)
+    {
+        var dto = new CreateInventoryHistoryDTO { QuantityChange = 1, ChangeType = changeType };
+        var result = await _validator.ValidateAsync(dto);
+        result.IsValid.Should().BeTrue();
     }
 }

@@ -50,4 +50,24 @@ public class CreateReturnRequestDtoValidatorTests
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "Items");
     }
+
+    [Fact]
+    public async Task Validate_WithZeroQuantity_ShouldFail()
+    {
+        var dto = CreateValidDto();
+        dto.Items[0].Quantity = 0;
+        var result = await _validator.ValidateAsync(dto);
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(e => e.PropertyName.Contains("Quantity"));
+    }
+
+    [Fact]
+    public async Task Validate_WithEmptyOrderItemId_ShouldFail()
+    {
+        var dto = CreateValidDto();
+        dto.Items[0].OrderItemId = Guid.Empty;
+        var result = await _validator.ValidateAsync(dto);
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(e => e.PropertyName.Contains("OrderItemId"));
+    }
 }

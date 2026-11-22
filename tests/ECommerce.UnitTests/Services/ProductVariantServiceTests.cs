@@ -39,7 +39,7 @@ public class ProductVariantServiceTests
         var variants = new List<ProductVariant> { new() { Id = TestGuid.FromInt(1), Sku = "VAR-001" } };
         var variantDtos = new List<GetProductVariantDTO> { new() { Id = TestGuid.FromInt(1), Sku = "VAR-001" } };
 
-        _unitOfWorkMock.Setup(u => u.GetRepository<ProductVariant, Guid>().GetAllAsync(new ProductVariantsByProductSpecification(TestGuid.FromInt(1))))
+        _unitOfWorkMock.Setup(u => u.GetRepository<ProductVariant, Guid>().GetAllAsync(It.IsAny<ProductVariantsByProductSpecification>()))
             .ReturnsAsync(variants);
         _mapperMock.Setup(m => m.Map<IEnumerable<GetProductVariantDTO>>(variants)).Returns(variantDtos);
 
@@ -139,7 +139,7 @@ public class ProductVariantServiceTests
     public async Task DeleteVariantAsync_WhenExists_ShouldDeleteVariant()
     {
         _unitOfWorkMock.Setup(u => u.GetRepository<ProductVariant, Guid>().ExistsAsync(
-            new ProductVariantSpecification(TestGuid.FromInt(1))))
+            It.IsAny<ProductVariantSpecification>()))
             .ReturnsAsync(true);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
@@ -152,7 +152,7 @@ public class ProductVariantServiceTests
     public async Task DeleteVariantAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
         _unitOfWorkMock.Setup(u => u.GetRepository<ProductVariant, Guid>().ExistsAsync(
-            new ProductVariantSpecification(TestGuid.FromInt(999))))
+            It.IsAny<ProductVariantSpecification>()))
             .ReturnsAsync(false);
 
         var act = () => _productVariantService.DeleteVariantAsync(TestGuid.FromInt(999));

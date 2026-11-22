@@ -5,10 +5,10 @@
 | Project | Type | Tests | Description |
 |---------|------|-------|-------------|
 | `ECommerce.UnitTests` | Unit | 284 | Service logic & validator tests with Moq |
-| `ECommerce.IntegrationTests` | Integration | 65 | API endpoint tests with WebApplicationFactory |
+| `ECommerce.IntegrationTests` | Integration | 67 | API endpoint tests with WebApplicationFactory |
 | `ECommerce.ArchitectureTests` | Architecture | 9 | Clean architecture enforcement with NetArchTest |
 
-**Total: 358 tests**
+**Total: 360 tests**
 
 ## Running Tests
 
@@ -238,10 +238,12 @@ open coverage/report/index.html
 
 ## Phase 2 Additions (authorization, error paths, return integrity)
 
-**Admin and auth controller coverage (new):** 11 admin controllers (AdminBrands, AdminCategories, AdminCoupons, AdminOrders, AdminProducts, AdminProductOptions, AdminProductVariants, AdminReturnItems, AdminReturns, AdminShipping, NotificationPreferences) and AuthenticationController now have integration tests focused on authorization (401 unauthenticated, 403 customer-only), plus happy-path checks where they are deterministic (admin list GETs, brand/category creation). The test auth handler supports `X-Test-Anonymous: true` (forces 401) and `X-Test-Role: Customer` (strips the Admin role) headers.
+**Admin and auth controller coverage (new):** 11 admin controllers (AdminBrands, AdminCategories, AdminCoupons, AdminOrders, AdminProducts, AdminProductOptions, AdminProductVariants, AdminReturnItems, AdminReturns, AdminShipping, NotificationPreferences) and AuthenticationController now have integration tests focused on authorization (401 unauthenticated, 403 customer-only). For each admin controller the authorization tests invoke **every protected action** (all verbs/routes attributed with `[Authorize(Roles = "Admin")]`), chunked to stay under the API rate limit, plus happy-path checks where they are deterministic (admin list GETs, brand/category creation). The test auth handler supports `X-Test-Anonymous: true` (forces 401) and `X-Test-Role: Customer` (strips the Admin role) headers.
 
 **Return creation integrity:** `ReturnService.CreateReturnAsync` now verifies the order exists and belongs to the requesting user (KeyNotFoundException otherwise), that every returned item belongs to the order, and that requested quantities do not exceed purchased minus already-returned quantities (excluding rejected/cancelled returns). Return items are constructed server-side with the ProductId taken from the order item. Refund amount is deliberately NOT calculated: the refund policy (eligibility window, discount allocation, fees) is an unresolved business decision. The validator now also requires a non-empty OrderItemId and Quantity > 0 per item.
 
 **Removed tautological tests:** `VariantSelectorsControllerTests` asserted only "OK or NotFound" against routes that have no controller; removed as coverage evidence (variant selectors are DTO shapes used inside product-option flows).
 
-**Known limitations:** `ExceptionsMiddleware` maps all unhandled exceptions (including KeyNotFoundException) to HTTP 500, so not-found error paths cannot be asserted as 404 until that middleware is fixed. Admin controller actions that require existing entities (update/delete by id, return state transitions) have authorization coverage but not yet full state-machine integration coverage. The seeded-admin login happy path could not be grounded in the test environment and is not asserted.
+**Middleware not-found fix:** `ExceptionsMiddleware` previously mapped all unhandled exceptions (including KeyNotFoundException) to HTTP 500. It now maps KeyNotFoundException to HTTP 404 with an `ApiExceptions` body, matching established API conventions. The Brands get-by-id not-found integration test is the regression test for this fix and now asserts exactly 404.
+
+**Known limitations:** Admin controller actions that require existing entities (update/delete by id, return state transitions) have full authorization coverage but not yet full state-machine integration coverage. The seeded-admin login happy path could not be grounded in the test environment and is not asserted.

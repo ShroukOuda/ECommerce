@@ -65,13 +65,23 @@ public class OrdersControllerTests : IClassFixture<CustomWebApplicationFactory>
                 StockQuantity = 10,
                 PriceAdjustment = 0m
             });
-            db.Carts.Add(new Cart
+            var cart = new Cart
             {
                 Id = cartId,
                 UserId = "user-123",
                 Status = CartStatus.Active,
                 ExpiresAt = DateTime.UtcNow.AddDays(1)
+            };
+            cart.CartItems.Add(new CartItem
+            {
+                Id = Guid.NewGuid(),
+                CartId = cartId,
+                ProductId = productId,
+                VariantId = variantId,
+                Quantity = 2,
+                Price = 100m
             });
+            db.Carts.Add(cart);
             await db.SaveChangesAsync();
         }
 
@@ -79,11 +89,7 @@ public class OrdersControllerTests : IClassFixture<CustomWebApplicationFactory>
         var orderResponse = await _client.PostAsJsonAsync("/api/v1/orders", new
         {
             cartId,
-            currency = "USD",
-            items = new[]
-            {
-                new { productId, productVariantId = variantId, quantity = 2, options = Array.Empty<object>() }
-            }
+            currency = "USD"
         });
 
         var orderBody = await orderResponse.Content.ReadAsStringAsync();
@@ -106,7 +112,21 @@ public class OrdersControllerTests : IClassFixture<CustomWebApplicationFactory>
             line.TotalPrice.Should().Be(200m);
             orderId = order.Id;
             orderItemId = line.Id;
+
+            // Stock reserved and cart consumed.
+            (await db.ProductVariants.SingleAsync(v => v.Id == variantId))
+                .StockQuantity.Should().Be(8);
+            (await db.Carts.SingleAsync(c => c.Id == cartId))
+                .Status.Should().Be(CartStatus.Converted);
         }
+
+        // Replaying the consumed cart is rejected.
+        var replayResponse = await _client.PostAsJsonAsync("/api/v1/orders", new
+        {
+            cartId,
+            currency = "USD"
+        });
+        replayResponse.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
 
         var returnResponse = await _client.PostAsJsonAsync("/api/v1/returns", new
         {

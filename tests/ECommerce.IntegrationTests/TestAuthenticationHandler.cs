@@ -20,13 +20,35 @@ public class TestAuthenticationHandler : AuthenticationHandler<AuthenticationSch
 
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
+        // Tests can force an unauthenticated request or a customer-only
+        // principal through headers.
+        if (string.Equals(
+                Request.Headers["X-Test-Anonymous"],
+                "true",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return Task.FromResult(
+                AuthenticateResult.Fail("Anonymous test request"));
+        }
+
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, "user-123"),
-            new(ClaimTypes.Name, "Test User"),
-            new(ClaimTypes.Role, "Admin"),
-            new(ClaimTypes.Role, "Customer")
+            new(ClaimTypes.Name, "Test User")
         };
+
+        if (string.Equals(
+                Request.Headers["X-Test-Role"],
+                "Customer",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            claims.Add(new Claim(ClaimTypes.Role, "Customer"));
+        }
+        else
+        {
+            claims.Add(new Claim(ClaimTypes.Role, "Admin"));
+            claims.Add(new Claim(ClaimTypes.Role, "Customer"));
+        }
 
         var identity = new ClaimsIdentity(claims, SchemeName);
         var principal = new ClaimsPrincipal(identity);

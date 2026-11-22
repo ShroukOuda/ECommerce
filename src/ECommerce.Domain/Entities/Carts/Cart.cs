@@ -6,6 +6,7 @@ public class Cart : BaseEntity<Guid>
 {
     public string GuestToken { get; set; } = string.Empty;
     public decimal DiscountAmount { get; set; }
+    public string? CouponCode { get; set; }
     public DateTime ExpiresAt { get; set; }
     public CartStatus Status { get; set; } = CartStatus.Active;
     

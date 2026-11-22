@@ -10,7 +10,6 @@ public class UpdateProductOptionDtoValidatorTests
 
     private static UpdateProductOptionDTO CreateValidDto() => new()
     {
-        Id = TestGuid.FromInt(1),
         Name = "Color",
         DisplayType = "Swatch",
         Type = "Visual",
@@ -25,15 +24,6 @@ public class UpdateProductOptionDtoValidatorTests
         result.IsValid.Should().BeTrue();
     }
 
-    [Fact]
-    public async Task Validate_WithIdZero_ShouldFail()
-    {
-        var dto = CreateValidDto();
-        dto.Id = Guid.Empty;
-        var result = await _validator.ValidateAsync(dto);
-        result.IsValid.Should().BeFalse();
-        result.Errors.Should().Contain(e => e.PropertyName == "Id");
-    }
 
     [Fact]
     public async Task Validate_WithEmptyName_ShouldFail()

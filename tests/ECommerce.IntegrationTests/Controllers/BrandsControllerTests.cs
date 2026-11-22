@@ -19,7 +19,7 @@ public class BrandsControllerTests : IClassFixture<CustomWebApplicationFactory>
     public async Task GetAll_ShouldReturnSuccessStatusCode()
     {
         // Act
-        var response = await _client.GetAsync("/api/Brands/get-all");
+        var response = await _client.GetAsync("/api/v1/brands");
 
         // Assert - log response body for debugging if not OK
         var body = await response.Content.ReadAsStringAsync();
@@ -30,7 +30,7 @@ public class BrandsControllerTests : IClassFixture<CustomWebApplicationFactory>
     public async Task GetById_WithInvalidId_ShouldReturnErrorResponse()
     {
         // Act
-        var response = await _client.GetAsync("/api/Brands/get-by-id/99999");
+        var response = await _client.GetAsync("/api/v1/brands/00000000-0000-0000-0000-000000099999");
 
         // Assert
         // The ExceptionsMiddleware will catch the KeyNotFoundException

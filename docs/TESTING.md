@@ -4,11 +4,11 @@
 
 | Project | Type | Tests | Description |
 |---------|------|-------|-------------|
-| `ECommerce.UnitTests` | Unit | 284 | Service logic & validator tests with Moq |
+| `ECommerce.UnitTests` | Unit | 288 | Service logic & validator tests with Moq |
 | `ECommerce.IntegrationTests` | Integration | 67 | API endpoint tests with WebApplicationFactory |
 | `ECommerce.ArchitectureTests` | Architecture | 9 | Clean architecture enforcement with NetArchTest |
 
-**Total: 360 tests**
+**Total: 364 tests**
 
 ## Running Tests
 
@@ -240,7 +240,9 @@ open coverage/report/index.html
 
 **Admin and auth controller coverage (new):** 11 admin controllers (AdminBrands, AdminCategories, AdminCoupons, AdminOrders, AdminProducts, AdminProductOptions, AdminProductVariants, AdminReturnItems, AdminReturns, AdminShipping, NotificationPreferences) and AuthenticationController now have integration tests focused on authorization (401 unauthenticated, 403 customer-only). For each admin controller the authorization tests invoke **every protected action** (all verbs/routes attributed with `[Authorize(Roles = "Admin")]`), chunked to stay under the API rate limit, plus happy-path checks where they are deterministic (admin list GETs, brand/category creation). The test auth handler supports `X-Test-Anonymous: true` (forces 401) and `X-Test-Role: Customer` (strips the Admin role) headers.
 
-**Return creation integrity:** `ReturnService.CreateReturnAsync` now verifies the order exists and belongs to the requesting user (KeyNotFoundException otherwise), that every returned item belongs to the order, and that requested quantities do not exceed purchased minus already-returned quantities (excluding rejected/cancelled returns). Return items are constructed server-side with the ProductId taken from the order item. Refund amount is deliberately NOT calculated: the refund policy (eligibility window, discount allocation, fees) is an unresolved business decision. The validator now also requires a non-empty OrderItemId and Quantity > 0 per item.
+**Return creation integrity:** `ReturnService.CreateReturnAsync` now verifies the order exists and belongs to the requesting user (KeyNotFoundException otherwise), that every returned item belongs to the order, and that requested quantities do not exceed purchased minus already-returned quantities (excluding rejected/cancelled returns). Return items are constructed server-side with the ProductId taken from the order item. The validator now also requires a non-empty OrderItemId and Quantity > 0 per item.
+
+**Refund calculation (approved policy):** `ReturnService.CreateReturnAsync` computes each return item's refund as the paid line value (`OrderItem.TotalPrice`) minus its proportional share of the order's coupon discount (allocated by line share of the subtotal, clamped at zero), divided by purchased quantity and multiplied by the returned quantity. Shipping is never refunded, order-level tax is not allocated into item refunds, and no fees are added. `ReturnRequest.RefundAmount` is the sum of its item refunds. Caveat: the current `CreateOrderAsync` does not populate order prices (order creation is mid-refactor), so refund amounts are only non-zero once checkout persists line totals; the formula is fully covered by unit tests with priced orders.
 
 **Removed tautological tests:** `VariantSelectorsControllerTests` asserted only "OK or NotFound" against routes that have no controller; removed as coverage evidence (variant selectors are DTO shapes used inside product-option flows).
 

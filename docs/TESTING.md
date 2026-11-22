@@ -4,11 +4,11 @@
 
 | Project | Type | Tests | Description |
 |---------|------|-------|-------------|
-| `ECommerce.UnitTests` | Unit | 291 | Service logic & validator tests with Moq |
-| `ECommerce.IntegrationTests` | Integration | 67 | API endpoint tests with WebApplicationFactory |
+| `ECommerce.UnitTests` | Unit | 304 | Service logic & validator tests with Moq |
+| `ECommerce.IntegrationTests` | Integration | 68 | API endpoint tests with WebApplicationFactory |
 | `ECommerce.ArchitectureTests` | Architecture | 9 | Clean architecture enforcement with NetArchTest |
 
-**Total: 367 tests**
+**Total: 381 tests**
 
 ## Running Tests
 
@@ -244,7 +244,23 @@ open coverage/report/index.html
 
 **Refund calculation (approved policy):** `ReturnService.CreateReturnAsync` computes each return item's refund as the paid line value (`OrderItem.TotalPrice`) minus its proportional share of the order's coupon discount (allocated by line share of the subtotal, clamped at zero), divided by purchased quantity and multiplied by the returned quantity. Shipping is never refunded, order-level tax is not allocated into item refunds, and no fees are added. `ReturnRequest.RefundAmount` is the sum of its item refunds. Money-bearing hardening: duplicate `OrderItemId` entries in one request are accounted cumulatively so they cannot bypass the per-line quantity limit; the cumulative refunded value per line is capped at the line's net paid value (across prior requests and within the same request), so repeated partial refunds cannot exceed it through per-request rounding. Line totals are gross by contract: the coupon discount only ever exists as a separate order-level `CouponUsage` (cart subtotal math and `CouponUsage.DiscountAmount` confirm it), so allocating it in the refund cannot double-subtract a discount baked into `TotalPrice`.
 
-**Refund blocker - order pricing is not implemented:** refunds are zero for orders placed by the current code because the whole pricing pipeline is missing, not just order totals. `AddCartItemDTO` has no price and `CartItem.Price` is never populated (default-mapped to 0); `CreateOrderAsync` sets no `UnitPrice`/`TotalPrice`/`SubTotal`/`TaxAmount`/`ShippingCost`/`TotalAmount`; no tax rate or shipping cost source exists anywhere; option `PriceAdjustment` is taken from the client DTO; and nothing records a `CouponUsage` at order placement. Persisting actual paid totals requires decisions/rules that do not exist in the codebase (tax rate, shipping pricing, trusted server-side option pricing, cart-vs-DTO item source, coupon recording), so it is held rather than invented. The refund formula is fully unit-tested with priced orders and activates unchanged once checkout persists line totals and coupon usages.
+## Phase 3 Additions (checkout pricing, user-delegated defaults)
+
+**Checkout now persists trusted server-side prices.** `OrderService.CreateOrderAsync` prices every item from the catalog, never from client input: unit price = (`Product.SalePrice` when `IsOnSale`, else `BasePrice`) + `ProductVariant.PriceAdjustment` + option prices resolved from the catalog (`ProductOptionValue.PriceValue` for valued options matched by value/label, else the option's flat `PriceValue`). Line `TotalPrice = UnitPrice * Quantity`; `SubTotal` is the line sum. `ProductName`/`VariantName`/`VariantAttributes` are snapshotted onto the order item. The client-supplied option `PriceAdjustment` is ignored.
+
+**Integrity at checkout:** the cart must exist, belong to the ordering user, be active and unexpired (otherwise 404 / InvalidOperation); products must be published; variants must belong to the product, be active and have sufficient stock; options must belong to the product and valued options must contain the requested value. All violations throw ArgumentException (HTTP 400) before anything is written. The validator now also requires a non-empty `CartId` and per-item `ProductVariantId`.
+
+**Chosen defaults (delegated by the project owner, documented, not legal/tax determinations):**
+- `TaxAmount = 0` and `ShippingCost = 0`: no tax or shipping rules exist anywhere in the project; these are explicit zero placeholders until real rules are provided. `TotalAmount = SubTotal + Tax + Shipping`.
+- Cart discounts are NOT applied at checkout: `Cart` stores only a discount amount, not which coupon produced it, so applying it would leave no `CouponUsage` trace and refunds could exceed what was paid. Applying coupons at checkout needs a cart-to-coupon link (schema change) and is the one held piece.
+- Stock is validated for sufficiency but not decremented: stock-movement timing (placement vs payment vs shipment) and level (both `Product` and `ProductVariant` carry `StockQuantity`; the only existing writer is manual product-level adjustment) is inventory policy that does not exist yet. Cancel does not restock for the same reason.
+- Order items still come from the request DTO (existing API contract); the cart supplies checkout context/ownership.
+
+**Two latent bugs fixed (found by the new end-to-end test):**
+- `CustomWebApplicationFactory` generated a NEW InMemory database name per context creation (the options lambda evaluated `Guid.NewGuid()` each time), so every scope saw a fresh empty store. The name is now generated once per factory instance.
+- `ReturnRequest.RejectionReason` was configured `IsRequired` but the entity left it null on creation, so creating a return through the real pipeline always failed with a 500. The entity now follows the codebase convention (`string.Empty` default).
+
+**End-to-end regression:** `OrdersControllerTests.CreateOrderThenCreateReturn_EndToEnd` seeds a product/variant/cart, creates an order over HTTP (asserting persisted prices and totals), then creates a return over HTTP and asserts the refund equals the pro-rata paid value.
 
 **Removed tautological tests:** `VariantSelectorsControllerTests` asserted only "OK or NotFound" against routes that have no controller; removed as coverage evidence (variant selectors are DTO shapes used inside product-option flows).
 

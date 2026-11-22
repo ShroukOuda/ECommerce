@@ -2,7 +2,9 @@ using AutoMapper;
 using FluentValidation;
 using ECommerce.Application.DTO.Return;
 using ECommerce.Application.Interfaces;
+using ECommerce.Application.Specifications.Orders;
 using ECommerce.Application.Specifications.Returns;
+using ECommerce.Domain.Entities.Orders;
 using ECommerce.Domain.Entities.Returns;
 using ECommerce.Domain.Enums.Return;
 using ECommerce.Domain.Interfaces.Repositories;
@@ -76,16 +78,21 @@ public class ReturnService : IReturnService
             throw new ValidationException(
                 validationResult.Errors);
 
-        /*
-         * Business validation should happen here:
-         *
-         * 1. Get the order.
-         * 2. Verify that the order belongs to userId.
-         * 3. Verify every OrderItem belongs to the order.
-         * 4. Verify quantity is returnable.
-         * 5. Calculate refund amount on the server.
-         * 6. Get ProductId from OrderItem.
-         */
+        var order = await _unitOfWork
+            .GetRepository<Order, Guid>()
+            .GetFirstOrDefaultAsync(
+                new OrderDetailsSpecification(dto.OrderId));
+
+        if (order is null || order.UserId != userId)
+        {
+            throw new KeyNotFoundException(
+                $"Order with ID {dto.OrderId} not found.");
+        }
+
+        var existingReturnItems = await _unitOfWork
+            .GetRepository<ReturnItem, Guid>()
+            .GetAllAsync(
+                new ReturnItemsByOrderSpecification(dto.OrderId));
 
         var returnRequest =
             _mapper.Map<ReturnRequest>(dto);
@@ -94,6 +101,45 @@ public class ReturnService : IReturnService
         returnRequest.OrderId = dto.OrderId;
         returnRequest.Status = ReturnStatus.Requested;
         returnRequest.ReturnNumber = GenerateReturnNumber();
+        returnRequest.ReturnItems = new List<ReturnItem>();
+
+        foreach (var item in dto.Items)
+        {
+            var orderItem = order.OrderItems
+                .FirstOrDefault(oi => oi.Id == item.OrderItemId);
+
+            if (orderItem is null)
+            {
+                throw new ArgumentException(
+                    $"Order item {item.OrderItemId} does not belong to order {dto.OrderId}.");
+            }
+
+            var alreadyReturned = existingReturnItems
+                .Where(ri => ri.OrderItemId == item.OrderItemId)
+                .Sum(ri => ri.Quantity);
+
+            var remaining = orderItem.Quantity - alreadyReturned;
+
+            if (item.Quantity > remaining)
+            {
+                throw new ArgumentException(
+                    $"Requested quantity ({item.Quantity}) for order item {item.OrderItemId} exceeds the returnable quantity ({remaining}).");
+            }
+
+            returnRequest.ReturnItems.Add(new ReturnItem
+            {
+                OrderItemId = item.OrderItemId,
+                ProductId = orderItem.ProductId,
+                Quantity = item.Quantity,
+                Reason = item.Reason,
+                Status = ReturnItemStatus.Pending
+            });
+        }
+
+        // Refund amount is intentionally not calculated here:
+        // the refund policy (eligibility window, partial
+        // quantities, discount allocation) is an unresolved
+        // business decision.
 
         // Initial history
         returnRequest.ReturnHistories.Add(

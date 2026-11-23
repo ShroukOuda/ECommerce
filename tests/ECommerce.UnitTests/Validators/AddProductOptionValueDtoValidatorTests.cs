@@ -11,7 +11,7 @@ public class AddProductOptionValueDtoValidatorTests
     [Fact]
     public async Task Validate_WithValidData_ShouldPass()
     {
-        var dto = new AddProductOptionValueDTO { Value = "Red", Label = "Red Color", OptionId = TestGuid.FromInt(1) };
+        var dto = new AddProductOptionValueDTO { Value = "Red", Label = "Red Color" };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeTrue();
     }
@@ -21,7 +21,7 @@ public class AddProductOptionValueDtoValidatorTests
     [InlineData(null)]
     public async Task Validate_WithEmptyValue_ShouldFail(string? value)
     {
-        var dto = new AddProductOptionValueDTO { Value = value!, Label = "Red Color", OptionId = TestGuid.FromInt(1) };
+        var dto = new AddProductOptionValueDTO { Value = value!, Label = "Red Color" };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "Value");
@@ -30,7 +30,7 @@ public class AddProductOptionValueDtoValidatorTests
     [Fact]
     public async Task Validate_WithValueTooLong_ShouldFail()
     {
-        var dto = new AddProductOptionValueDTO { Value = new string('A', 201), Label = "Red", OptionId = TestGuid.FromInt(1) };
+        var dto = new AddProductOptionValueDTO { Value = new string('A', 201), Label = "Red" };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "Value");
@@ -41,7 +41,7 @@ public class AddProductOptionValueDtoValidatorTests
     [InlineData(null)]
     public async Task Validate_WithEmptyLabel_ShouldFail(string? label)
     {
-        var dto = new AddProductOptionValueDTO { Value = "Red", Label = label!, OptionId = TestGuid.FromInt(1) };
+        var dto = new AddProductOptionValueDTO { Value = "Red", Label = label! };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "Label");
@@ -50,18 +50,10 @@ public class AddProductOptionValueDtoValidatorTests
     [Fact]
     public async Task Validate_WithLabelTooLong_ShouldFail()
     {
-        var dto = new AddProductOptionValueDTO { Value = "Red", Label = new string('A', 201), OptionId = TestGuid.FromInt(1) };
+        var dto = new AddProductOptionValueDTO { Value = "Red", Label = new string('A', 201) };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "Label");
     }
 
-    [Fact]
-    public async Task Validate_WithOptionIdZero_ShouldFail()
-    {
-        var dto = new AddProductOptionValueDTO { Value = "Red", Label = "Red Color", OptionId = Guid.Empty };
-        var result = await _validator.ValidateAsync(dto);
-        result.IsValid.Should().BeFalse();
-        result.Errors.Should().Contain(e => e.PropertyName == "OptionId");
-    }
 }

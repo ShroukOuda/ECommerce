@@ -36,7 +36,7 @@ public class WishlistServiceTests
         var items = new List<Wishlist> { new() { Id = TestGuid.FromInt(1), ProductId = TestGuid.FromInt(1), UserId = "user1" } };
         var itemDtos = new List<GetWishlistDTO> { new() { Id = TestGuid.FromInt(1), ProductId = TestGuid.FromInt(1), UserId = "user1" } };
 
-        _unitOfWorkMock.Setup(u => u.GetRepository<Wishlist, Guid>().GetAllAsync(new WishlistsByUserSpecification("user1")))
+        _unitOfWorkMock.Setup(u => u.GetRepository<Wishlist, Guid>().GetAllAsync(It.IsAny<WishlistsByUserSpecification>()))
             .ReturnsAsync(items);
         _mapperMock.Setup(m => m.Map<IEnumerable<GetWishlistDTO>>(items)).Returns(itemDtos);
 
@@ -54,7 +54,7 @@ public class WishlistServiceTests
         _addValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
         _unitOfWorkMock.Setup(u => u.GetRepository<Wishlist, Guid>().ExistsAsync(
-            new WishlistSpecification(TestGuid.FromInt(1))))
+            It.IsAny<WishlistSpecification>()))
             .ReturnsAsync(false);
         _mapperMock.Setup(m => m.Map<Wishlist>(dto)).Returns(wishlist);
         _unitOfWorkMock.Setup(u => u.GetRepository<Wishlist, Guid>().AddAsync(It.IsAny<Wishlist>()))
@@ -74,7 +74,7 @@ public class WishlistServiceTests
         _addValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
         _unitOfWorkMock.Setup(u => u.GetRepository<Wishlist, Guid>().ExistsAsync(
-            new WishlistSpecification(TestGuid.FromInt(1))))
+            It.IsAny<WishlistSpecification>()))
             .ReturnsAsync(true);
 
         var act = () => _wishlistService.AddToWishlistAsync(dto);
@@ -99,15 +99,14 @@ public class WishlistServiceTests
     [Fact]
     public async Task RemoveFromWishlistAsync_WhenExists_ShouldRemoveItem()
     {
-        var item = new Wishlist { Id = TestGuid.FromInt(1) };
-
-        _unitOfWorkMock.Setup(u => u.GetRepository<Wishlist, Guid>().GetByIdAsync(TestGuid.FromInt(1)))
-            .ReturnsAsync(item);
+        _unitOfWorkMock.Setup(u => u.GetRepository<Wishlist, Guid>().ExistsAsync(It.IsAny<WishlistSpecification>()))
+            .ReturnsAsync(true);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
         await _wishlistService.RemoveFromWishlistAsync(TestGuid.FromInt(1));
 
-        _unitOfWorkMock.Verify(u => u.GetRepository<Wishlist, Guid>().Delete(item), Times.Once);
+        _unitOfWorkMock.Verify(u => u.GetRepository<Wishlist, Guid>().Delete(
+            It.Is<Wishlist>(w => w.Id == TestGuid.FromInt(1))), Times.Once);
     }
 
     [Fact]

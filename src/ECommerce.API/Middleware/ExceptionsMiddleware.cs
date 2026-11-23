@@ -40,6 +40,14 @@ public class ExceptionsMiddleware
             }
             await _next(context);
         }
+        catch (KeyNotFoundException e)
+        {
+            context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+            context.Response.ContentType = "application/json";
+            ApiExceptions notFoundResponse = new ApiExceptions((int)HttpStatusCode.NotFound, e.Message);
+            string notFoundJson = JsonSerializer.Serialize(notFoundResponse);
+            await context.Response.WriteAsync(notFoundJson);
+        }
         catch (Exception e)
         {
             context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;

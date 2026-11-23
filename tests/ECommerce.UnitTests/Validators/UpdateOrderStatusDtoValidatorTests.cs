@@ -11,26 +11,18 @@ public class UpdateOrderStatusDtoValidatorTests
     [Fact]
     public async Task Validate_WithValidData_ShouldPass()
     {
-        var dto = new UpdateOrderStatusDTO { Id = TestGuid.FromInt(1), OrderStatus = "Shipped" };
+        var dto = new UpdateOrderStatusDTO { OrderStatus = "Shipped" };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeTrue();
     }
 
-    [Fact]
-    public async Task Validate_WithIdZero_ShouldFail()
-    {
-        var dto = new UpdateOrderStatusDTO { Id = Guid.Empty, OrderStatus = "Shipped" };
-        var result = await _validator.ValidateAsync(dto);
-        result.IsValid.Should().BeFalse();
-        result.Errors.Should().Contain(e => e.PropertyName == "Id");
-    }
 
     [Theory]
     [InlineData("")]
     [InlineData(null)]
     public async Task Validate_WithEmptyOrderStatus_ShouldFail(string? status)
     {
-        var dto = new UpdateOrderStatusDTO { Id = TestGuid.FromInt(1), OrderStatus = status! };
+        var dto = new UpdateOrderStatusDTO { OrderStatus = status! };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "OrderStatus");

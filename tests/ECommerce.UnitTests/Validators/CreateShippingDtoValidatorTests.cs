@@ -1,5 +1,6 @@
 using ECommerce.Application.DTO.Shipping;
 using ECommerce.Application.Validators.Shipping;
+using ECommerce.Domain.Enums.Shipping;
 using FluentAssertions;
 
 namespace ECommerce.UnitTests.Validators;
@@ -11,7 +12,7 @@ public class CreateShippingDtoValidatorTests
     [Fact]
     public async Task Validate_WithValidData_ShouldPass()
     {
-        var dto = new CreateShippingDTO { OrderId = TestGuid.FromInt(1), AddressId = TestGuid.FromInt(1), Cost = 9.99m, Method = "Express" };
+        var dto = new CreateShippingDTO { OrderId = TestGuid.FromInt(1), AddressId = TestGuid.FromInt(1), Cost = 9.99m, Method = ShippingMethod.Express };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeTrue();
     }
@@ -19,7 +20,7 @@ public class CreateShippingDtoValidatorTests
     [Fact]
     public async Task Validate_WithOrderIdZero_ShouldFail()
     {
-        var dto = new CreateShippingDTO { OrderId = Guid.Empty, AddressId = TestGuid.FromInt(1), Cost = 9.99m, Method = "Express" };
+        var dto = new CreateShippingDTO { OrderId = Guid.Empty, AddressId = TestGuid.FromInt(1), Cost = 9.99m, Method = ShippingMethod.Express };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "OrderId");
@@ -28,7 +29,7 @@ public class CreateShippingDtoValidatorTests
     [Fact]
     public async Task Validate_WithAddressIdZero_ShouldFail()
     {
-        var dto = new CreateShippingDTO { OrderId = TestGuid.FromInt(1), AddressId = Guid.Empty, Cost = 9.99m, Method = "Express" };
+        var dto = new CreateShippingDTO { OrderId = TestGuid.FromInt(1), AddressId = Guid.Empty, Cost = 9.99m, Method = ShippingMethod.Express };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "AddressId");
@@ -37,7 +38,7 @@ public class CreateShippingDtoValidatorTests
     [Fact]
     public async Task Validate_WithNegativeCost_ShouldFail()
     {
-        var dto = new CreateShippingDTO { OrderId = TestGuid.FromInt(1), AddressId = TestGuid.FromInt(1), Cost = -1, Method = "Express" };
+        var dto = new CreateShippingDTO { OrderId = TestGuid.FromInt(1), AddressId = TestGuid.FromInt(1), Cost = -1, Method = ShippingMethod.Express };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "Cost");
@@ -46,17 +47,15 @@ public class CreateShippingDtoValidatorTests
     [Fact]
     public async Task Validate_WithZeroCost_ShouldPass()
     {
-        var dto = new CreateShippingDTO { OrderId = TestGuid.FromInt(1), AddressId = TestGuid.FromInt(1), Cost = 0, Method = "Express" };
+        var dto = new CreateShippingDTO { OrderId = TestGuid.FromInt(1), AddressId = TestGuid.FromInt(1), Cost = 0, Method = ShippingMethod.Express };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeTrue();
     }
 
-    [Theory]
-    [InlineData("")]
-    [InlineData(null)]
-    public async Task Validate_WithEmptyMethod_ShouldFail(string? method)
+    [Fact]
+    public async Task Validate_WithUndefinedMethod_ShouldFail()
     {
-        var dto = new CreateShippingDTO { OrderId = TestGuid.FromInt(1), AddressId = TestGuid.FromInt(1), Cost = 9.99m, Method = method! };
+        var dto = new CreateShippingDTO { OrderId = TestGuid.FromInt(1), AddressId = TestGuid.FromInt(1), Cost = 9.99m, Method = (ShippingMethod)0 };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e => e.PropertyName == "Method");

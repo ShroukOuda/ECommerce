@@ -9,7 +9,7 @@ public class ReturnRequest : BaseEntity<Guid>
 
     public string? Description { get; set; }
 
-    public string? RejectionReason { get; set; }
+    public string RejectionReason { get; set; } = string.Empty;
 
     public ReturnStatus Status { get; set; } = ReturnStatus.Requested;
 

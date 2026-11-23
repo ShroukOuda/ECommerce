@@ -199,6 +199,9 @@ public class CouponService : ICouponService
             subtotal);
 
         cart.DiscountAmount = discount;
+        // Persist which coupon produced the discount so checkout
+        // can revalidate it and record the usage.
+        cart.CouponCode = coupon.Code;
 
         _unitOfWork
             .GetRepository<Cart, Guid>()

@@ -2,7 +2,11 @@ using AutoMapper;
 using FluentValidation;
 using ECommerce.Application.DTO.Return;
 using ECommerce.Application.Interfaces;
+using ECommerce.Application.Specifications.Coupons;
+using ECommerce.Application.Specifications.Orders;
 using ECommerce.Application.Specifications.Returns;
+using ECommerce.Domain.Entities.Coupons;
+using ECommerce.Domain.Entities.Orders;
 using ECommerce.Domain.Entities.Returns;
 using ECommerce.Domain.Enums.Return;
 using ECommerce.Domain.Interfaces.Repositories;
@@ -76,16 +80,36 @@ public class ReturnService : IReturnService
             throw new ValidationException(
                 validationResult.Errors);
 
-        /*
-         * Business validation should happen here:
-         *
-         * 1. Get the order.
-         * 2. Verify that the order belongs to userId.
-         * 3. Verify every OrderItem belongs to the order.
-         * 4. Verify quantity is returnable.
-         * 5. Calculate refund amount on the server.
-         * 6. Get ProductId from OrderItem.
-         */
+        var order = await _unitOfWork
+            .GetRepository<Order, Guid>()
+            .GetFirstOrDefaultAsync(
+                new OrderDetailsSpecification(dto.OrderId));
+
+        if (order is null || order.UserId != userId)
+        {
+            throw new KeyNotFoundException(
+                $"Order with ID {dto.OrderId} not found.");
+        }
+
+        var existingReturnItems = await _unitOfWork
+            .GetRepository<ReturnItem, Guid>()
+            .GetAllAsync(
+                new ReturnItemsByOrderSpecification(dto.OrderId));
+
+        // Approved refund policy: refund the actual paid item
+        // value after allocated order-level coupon discounts,
+        // proportional to the returned quantity. Shipping is
+        // never refunded and no fees are added.
+        var couponUsages = await _unitOfWork
+            .GetRepository<CouponUsage, Guid>()
+            .GetAllAsync(
+                new CouponUsagesByOrderSpecification(dto.OrderId));
+
+        decimal totalCouponDiscount =
+            couponUsages.Sum(cu => cu.DiscountAmount);
+
+        decimal orderSubTotal =
+            order.OrderItems.Sum(oi => oi.TotalPrice);
 
         var returnRequest =
             _mapper.Map<ReturnRequest>(dto);
@@ -94,6 +118,86 @@ public class ReturnService : IReturnService
         returnRequest.OrderId = dto.OrderId;
         returnRequest.Status = ReturnStatus.Requested;
         returnRequest.ReturnNumber = GenerateReturnNumber();
+        returnRequest.ReturnItems = new List<ReturnItem>();
+
+        // Quantities and refund values already consumed within
+        // this request, so duplicate OrderItemId entries cannot
+        // bypass the limits checked against persisted returns.
+        var requestedQuantities = new Dictionary<Guid, int>();
+        var requestedRefunds = new Dictionary<Guid, decimal>();
+
+        foreach (var item in dto.Items)
+        {
+            var orderItem = order.OrderItems
+                .FirstOrDefault(oi => oi.Id == item.OrderItemId);
+
+            if (orderItem is null)
+            {
+                throw new ArgumentException(
+                    $"Order item {item.OrderItemId} does not belong to order {dto.OrderId}.");
+            }
+
+            var alreadyReturned = existingReturnItems
+                .Where(ri => ri.OrderItemId == item.OrderItemId)
+                .Sum(ri => ri.Quantity);
+
+            requestedQuantities.TryGetValue(
+                item.OrderItemId, out var requestedThisRequest);
+
+            var remaining = orderItem.Quantity
+                - alreadyReturned
+                - requestedThisRequest;
+
+            if (item.Quantity > remaining)
+            {
+                throw new ArgumentException(
+                    $"Requested quantity ({item.Quantity}) for order item {item.OrderItemId} exceeds the returnable quantity ({remaining}).");
+            }
+
+            // Cap the cumulative refunded value per line at its
+            // net paid value, so repeated partial refunds cannot
+            // exceed it through per-request rounding.
+            var alreadyRefunded = existingReturnItems
+                .Where(ri => ri.OrderItemId == item.OrderItemId)
+                .Sum(ri => ri.RefundAmount);
+
+            requestedRefunds.TryGetValue(
+                item.OrderItemId, out var refundedThisRequest);
+
+            decimal lineNetValue = CalculateLineNetValue(
+                orderItem,
+                totalCouponDiscount,
+                orderSubTotal);
+
+            decimal remainingRefundable = Math.Max(
+                0m,
+                lineNetValue - alreadyRefunded - refundedThisRequest);
+
+            decimal refundAmount = Math.Min(
+                CalculateRefundAmount(
+                    orderItem,
+                    item.Quantity,
+                    lineNetValue),
+                remainingRefundable);
+
+            requestedQuantities[item.OrderItemId] =
+                requestedThisRequest + item.Quantity;
+            requestedRefunds[item.OrderItemId] =
+                refundedThisRequest + refundAmount;
+
+            returnRequest.ReturnItems.Add(new ReturnItem
+            {
+                OrderItemId = item.OrderItemId,
+                ProductId = orderItem.ProductId,
+                Quantity = item.Quantity,
+                Reason = item.Reason,
+                RefundAmount = refundAmount,
+                Status = ReturnItemStatus.Pending
+            });
+        }
+
+        returnRequest.RefundAmount =
+            returnRequest.ReturnItems.Sum(ri => ri.RefundAmount);
 
         // Initial history
         returnRequest.ReturnHistories.Add(
@@ -507,6 +611,47 @@ public class ReturnService : IReturnService
         }
 
         return item;
+    }
+
+    private static decimal CalculateLineNetValue(
+        OrderItem orderItem,
+        decimal totalCouponDiscount,
+        decimal orderSubTotal)
+    {
+        // Line totals are gross: the coupon discount is only
+        // ever stored as a separate order-level CouponUsage, so
+        // subtracting its allocation here cannot double-count a
+        // discount already inside TotalPrice.
+        decimal lineNet = orderItem.TotalPrice;
+
+        if (totalCouponDiscount > 0 && orderSubTotal > 0)
+        {
+            // Allocate the order-level discount to this line in
+            // proportion to its share of the order subtotal.
+            decimal allocatedDiscount = Math.Round(
+                totalCouponDiscount *
+                (orderItem.TotalPrice / orderSubTotal),
+                2,
+                MidpointRounding.AwayFromZero);
+
+            lineNet = Math.Max(0m, lineNet - allocatedDiscount);
+        }
+
+        return lineNet;
+    }
+
+    private static decimal CalculateRefundAmount(
+        OrderItem orderItem,
+        int returnedQuantity,
+        decimal lineNetValue)
+    {
+        if (orderItem.Quantity <= 0)
+            return 0m;
+
+        return Math.Round(
+            lineNetValue / orderItem.Quantity * returnedQuantity,
+            2,
+            MidpointRounding.AwayFromZero);
     }
 
     private async Task SaveReturnAsync(

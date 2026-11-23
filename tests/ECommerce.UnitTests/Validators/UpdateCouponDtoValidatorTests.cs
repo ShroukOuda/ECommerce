@@ -1,3 +1,4 @@
+using ECommerce.Domain.Enums.Coupon;
 using ECommerce.Application.DTO.Coupon;
 using ECommerce.Application.Validators.Coupon;
 using FluentAssertions;
@@ -10,10 +11,9 @@ public class UpdateCouponDtoValidatorTests
 
     private static UpdateCouponDTO CreateValidDto() => new()
     {
-        Id = TestGuid.FromInt(1),
         Code = "SAVE20",
         Description = "Save 20%",
-        DiscountType = "Percentage",
+        DiscountType = DiscountType.Percentage,
         DiscountValue = 20,
         MinPurchaseAmount = 50,
         MaxDiscountAmount = 100,
@@ -31,15 +31,6 @@ public class UpdateCouponDtoValidatorTests
         result.IsValid.Should().BeTrue();
     }
 
-    [Fact]
-    public async Task Validate_WithIdZero_ShouldFail()
-    {
-        var dto = CreateValidDto();
-        dto.Id = Guid.Empty;
-        var result = await _validator.ValidateAsync(dto);
-        result.IsValid.Should().BeFalse();
-        result.Errors.Should().Contain(e => e.PropertyName == "Id");
-    }
 
     [Fact]
     public async Task Validate_WithEmptyCode_ShouldFail()

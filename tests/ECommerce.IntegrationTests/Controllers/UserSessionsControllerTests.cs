@@ -15,7 +15,7 @@ public class UserSessionsControllerTests : IClassFixture<CustomWebApplicationFac
     [Fact]
     public async Task GetByUser_ShouldReturnSuccessStatusCode()
     {
-        var response = await _client.GetAsync("/api/UserSessions/get-by-user/test-user-id");
+        var response = await _client.GetAsync("/api/v1/user-sessions/user/test-user-id");
         var body = await response.Content.ReadAsStringAsync();
         response.StatusCode.Should().Be(HttpStatusCode.OK, because: $"Response body: {body}");
     }

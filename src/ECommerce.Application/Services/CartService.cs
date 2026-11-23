@@ -1,8 +1,11 @@
 using ECommerce.Application.DTO.Cart;
 using ECommerce.Domain.Entities.Carts;
+using ECommerce.Domain.Entities.Products;
 using ECommerce.Domain.Interfaces.Repositories;
 using ECommerce.Application.Specifications.Carts;
+using ECommerce.Application.Specifications.Products;
 using ECommerce.Domain.Enums.Cart;
+using ECommerce.Domain.Enums.Product;
 
 namespace ECommerce.Application.Services;
 
@@ -39,7 +42,34 @@ public class CartService : ICartService
         var result = await _addItemValidator.ValidateAsync(dto);
         if (!result.IsValid) throw new ValidationException(result.Errors);
 
+        // Trusted server-side price snapshot: cart subtotals and
+        // coupon math build on this, so it must come from the
+        // catalog (effective product price + variant adjustment),
+        // never from client input.
+        var product = await _unitOfWork
+            .GetRepository<Product, Guid>()
+            .GetByIdAsync(dto.ProductId);
+
+        if (product is null || product.Status != ProductStatus.Published)
+            throw new ArgumentException(
+                $"Product {dto.ProductId} is not available.");
+
+        var variant = await _unitOfWork
+            .GetRepository<ProductVariant, Guid>()
+            .GetFirstOrDefaultAsync(
+                new ProductVariantSpecification(dto.VariantId));
+
+        if (variant is null ||
+            variant.ProductId != product.Id ||
+            variant.Status != ProductVariantStatus.Active)
+            throw new ArgumentException(
+                $"Product variant {dto.VariantId} is not available for product {product.Id}.");
+
         var item = _mapper.Map<CartItem>(dto);
+        item.Price =
+            (product.IsOnSale ? product.SalePrice : product.BasePrice)
+            + variant.PriceAdjustment;
+
         await _unitOfWork.GetRepository<CartItem, Guid>().AddAsync(item);
         await _unitOfWork.SaveChangesAsync();
         return _mapper.Map<GetCartItemDTO>(item);

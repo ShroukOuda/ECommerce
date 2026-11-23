@@ -1,3 +1,4 @@
+using ECommerce.Domain.Enums.Coupon;
 using ECommerce.Application.DTO.Coupon;
 using ECommerce.Application.Validators.Coupon;
 using FluentAssertions;
@@ -12,7 +13,7 @@ public class AddCouponDtoValidatorTests
     {
         Code = "SAVE20",
         Description = "Save 20%",
-        DiscountType = "Percentage",
+        DiscountType = DiscountType.Percentage,
         DiscountValue = 20,
         MinPurchaseAmount = 50,
         MaxDiscountAmount = 100,

@@ -4,11 +4,11 @@
 
 | Project | Type | Tests | Description |
 |---------|------|-------|-------------|
-| `ECommerce.UnitTests` | Unit | 13 | Service logic & validator tests with Moq |
-| `ECommerce.IntegrationTests` | Integration | 2 | API endpoint tests with WebApplicationFactory |
+| `ECommerce.UnitTests` | Unit | 304 | Service logic & validator tests with Moq |
+| `ECommerce.IntegrationTests` | Integration | 68 | API endpoint tests with WebApplicationFactory |
 | `ECommerce.ArchitectureTests` | Architecture | 9 | Clean architecture enforcement with NetArchTest |
 
-**Total: 24 tests**
+**Total: 381 tests**
 
 ## Running Tests
 
@@ -54,10 +54,25 @@ dotnet test --verbosity normal
 
 ```
 Services/
-  BrandServiceTests.cs        # GetAll, GetById, Add, Delete, validation
-  CategoryServiceTests.cs     # GetAll, GetById, not-found handling
+  AddressServiceTests.cs        # CRUD, validation, not-found handling
+  BrandServiceTests.cs          # GetAll, GetById, Add, Delete, validation
+  CartServiceTests.cs           # Cart lookup, add/update/remove items, clear
+  CategoryServiceTests.cs       # GetAll, GetById, not-found handling
+  CouponServiceTests.cs         # CRUD, code lookup, validation
+  InventoryServiceTests.cs      # History lookup, stock adjustments, guards
+  NotificationEventServiceTests.cs
+  NotificationPreferenceServiceTests.cs
+  OrderServiceTests.cs          # Customer/admin flows, cancel and status rules
+  PaymentServiceTests.cs
+  ProductOptionServiceTests.cs  # Options and option values
+  ProductServiceTests.cs
+  ProductVariantServiceTests.cs
+  ReturnServiceTests.cs         # Customer requests and admin status machine
+  ReviewServiceTests.cs
+  ShippingServiceTests.cs
+  WishlistServiceTests.cs
 Validators/
-  AddBrandDtoValidatorTests.cs # Valid/invalid inputs, edge cases
+  Add*/Create*/Update*DtoValidatorTests.cs # Valid/invalid inputs, edge cases
 ```
 
 **Patterns used:**
@@ -70,8 +85,9 @@ Validators/
 
 ```
 Controllers/
-  BrandsControllerTests.cs     # GET /api/Brands/get-all, GET by invalid ID
+  *ControllerTests.cs          # One class per /api/v1/* controller
 CustomWebApplicationFactory.cs # In-memory DB setup, service overrides
+TestAuthenticationHandler.cs   # Authenticated test user (Admin + Customer roles)
 ```
 
 **Patterns used:**
@@ -94,6 +110,27 @@ ArchitectureTests.cs
   - Interfaces start with "I"
   - Controllers inherit BaseController
 ```
+
+## Recent Test-Suite Realignment (fix/unit-tests-and-controllers)
+
+The suite was rewritten to match the refactored order/returns/admin code:
+
+- Validator tests for `Update*DTO` no longer test an `Id` property: update DTOs
+  dropped `Id` (the id now comes from the route), and the validators dropped the
+  `Id` rules with it. The removed `WithZeroId` tests covered a rule that no longer exists.
+- `UserId` tests were removed from `CreateOrderDTO` / `AddReviewDTO` /
+  `CreateReturnRequestDTO` validator tests: user identity now comes from the JWT,
+  not the request body, so there is no `UserId` field to validate.
+- Coupon and shipping tests now use the `DiscountType` / `ShippingMethod` enums
+  instead of strings.
+- Inventory history tests were rewritten for the redesigned DTO
+  (`QuantityChange`, `InventoryChangeType`, optional `ProductVariantId`).
+- Integration tests now call the real `/api/v1/*` routes. Tests for endpoints
+  removed in the admin split (public coupon GETs, `/api/Homepage/banners`,
+  `/deals-today`, `/featured-collections`) were replaced with tests for the
+  endpoints that replaced them (coupon `validate`/`apply`, single `/api/v1/homepage`).
+- `ReturnServiceTests` and `OrderServiceTests` were rewritten to cover the new
+  customer/admin flows, including the return status machine and order cancel rules.
 
 ## Writing New Tests
 
@@ -198,3 +235,37 @@ reportgenerator -reports:coverage/**/coverage.cobertura.xml \
 # Open report
 open coverage/report/index.html
 ```
+
+## Phase 2 Additions (authorization, error paths, return integrity)
+
+**Admin and auth controller coverage (new):** 11 admin controllers (AdminBrands, AdminCategories, AdminCoupons, AdminOrders, AdminProducts, AdminProductOptions, AdminProductVariants, AdminReturnItems, AdminReturns, AdminShipping, NotificationPreferences) and AuthenticationController now have integration tests focused on authorization (401 unauthenticated, 403 customer-only). For each admin controller the authorization tests invoke **every protected action** (all verbs/routes attributed with `[Authorize(Roles = "Admin")]`), chunked to stay under the API rate limit, plus happy-path checks where they are deterministic (admin list GETs, brand/category creation). The test auth handler supports `X-Test-Anonymous: true` (forces 401) and `X-Test-Role: Customer` (strips the Admin role) headers.
+
+**Return creation integrity:** `ReturnService.CreateReturnAsync` now verifies the order exists and belongs to the requesting user (KeyNotFoundException otherwise), that every returned item belongs to the order, and that requested quantities do not exceed purchased minus already-returned quantities (excluding rejected/cancelled returns). Return items are constructed server-side with the ProductId taken from the order item. The validator now also requires a non-empty OrderItemId and Quantity > 0 per item.
+
+**Refund calculation (approved policy):** `ReturnService.CreateReturnAsync` computes each return item's refund as the paid line value (`OrderItem.TotalPrice`) minus its proportional share of the order's coupon discount (allocated by line share of the subtotal, clamped at zero), divided by purchased quantity and multiplied by the returned quantity. Shipping is never refunded, order-level tax is not allocated into item refunds, and no fees are added. `ReturnRequest.RefundAmount` is the sum of its item refunds. Money-bearing hardening: duplicate `OrderItemId` entries in one request are accounted cumulatively so they cannot bypass the per-line quantity limit; the cumulative refunded value per line is capped at the line's net paid value (across prior requests and within the same request), so repeated partial refunds cannot exceed it through per-request rounding. Line totals are gross by contract: the coupon discount only ever exists as a separate order-level `CouponUsage` (cart subtotal math and `CouponUsage.DiscountAmount` confirm it), so allocating it in the refund cannot double-subtract a discount baked into `TotalPrice`.
+
+## Phase 3 Additions (cart-sourced coherent checkout, user-delegated defaults)
+
+**Checkout is cart-sourced and cart-consumed.** `OrderService.CreateOrderAsync` now takes items exclusively from the user's cart (`CartDetailsSpecification`); the request DTO's `Items` are ignored by the validator and the service. The cart must exist, belong to the ordering user (KeyNotFound / 404), be active, unexpired and non-empty (InvalidOperation / 400 otherwise). On success the cart is marked `CartStatus.Converted`, so replaying the same cart is rejected - one priced cart produces one order.
+
+**Server-side pricing end to end.** `CartService.AddCartItemAsync` snapshots the catalog price into `CartItem.Price` at add time (sale price when `IsOnSale`, else base price, plus the variant's `PriceAdjustment`), rejecting unpublished products and variants that do not belong to the product or are inactive. At checkout each line is re-priced from the catalog (never from the cart snapshot or client input): unit price = (`Product.SalePrice` when `IsOnSale`, else `BasePrice`) + `ProductVariant.PriceAdjustment`; `ProductName`/`VariantName`/`VariantAttributes` are snapshotted; `SubTotal` is the line sum. Option pricing from request DTOs no longer applies because items are cart-sourced.
+
+**Stock reserved at placement, restocked on cancel.** For each cart item the variant must belong to the product, be active, and have sufficient stock (ArgumentException otherwise); `StockQuantity` is decremented at placement and `OutOfStock` is set when it reaches zero. `CancelOrderAsync` (customer cancel, Pending-only rule unchanged) and admin `UpdateOrderStatusAsync` to Cancelled restock each line (status-unchanged early return prevents double restock). Variant-level movements are not written to the product-level `InventoryHistory` (that log is product-scoped); there is no concurrency control (no optimistic locking), so truly concurrent checkouts of the last unit are not fully serialized - documented, not fixed, on this branch.
+
+**Cart discounts survive checkout.** `Cart.CouponCode` (new nullable column, migration `20261122211250_AddCartCouponCode` - file on this branch only, not applied anywhere) records which coupon produced `DiscountAmount` when `CouponService.ApplyCouponAsync` runs. At checkout, if the cart carries a discount the coupon is revalidated live through `CouponService.ValidateCouponAsync` (ownership, active, validity window, usage and per-user limits, minimum purchase against the CURRENT cart subtotal) and resolved by code; `UsedCount` is incremented and a `CouponUsage` row (CouponId, OrderId, UserId, DiscountAmount capped at the subtotal) is written, so the discount is traceable and refund allocation stays consistent. If the cart claims a discount but the code is missing, unresolvable, or fails revalidation, checkout is REJECTED (InvalidOperationException) rather than silently charging the undiscounted total. `TotalAmount = max(0, SubTotal - DiscountAmount)`; `TaxAmount` and `ShippingCost` remain explicit zero placeholders (no tax/shipping rules exist in the project; not legal/tax determinations).
+
+**Validator change:** `CreateOrderDtoValidator` no longer validates `Items` (items are cart-sourced); it still requires a non-empty `CartId` and `Currency`. This is an API contract change: clients no longer send line items.
+
+**End-to-end regressions:** `OrdersControllerTests.CreateOrderThenCreateReturn_EndToEnd` seeds a priced cart item, checks out over HTTP (asserting catalog pricing, stock decremented 10 -> 8, cart Converted), asserts replaying the consumed cart is rejected, then creates a return and asserts the pro-rata refund. Unit coverage includes discount-applied-with-usage-recording, discount clamped to zero, unverifiable/missing/failed-revalidation discount rejection, empty/inactive/converted cart rejection, stock reservation and cancel/admin-cancel restock.
+
+**Two latent bugs fixed (found by the new end-to-end test):**
+- `CustomWebApplicationFactory` generated a NEW InMemory database name per context creation (the options lambda evaluated `Guid.NewGuid()` each time), so every scope saw a fresh empty store. The name is now generated once per factory instance.
+- `ReturnRequest.RejectionReason` was configured `IsRequired` but the entity left it null on creation, so creating a return through the real pipeline always failed with a 500. The entity now follows the codebase convention (`string.Empty` default).
+
+**End-to-end regression:** `OrdersControllerTests.CreateOrderThenCreateReturn_EndToEnd` seeds a product/variant/cart, creates an order over HTTP (asserting persisted prices and totals), then creates a return over HTTP and asserts the refund equals the pro-rata paid value.
+
+**Removed tautological tests:** `VariantSelectorsControllerTests` asserted only "OK or NotFound" against routes that have no controller; removed as coverage evidence (variant selectors are DTO shapes used inside product-option flows).
+
+**Middleware not-found fix:** `ExceptionsMiddleware` previously mapped all unhandled exceptions (including KeyNotFoundException) to HTTP 500. It now maps KeyNotFoundException to HTTP 404 with an `ApiExceptions` body, matching established API conventions. The Brands get-by-id not-found integration test is the regression test for this fix and now asserts exactly 404.
+
+**Known limitations:** Admin controller actions that require existing entities (update/delete by id, return state transitions) have full authorization coverage but not yet full state-machine integration coverage. The seeded-admin login happy path could not be grounded in the test environment and is not asserted.

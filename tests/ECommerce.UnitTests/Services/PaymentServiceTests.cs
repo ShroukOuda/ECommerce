@@ -16,7 +16,7 @@ using ECommerce.Application.Interfaces;
 
 namespace ECommerce.UnitTests.Services;
 
-public class PaymentServiceTests
+public partial class PaymentServiceTests
 {
     private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
     private readonly Mock<IMapper> _mapperMock = new();

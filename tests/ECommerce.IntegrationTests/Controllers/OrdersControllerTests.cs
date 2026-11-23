@@ -126,7 +126,7 @@ public class OrdersControllerTests : IClassFixture<CustomWebApplicationFactory>
             cartId,
             currency = "USD"
         });
-        replayResponse.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+        replayResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
 
         var returnResponse = await _client.PostAsJsonAsync("/api/v1/returns", new
         {

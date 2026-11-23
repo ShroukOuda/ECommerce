@@ -57,7 +57,7 @@ public class BrandLogoService : IBrandLogoService
         if (!validationResult.IsValid)
             throw new ValidationException(validationResult.Errors);
         
-        var folderPath = $"categories/{brandId}/{dto.SubType.ToString().ToLowerInvariant()}";
+        var folderPath = $"brands/{brandId}/{dto.SubType.ToString().ToLowerInvariant()}";
         await using var stream = dto.File.OpenReadStream();
 
         try
@@ -123,7 +123,7 @@ public class BrandLogoService : IBrandLogoService
         foreach (var logo in logos)
             await _logoService.DeleteAsync(logo.ImageUrl);
 
-        var folderPath = $"categories/{BrandId}";
+        var folderPath = $"brands/{BrandId}";
         await _logoService.DeleteFolderAsync(folderPath);
 
         _unitOfWork.GetRepository<BrandLogo, Guid>().DeleteRange(logos);

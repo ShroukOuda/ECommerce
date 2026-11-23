@@ -29,4 +29,10 @@ public interface IGenericRepository<TEntity, TKey>
     
     
     
+    // Explicit overloads preserve existing service call signatures.
+    Task<IReadOnlyList<TEntity>> GetAllAsync(BaseSpecification<TEntity, TKey> specification, CancellationToken cancellationToken);
+    Task<TEntity?> GetByIdAsync(TKey id, CancellationToken cancellationToken);
+    Task<TEntity?> GetFirstOrDefaultAsync(BaseSpecification<TEntity, TKey> specification, CancellationToken cancellationToken);
+    Task<bool> ExistsAsync(BaseSpecification<TEntity, TKey> specification, CancellationToken cancellationToken);
+    Task AddAsync(TEntity entity, CancellationToken cancellationToken);
 }

@@ -8,6 +8,7 @@ public class AddCartItemDtoValidator : AbstractValidator<AddCartItemDTO>
     {
         RuleFor(x => x.CartId).NotEmpty();
         RuleFor(x => x.ProductId).NotEmpty();
+        RuleFor(x => x.VariantId).NotEmpty();
         RuleFor(x => x.Quantity).GreaterThan(0).WithMessage("Quantity must be at least 1.");
     }
 }

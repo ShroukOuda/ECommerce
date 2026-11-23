@@ -5,8 +5,8 @@ namespace ECommerce.Application.Interfaces;
 public interface IAddressService
 {
     Task<IEnumerable<GetAddressDTO>> GetAddressesByUserIdAsync(string userId);
-    Task<GetAddressDTO> GetAddressByIdAsync(Guid id);
-    Task<GetAddressDTO> AddAddressAsync(AddAddressDTO dto);
-    Task<GetAddressDTO> UpdateAddressAsync(Guid id, UpdateAddressDTO dto);
-    Task DeleteAddressAsync(Guid id);
+    Task<GetAddressDTO> GetAddressByIdAsync(Guid id, string userId);
+    Task<GetAddressDTO> AddAddressAsync(AddAddressDTO dto, string userId);
+    Task<GetAddressDTO> UpdateAddressAsync(Guid id, UpdateAddressDTO dto, string userId);
+    Task DeleteAddressAsync(Guid id, string userId);
 }

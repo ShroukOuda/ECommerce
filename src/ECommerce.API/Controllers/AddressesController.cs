@@ -29,7 +29,7 @@ public class AddressesController : BaseController
     [Authorize(Roles = "Customer")]
     public async Task<IActionResult> GetById(Guid id)
     {
-        var address = await _addressService.GetAddressByIdAsync(id);
+        var address = await _addressService.GetAddressByIdAsync(id, CurrentUserId);
         return Success(
             address,
             "Address retrieved successfully.");
@@ -39,7 +39,7 @@ public class AddressesController : BaseController
     [Authorize(Roles = "Customer")]
     public async Task<IActionResult> Add(AddAddressDTO dto)
     {
-        var address = await _addressService.AddAddressAsync(dto);
+        var address = await _addressService.AddAddressAsync(dto, CurrentUserId);
         return Created(address, "Address added successfully.");
     }
 
@@ -47,7 +47,7 @@ public class AddressesController : BaseController
     [Authorize(Roles = "Customer")]
     public async Task<IActionResult> Update(Guid id, UpdateAddressDTO dto)
     {
-        var address = await _addressService.UpdateAddressAsync(id, dto);
+        var address = await _addressService.UpdateAddressAsync(id, dto, CurrentUserId);
         return Success(address, "Address updated successfully");
     }
 
@@ -55,7 +55,7 @@ public class AddressesController : BaseController
     [Authorize(Roles = "Customer")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        await _addressService.DeleteAddressAsync(id);
+        await _addressService.DeleteAddressAsync(id, CurrentUserId);
         return NoContent();
     }
 }

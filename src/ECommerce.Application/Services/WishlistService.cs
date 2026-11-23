@@ -32,7 +32,7 @@ public class WishlistService : IWishlistService
         
         var spec = new WishlistSpecification(dto.ProductId, dto.UserId);
         bool exists = await _unitOfWork.GetRepository<Wishlist, Guid>().ExistsAsync(spec);
-        if (exists) throw new InvalidOperationException("Product already in wishlist.");
+        if (exists) throw new BusinessRuleException("Product already in wishlist.");
         
         var wishlist = _mapper.Map<Wishlist>(dto);
         await _unitOfWork.GetRepository<Wishlist, Guid>().AddAsync(wishlist);

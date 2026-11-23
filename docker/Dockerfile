@@ -51,6 +51,11 @@ RUN dotnet publish src/ECommerce.API/ECommerce.API.csproj \
 # Stage 2: Runtime
 # ========================================
 
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS development
+WORKDIR /src
+ENV ASPNETCORE_URLS=http://+:8080
+EXPOSE 8080
+
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
 
 WORKDIR /app
@@ -77,7 +82,7 @@ HEALTHCHECK \
     --timeout=10s \
     --start-period=60s \
     --retries=5 \
-    CMD curl -f http://localhost:8080/health || exit 1
+    CMD curl -f http://localhost:8080/api/v1/health || exit 1
 
 # Start API
 ENTRYPOINT ["dotnet", "ECommerce.API.dll"]

@@ -21,8 +21,8 @@ public partial class PaymentServiceTests
         var evt = new StripeWebhookEventDTO { EventId = "evt_test", EventType = type, ClientReferenceId = payment.Id.ToString(),
             PaymentId = payment.Id.ToString(), OrderId = order.Id.ToString(), CheckoutSessionId = "cs_test", PaymentIntentId = "pi_test",
             Currency = "usd", AmountTotal = 1234, PaymentStatus = paymentStatus, CheckoutSessionStatus = "complete" };
-        _paymentRepositoryMock.Setup(x => x.GetByIdAsync(payment.Id)).ReturnsAsync(payment);
-        _orderRepositoryMock.Setup(x => x.GetByIdAsync(order.Id)).ReturnsAsync(order);
+        _paymentRepositoryMock.Setup(x => x.GetByIdAsync(payment.Id, It.IsAny<CancellationToken>())).ReturnsAsync(payment);
+        _orderRepositoryMock.Setup(x => x.GetByIdAsync(order.Id, It.IsAny<CancellationToken>())).ReturnsAsync(order);
         _paymentGatewayMock.Setup(x => x.ParseWebhookEvent("payload", "signature")).Returns(evt);
         return (payment, order, evt);
     }
@@ -67,7 +67,7 @@ public partial class PaymentServiceTests
             case "intent": evt.PaymentIntentId = "pi_wrong"; break;
         }
         // Wrong reference still finds candidate by its session, then must reject the reference mismatch.
-        _paymentRepositoryMock.Setup(x => x.GetFirstOrDefaultAsync(It.IsAny<PaymentByCheckoutSessionSpecification>())).ReturnsAsync(payment);
+        _paymentRepositoryMock.Setup(x => x.GetFirstOrDefaultAsync(It.IsAny<PaymentByCheckoutSessionSpecification>(), It.IsAny<CancellationToken>())).ReturnsAsync(payment);
         var act = () => _paymentService.HandleStripeWebhookAsync("payload", "signature");
         await act.Should().ThrowAsync<BadRequestException>();
         payment.Status.Should().Be(PaymentStatus.Pending);
@@ -101,7 +101,7 @@ public partial class PaymentServiceTests
     public async Task DuplicateEvent_IsAcknowledgedWithoutWriting()
     {
         ArrangeWebhook("checkout.session.completed");
-        _stripeEventRepositoryMock.Setup(x => x.ExistsAsync(It.IsAny<StripeWebhookEventByEventIdSpecification>())).ReturnsAsync(true);
+        _stripeEventRepositoryMock.Setup(x => x.ExistsAsync(It.IsAny<StripeWebhookEventByEventIdSpecification>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
         await _paymentService.HandleStripeWebhookAsync("payload", "signature");
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -111,15 +111,15 @@ public partial class PaymentServiceTests
     {
         ArrangeWebhook("customer.created");
         await _paymentService.HandleStripeWebhookAsync("payload", "signature");
-        _paymentRepositoryMock.Verify(x => x.GetByIdAsync(It.IsAny<Guid>()), Times.Never);
+        _paymentRepositoryMock.Verify(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     private Order ArrangeCheckout(Payment? existing = null)
     {
         var order = new Order { Id = existing?.OrderId ?? Guid.NewGuid(), UserId = "owner", Currency = "USD", TotalAmount = 12.34m, OrderStatus = OrderStatus.Pending };
         _validatorMock.Setup(x => x.ValidateAsync(It.IsAny<CreateCheckoutSessionDTO>(), It.IsAny<CancellationToken>())).ReturnsAsync(new ValidationResult());
-        _orderRepositoryMock.Setup(x => x.GetFirstOrDefaultAsync(It.IsAny<ECommerce.Application.Specifications.Orders.OrderByUserSpecification>())).ReturnsAsync(order);
-        _paymentRepositoryMock.Setup(x => x.GetFirstOrDefaultAsync(It.IsAny<LatestPaymentByOrderSpecification>())).ReturnsAsync(existing);
+        _orderRepositoryMock.Setup(x => x.GetFirstOrDefaultAsync(It.IsAny<ECommerce.Application.Specifications.Orders.OrderByUserSpecification>(), It.IsAny<CancellationToken>())).ReturnsAsync(order);
+        _paymentRepositoryMock.Setup(x => x.GetFirstOrDefaultAsync(It.IsAny<LatestPaymentByOrderSpecification>(), It.IsAny<CancellationToken>())).ReturnsAsync(existing);
         _paymentGatewayMock.Setup(x => x.CreateCheckoutSessionAsync(It.IsAny<Payment>(), order, It.IsAny<CancellationToken>())).ReturnsAsync(new CreateCheckoutSessionResponseDTO { CheckoutSessionId = "cs_test", CheckoutSessionStatus = "open", CheckoutSessionUrl = "https://checkout.stripe.com/test" });
         return order;
     }
@@ -130,7 +130,7 @@ public partial class PaymentServiceTests
         var previous = new Payment { Id = Guid.NewGuid(), OrderId = Guid.NewGuid(), CreatedAt = DateTime.UtcNow, Status = PaymentStatus.Pending, TransactionId = "stable-operation", Currency = "USD", AmountInMinorUnits = 1234 };
         var order = ArrangeCheckout(previous);
         await _paymentService.CreateCheckoutSessionAsync(order.Id, "owner");
-        _paymentRepositoryMock.Verify(x => x.AddAsync(It.IsAny<Payment>()), Times.Never);
+        _paymentRepositoryMock.Verify(x => x.AddAsync(It.IsAny<Payment>(), It.IsAny<CancellationToken>()), Times.Never);
         _paymentGatewayMock.Verify(x => x.CreateCheckoutSessionAsync(previous, order, It.IsAny<CancellationToken>()), Times.Once);
         previous.TransactionId.Should().Be("stable-operation");
     }
@@ -141,7 +141,7 @@ public partial class PaymentServiceTests
         var previous = new Payment { Id = Guid.NewGuid(), OrderId = Guid.NewGuid(), Status = PaymentStatus.Expired, TransactionId = "old-operation" };
         var order = ArrangeCheckout(previous);
         await _paymentService.CreateCheckoutSessionAsync(order.Id, "owner");
-        _paymentRepositoryMock.Verify(x => x.AddAsync(It.Is<Payment>(p => p.Id != previous.Id && p.TransactionId != previous.TransactionId)), Times.Once);
+        _paymentRepositoryMock.Verify(x => x.AddAsync(It.Is<Payment>(p => p.Id != previous.Id && p.TransactionId != previous.TransactionId), It.IsAny<CancellationToken>()), Times.Once);
         previous.Status.Should().Be(PaymentStatus.Expired);
         previous.TransactionId.Should().Be("old-operation");
     }
@@ -156,5 +156,59 @@ public partial class PaymentServiceTests
         var act = () => _paymentService.CreateCheckoutSessionAsync(order.Id, "owner");
         await act.Should().ThrowAsync<ConflictException>();
         _paymentGatewayMock.Verify(x => x.CreateCheckoutSessionAsync(It.IsAny<Payment>(), order, It.IsAny<CancellationToken>()), Times.Never);
+    }
+}
+
+public partial class PaymentServiceTests
+{
+    [Fact]
+    public async Task CancelledCheckout_StopsBeforeValidationOrPersistence()
+    {
+        using var source = new CancellationTokenSource();
+        source.Cancel();
+        var act = () => _paymentService.CreateCheckoutSessionAsync(Guid.NewGuid(), "owner", source.Token);
+        await act.Should().ThrowAsync<OperationCanceledException>();
+        _validatorMock.Verify(x => x.ValidateAsync(It.IsAny<CreateCheckoutSessionDTO>(), It.IsAny<CancellationToken>()), Times.Never);
+        _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Checkout_CarriesRequestCancellationThroughEveryBoundary()
+    {
+        using var source = new CancellationTokenSource();
+        var order = ArrangeCheckout();
+        await _paymentService.CreateCheckoutSessionAsync(order.Id, "owner", source.Token);
+        _validatorMock.Verify(x => x.ValidateAsync(It.IsAny<CreateCheckoutSessionDTO>(), source.Token), Times.Once);
+        _orderRepositoryMock.Verify(x => x.GetFirstOrDefaultAsync(It.IsAny<ECommerce.Application.Specifications.Orders.OrderByUserSpecification>(), source.Token), Times.Once);
+        _paymentRepositoryMock.Verify(x => x.GetFirstOrDefaultAsync(It.IsAny<LatestPaymentByOrderSpecification>(), source.Token), Times.Once);
+        _paymentRepositoryMock.Verify(x => x.AddAsync(It.IsAny<Payment>(), source.Token), Times.Once);
+        _paymentGatewayMock.Verify(x => x.CreateCheckoutSessionAsync(It.IsAny<Payment>(), order, source.Token), Times.Once);
+        _unitOfWorkMock.Verify(x => x.SaveChangesAsync(source.Token), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task Webhook_CarriesRequestCancellationThroughEveryBoundary()
+    {
+        using var source = new CancellationTokenSource();
+        var (payment, order, _) = ArrangeWebhook("checkout.session.completed");
+        await _paymentService.HandleStripeWebhookAsync("payload", "signature", source.Token);
+        _stripeEventRepositoryMock.Verify(x => x.ExistsAsync(It.IsAny<StripeWebhookEventByEventIdSpecification>(), source.Token), Times.Once);
+        _paymentRepositoryMock.Verify(x => x.GetByIdAsync(payment.Id, source.Token), Times.Once);
+        _orderRepositoryMock.Verify(x => x.GetByIdAsync(order.Id, source.Token), Times.Once);
+        _stripeEventRepositoryMock.Verify(x => x.AddAsync(It.IsAny<StripeWebhookEvent>(), source.Token), Times.Once);
+        _unitOfWorkMock.Verify(x => x.SaveChangesAsync(source.Token), Times.Once);
+    }
+
+    [Fact]
+    public async Task CancellationDuringOrderRead_DoesNotStartPaymentOperation()
+    {
+        using var source = new CancellationTokenSource();
+        var order = ArrangeCheckout();
+        _orderRepositoryMock.Setup(x => x.GetFirstOrDefaultAsync(It.IsAny<ECommerce.Application.Specifications.Orders.OrderByUserSpecification>(), source.Token))
+            .ThrowsAsync(new OperationCanceledException(source.Token));
+        var act = () => _paymentService.CreateCheckoutSessionAsync(order.Id, "owner", source.Token);
+        await act.Should().ThrowAsync<OperationCanceledException>();
+        _paymentGatewayMock.Verify(x => x.CreateCheckoutSessionAsync(It.IsAny<Payment>(), It.IsAny<Order>(), It.IsAny<CancellationToken>()), Times.Never);
+        _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 }

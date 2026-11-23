@@ -92,6 +92,9 @@ public class OrderService : IOrderService
                 validationResult.Errors);
         }
 
+        if (!string.Equals(dto.Currency?.Trim(), "USD", StringComparison.OrdinalIgnoreCase))
+            throw new BadRequestException("Catalog prices are USD. Other currencies are not supported.");
+
         // Checkout converts the cart: items, quantities and
         // prices all come from the server-side cart and catalog,
         // never from client-supplied order lines.
@@ -109,14 +112,21 @@ public class OrderService : IOrderService
         if (cart.Status != CartStatus.Active ||
             cart.ExpiresAt <= DateTime.UtcNow)
         {
-            throw new InvalidOperationException(
+            throw new BusinessRuleException(
                 "Cart is no longer active.");
         }
 
         if (cart.CartItems.Count == 0)
         {
-            throw new InvalidOperationException(
+            throw new BusinessRuleException(
                 "Cannot checkout an empty cart.");
+        }
+
+        foreach (var addressId in new[] { dto.ShippingAddressId, dto.BillingAddressId }.Where(id => id.HasValue).Distinct())
+        {
+            var address = await _unitOfWork.GetRepository<ECommerce.Domain.Entities.Users.Address, Guid>().GetByIdAsync(addressId!.Value);
+            if (address is null || address.UserId != userId)
+                throw new NotFoundException("The selected address was not found for this customer.");
         }
 
         var order = new Order
@@ -135,7 +145,7 @@ public class OrderService : IOrderService
 
             OrderStatus = OrderStatus.Pending,
 
-            Currency = dto.Currency,
+            Currency = "USD",
 
             ShippingAddressId = dto.ShippingAddressId,
 
@@ -147,6 +157,8 @@ public class OrderService : IOrderService
 
         foreach (var cartItem in cart.CartItems)
         {
+            if (cartItem.Quantity <= 0)
+                throw new BadRequestException("Order quantities must be positive.");
             // Trusted server-side pricing: catalog values only.
             var product = await _unitOfWork
                 .GetRepository<Product, Guid>()
@@ -232,7 +244,7 @@ public class OrderService : IOrderService
         {
             if (string.IsNullOrWhiteSpace(cart.CouponCode))
             {
-                throw new InvalidOperationException(
+                throw new BusinessRuleException(
                     "The cart has a discount that cannot be verified. Re-apply the coupon before checkout.");
             }
 
@@ -252,7 +264,7 @@ public class OrderService : IOrderService
 
             if (coupon is null)
             {
-                throw new InvalidOperationException(
+                throw new BusinessRuleException(
                     "The coupon applied to this cart no longer exists. Re-apply a valid coupon before checkout.");
             }
 
@@ -324,7 +336,7 @@ public class OrderService : IOrderService
 
         if (order.OrderStatus != OrderStatus.Pending)
         {
-            throw new InvalidOperationException(
+            throw new BusinessRuleException(
                 "Only pending orders can be cancelled.");
         }
 
@@ -431,7 +443,7 @@ public class OrderService : IOrderService
         if (!Enum.TryParse<OrderStatus>(
                 dto.OrderStatus,
                 true,
-                out var newStatus))
+                out var newStatus) || !Enum.IsDefined(newStatus))
         {
             throw new ArgumentException(
                 $"Invalid order status: {dto.OrderStatus}");
@@ -442,6 +454,23 @@ public class OrderService : IOrderService
             return _mapper.Map<GetAdminOrderDTO>(order);
         }
 
+        var allowed = order.OrderStatus switch
+        {
+            OrderStatus.Pending => newStatus is OrderStatus.Confirmed or OrderStatus.Cancelled or OrderStatus.OnHold,
+            OrderStatus.Confirmed => newStatus is OrderStatus.Processing or OrderStatus.OnHold or OrderStatus.Cancelled,
+            OrderStatus.Processing => newStatus is OrderStatus.ReadyForShipping or OrderStatus.Shipped or OrderStatus.OnHold or OrderStatus.Cancelled,
+            OrderStatus.ReadyForShipping => newStatus is OrderStatus.Shipped or OrderStatus.PartiallyShipped,
+            OrderStatus.PartiallyShipped => newStatus == OrderStatus.Shipped,
+            OrderStatus.Shipped => newStatus is OrderStatus.OutForDelivery or OrderStatus.Delivered,
+            OrderStatus.OutForDelivery => newStatus == OrderStatus.Delivered,
+            OrderStatus.OnHold => newStatus is OrderStatus.Pending or OrderStatus.Cancelled
+                || (newStatus == OrderStatus.Processing && order.Payments.Any(p => p.Status == ECommerce.Domain.Enums.Payment.PaymentStatus.Paid)),
+            _ => false
+        };
+        if (!allowed)
+            throw new BadRequestException("This order status transition is not allowed.");
+        if (newStatus == OrderStatus.Confirmed && !order.Payments.Any(p => p.Status == ECommerce.Domain.Enums.Payment.PaymentStatus.Paid))
+            throw new BadRequestException("An order cannot be confirmed before successful payment.");
         if (newStatus == OrderStatus.Cancelled)
             await RestockOrderAsync(order);
 

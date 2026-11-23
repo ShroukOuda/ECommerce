@@ -680,7 +680,7 @@ public class ReturnService : IReturnService
     {
         if (returnRequest.Status != expectedStatus)
         {
-            throw new InvalidOperationException(
+            throw new BusinessRuleException(
                 $"Return request must be in " +
                 $"'{expectedStatus}' status.");
         }
@@ -692,7 +692,7 @@ public class ReturnService : IReturnService
     {
         if (item.Status != expectedStatus)
         {
-            throw new InvalidOperationException(
+            throw new BusinessRuleException(
                 $"Return item must be in " +
                 $"'{expectedStatus}' status.");
         }

@@ -40,14 +40,31 @@ public class BrandService : IBrandService
     public async Task<GetBrandDTO> AddBrandAsync(AddBrandDTO dto)
     {
         var result = await _addValidator.ValidateAsync(dto);
-        if (!result.IsValid) throw new ValidationException(result.Errors);
+
+        if (!result.IsValid)
+            throw new ValidationException(result.Errors);
+
+        var slug = dto.Name.Trim()
+            .ToLowerInvariant()
+            .Replace(" ", "-");
+
+        var spec = new BrandSpecification(slug);
+
+        var existingBrand = await _unitOfWork
+            .GetRepository<Brand, Guid>().ExistsAsync(spec);
+
+        if (existingBrand)
+            throw new ConflictException("A brand with this name already exists.");
+
         var brand = _mapper.Map<Brand>(dto);
-        brand.Slug = dto.Name.ToLower().Replace(" ", "-");
+        brand.Slug = slug;
+
         await _unitOfWork.GetRepository<Brand, Guid>().AddAsync(brand);
+
         await _unitOfWork.SaveChangesAsync();
+
         return _mapper.Map<GetBrandDTO>(brand);
     }
-
     public async Task<GetBrandDTO> UpdateBrandAsync(Guid id, UpdateBrandDTO dto)
     {
 

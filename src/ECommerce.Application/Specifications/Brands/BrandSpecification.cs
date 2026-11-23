@@ -11,5 +11,11 @@ public class BrandSpecification : BaseSpecification<Brand, Guid>
         AsNoTracking();
     }
 
+    public BrandSpecification(string slug)
+        : base(b => b.Slug == slug)
+    {
+        AsNoTracking();
+    }
+
     
 }

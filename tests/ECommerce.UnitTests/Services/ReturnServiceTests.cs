@@ -577,7 +577,7 @@ public class ReturnServiceTests
     }
 
     [Fact]
-    public async Task CancelReturnAsync_WhenNotRequested_ShouldThrowInvalidOperationException()
+    public async Task CancelReturnAsync_WhenNotRequested_ShouldThrowBusinessRuleException()
     {
         var returnRequest = new ReturnRequest { Id = TestGuid.FromInt(1), Status = ReturnStatus.Approved };
 
@@ -587,7 +587,7 @@ public class ReturnServiceTests
 
         var act = () => _returnService.CancelReturnAsync(TestGuid.FromInt(1), "user1");
 
-        await act.Should().ThrowAsync<InvalidOperationException>();
+        await act.Should().ThrowAsync<ECommerce.Domain.Exceptions.BusinessRuleException>();
     }
 
     // ---------------- Admin ----------------
@@ -619,7 +619,7 @@ public class ReturnServiceTests
     }
 
     [Fact]
-    public async Task ApproveReturnAsync_WhenNotRequested_ShouldThrowInvalidOperationException()
+    public async Task ApproveReturnAsync_WhenNotRequested_ShouldThrowBusinessRuleException()
     {
         var returnRequest = new ReturnRequest { Id = TestGuid.FromInt(1), Status = ReturnStatus.Completed };
 
@@ -627,7 +627,7 @@ public class ReturnServiceTests
 
         var act = () => _returnService.ApproveReturnAsync(TestGuid.FromInt(1), "admin1");
 
-        await act.Should().ThrowAsync<InvalidOperationException>();
+        await act.Should().ThrowAsync<ECommerce.Domain.Exceptions.BusinessRuleException>();
     }
 
     [Fact]
@@ -674,7 +674,7 @@ public class ReturnServiceTests
     }
 
     [Fact]
-    public async Task MarkAsInTransitAsync_WhenNotApproved_ShouldThrowInvalidOperationException()
+    public async Task MarkAsInTransitAsync_WhenNotApproved_ShouldThrowBusinessRuleException()
     {
         var returnRequest = new ReturnRequest { Id = TestGuid.FromInt(1), Status = ReturnStatus.Requested };
 
@@ -682,7 +682,7 @@ public class ReturnServiceTests
 
         var act = () => _returnService.MarkAsInTransitAsync(TestGuid.FromInt(1), "admin1");
 
-        await act.Should().ThrowAsync<InvalidOperationException>();
+        await act.Should().ThrowAsync<ECommerce.Domain.Exceptions.BusinessRuleException>();
     }
 
     [Fact]
@@ -696,5 +696,15 @@ public class ReturnServiceTests
         await _returnService.CompleteReturnAsync(TestGuid.FromInt(1), "admin1");
 
         returnRequest.Status.Should().Be(ReturnStatus.Completed);
+    }
+    [Fact]
+    public async Task ApproveItem_WithInvalidStatus_ThrowsTypedBusinessRuleWithoutSaving()
+    {
+        var item = new ReturnItem { Id = Guid.NewGuid(), Status = ReturnItemStatus.Rejected };
+        _unitOfWorkMock.Setup(u => u.GetRepository<ReturnItem, Guid>().GetFirstOrDefaultAsync(It.IsAny<ReturnItemSpecification>())).ReturnsAsync(item);
+        var act = () => _returnService.ApproveItemAsync(item.Id, "admin");
+        await act.Should().ThrowAsync<ECommerce.Domain.Exceptions.BusinessRuleException>();
+        item.Status.Should().Be(ReturnItemStatus.Rejected);
+        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(), Times.Never);
     }
 }

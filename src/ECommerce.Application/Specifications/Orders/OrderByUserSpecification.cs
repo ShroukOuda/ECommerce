@@ -14,6 +14,6 @@ public class OrderByUserSpecification : BaseSpecification<Order, Guid>
         AddInclude(o => o.BillingAddress);
         AddInclude(o => o.Payments);
         AddInclude(o => o.Shippings);
-        AsNoTracking();
+        // Used by mutation workflows; keep this graph tracked.
     }
 }

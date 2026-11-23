@@ -67,7 +67,7 @@ public class WishlistServiceTests
     }
 
     [Fact]
-    public async Task AddToWishlistAsync_WhenAlreadyExists_ShouldThrowInvalidOperationException()
+    public async Task AddToWishlistAsync_WhenAlreadyExists_ShouldThrowBusinessRuleException()
     {
         var dto = new AddWishlistDTO { ProductId = TestGuid.FromInt(1), UserId = "user1" };
 
@@ -79,7 +79,7 @@ public class WishlistServiceTests
 
         var act = () => _wishlistService.AddToWishlistAsync(dto);
 
-        await act.Should().ThrowAsync<InvalidOperationException>();
+        await act.Should().ThrowAsync<ECommerce.Domain.Exceptions.BusinessRuleException>();
     }
 
     [Fact]

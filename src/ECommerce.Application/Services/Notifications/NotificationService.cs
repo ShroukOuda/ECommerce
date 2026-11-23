@@ -62,9 +62,9 @@ public class NotificationService : INotificationService
     public async Task MarkAsReadAsync(string userId, Guid notificationId)
     {
         var n = await _unitOfWork.GetRepository<Notification, Guid>().GetByIdAsync(notificationId)
-            ?? throw new Exception("Notification not found");
+            ?? throw new NotFoundException("Notification not found");
 
-        if (n.UserId != userId) throw new UnauthorizedAccessException();
+        if (n.UserId != userId) throw new NotFoundException("Notification not found");
 
         n.IsRead = true;
         await _unitOfWork.SaveChangesAsync();

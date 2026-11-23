@@ -74,7 +74,11 @@ public class NotificationService : INotificationService
     {
         var spec  = new UnreadNotificationsSpecification(userId);
         var notifications = await _unitOfWork.GetRepository<Notification, Guid>().GetAllAsync(spec);
-        foreach (var n in notifications) n.IsRead = true;
+        foreach (var n in notifications)
+        {
+            n.IsRead = true;
+            _unitOfWork.GetRepository<Notification, Guid>().Update(n);
+        }
         await _unitOfWork.SaveChangesAsync();
     }
 

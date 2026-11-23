@@ -28,16 +28,16 @@ public class PaymentsController : BaseController
     }
 
     [HttpGet("order/{orderId:guid}")]
-    public async Task<IActionResult> GetByOrder(Guid orderId)
+    public async Task<IActionResult> GetByOrder(Guid orderId, CancellationToken cancellationToken)
     {
-        var payments = await _paymentService.GetPaymentsByOrderIdAsync(orderId, CurrentUserId, IsAdmin);
+        var payments = await _paymentService.GetPaymentsByOrderIdAsync(orderId, CurrentUserId, IsAdmin, cancellationToken);
         return Ok(payments);
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<IActionResult> GetById(Guid id)
+    public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
     {
-        var payment = await _paymentService.GetPaymentByIdAsync(id, CurrentUserId, IsAdmin);
+        var payment = await _paymentService.GetPaymentByIdAsync(id, CurrentUserId, IsAdmin, cancellationToken);
         return Success(
             payment,
             "Payment retrieved successfully.");

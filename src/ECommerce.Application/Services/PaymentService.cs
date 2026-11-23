@@ -38,13 +38,14 @@ public class PaymentService : IPaymentService
 
     public async Task<CreateCheckoutSessionResponseDTO> CreateCheckoutSessionAsync(Guid orderId, string userId, CancellationToken cancellationToken = default)
     {
-        var validationResult = await _createCheckoutValidator.ValidateAsync(new CreateCheckoutSessionDTO { OrderId = orderId });
+        cancellationToken.ThrowIfCancellationRequested();
+        var validationResult = await _createCheckoutValidator.ValidateAsync(new CreateCheckoutSessionDTO { OrderId = orderId }, cancellationToken);
         if (!validationResult.IsValid)
         {
             throw new ValidationException(validationResult.Errors);
         }
 
-        var order = await GetOwnedOrderAsync(orderId, userId);
+        var order = await GetOwnedOrderAsync(orderId, userId, cancellationToken);
 
         if (order.OrderStatus is OrderStatus.Cancelled or OrderStatus.Refunded)
         {
@@ -54,7 +55,7 @@ public class PaymentService : IPaymentService
         if (order.OrderStatus != OrderStatus.Pending)
             throw new BadRequestException("Only pending orders are eligible for checkout.");
 
-        var existingPayment = await GetLatestPaymentForOrderAsync(orderId);
+        var existingPayment = await GetLatestPaymentForOrderAsync(orderId, cancellationToken);
 
         if (existingPayment is not null)
         {
@@ -91,7 +92,7 @@ public class PaymentService : IPaymentService
         var payment = recoverIncompleteAttempt ? existingPayment! : BuildNewPayment(order, userId);
         if (!recoverIncompleteAttempt)
         {
-            await _unitOfWork.GetRepository<Payment, Guid>().AddAsync(payment);
+            await _unitOfWork.GetRepository<Payment, Guid>().AddAsync(payment, cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
             await _unitOfWork.SaveChangesAsync(cancellationToken);
         }
@@ -126,18 +127,18 @@ public class PaymentService : IPaymentService
         return checkoutSession;
     }
 
-    public async Task<IEnumerable<GetPaymentDTO>> GetPaymentsByOrderIdAsync(Guid orderId, string userId, bool isAdmin)
+    public async Task<IEnumerable<GetPaymentDTO>> GetPaymentsByOrderIdAsync(Guid orderId, string userId, bool isAdmin, CancellationToken cancellationToken = default)
     {
-        var order = await GetAccessibleOrderAsync(orderId, userId, isAdmin);
+        var order = await GetAccessibleOrderAsync(orderId, userId, isAdmin, cancellationToken);
 
         var spec = new PaymentsByOrderSpecification(order.Id);
-        var payments = await _unitOfWork.GetRepository<Payment, Guid>().GetAllAsync(spec);
+        var payments = await _unitOfWork.GetRepository<Payment, Guid>().GetAllAsync(spec, cancellationToken);
         return _mapper.Map<IEnumerable<GetPaymentDTO>>(payments);
     }
 
-    public async Task<GetPaymentDTO> GetPaymentByIdAsync(Guid id, string userId, bool isAdmin)
+    public async Task<GetPaymentDTO> GetPaymentByIdAsync(Guid id, string userId, bool isAdmin, CancellationToken cancellationToken = default)
     {
-        var payment = await _unitOfWork.GetRepository<Payment, Guid>().GetByIdAsync(id);
+        var payment = await _unitOfWork.GetRepository<Payment, Guid>().GetByIdAsync(id, cancellationToken);
         if (payment is null)
         {
             throw new NotFoundException($"Payment with ID {id} not found.");
@@ -160,12 +161,12 @@ public class PaymentService : IPaymentService
             or "checkout.session.async_payment_failed" or "checkout.session.expired"))
             return;
 
-        if (await EventAlreadyProcessedAsync(stripeEvent.EventId))
+        if (await EventAlreadyProcessedAsync(stripeEvent.EventId, cancellationToken))
         {
             return;
         }
 
-        var payment = await FindPaymentForStripeEventAsync(stripeEvent);
+        var payment = await FindPaymentForStripeEventAsync(stripeEvent, cancellationToken);
 
         if (payment is null)
         {
@@ -178,7 +179,7 @@ public class PaymentService : IPaymentService
 
         if (nextStatus is null)
         {
-            await RecordStripeEventAsync(stripeEvent, payment, "Ignored", null, now);
+            await RecordStripeEventAsync(stripeEvent, payment, "Ignored", null, now, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return;
         }
@@ -187,10 +188,10 @@ public class PaymentService : IPaymentService
 
         if (nextStatus == PaymentStatus.Paid)
         {
-            await ConfirmOrderIfNeededAsync(payment.OrderId, now);
+            await ConfirmOrderIfNeededAsync(payment.OrderId, now, cancellationToken);
         }
 
-        await RecordStripeEventAsync(stripeEvent, payment, "Processed", null, now);
+        await RecordStripeEventAsync(stripeEvent, payment, "Processed", null, now, cancellationToken);
 
         try
         {
@@ -202,10 +203,10 @@ public class PaymentService : IPaymentService
         }
     }
 
-    private async Task<Order> GetOwnedOrderAsync(Guid orderId, string userId)
+    private async Task<Order> GetOwnedOrderAsync(Guid orderId, string userId, CancellationToken cancellationToken)
     {
         var specification = new OrderByUserSpecification(orderId, userId);
-        var order = await _unitOfWork.GetRepository<Order, Guid>().GetFirstOrDefaultAsync(specification);
+        var order = await _unitOfWork.GetRepository<Order, Guid>().GetFirstOrDefaultAsync(specification, cancellationToken);
 
         if (order is null)
         {
@@ -215,11 +216,11 @@ public class PaymentService : IPaymentService
         return order;
     }
 
-    private async Task<Order> GetAccessibleOrderAsync(Guid orderId, string userId, bool isAdmin)
+    private async Task<Order> GetAccessibleOrderAsync(Guid orderId, string userId, bool isAdmin, CancellationToken cancellationToken = default)
     {
         if (isAdmin)
         {
-            var order = await _unitOfWork.GetRepository<Order, Guid>().GetByIdAsync(orderId);
+            var order = await _unitOfWork.GetRepository<Order, Guid>().GetByIdAsync(orderId, cancellationToken);
             if (order is null)
             {
                 throw new NotFoundException($"Order with ID {orderId} not found.");
@@ -228,12 +229,12 @@ public class PaymentService : IPaymentService
             return order;
         }
 
-        return await GetOwnedOrderAsync(orderId, userId);
+        return await GetOwnedOrderAsync(orderId, userId, cancellationToken);
     }
 
-    private async Task<Payment?> GetLatestPaymentForOrderAsync(Guid orderId)
+    private async Task<Payment?> GetLatestPaymentForOrderAsync(Guid orderId, CancellationToken cancellationToken)
     {
-        return await _unitOfWork.GetRepository<Payment, Guid>().GetFirstOrDefaultAsync(new LatestPaymentByOrderSpecification(orderId));
+        return await _unitOfWork.GetRepository<Payment, Guid>().GetFirstOrDefaultAsync(new LatestPaymentByOrderSpecification(orderId), cancellationToken);
     }
 
     private static Payment BuildNewPayment(Order order, string userId)
@@ -319,11 +320,11 @@ public class PaymentService : IPaymentService
             throw new BadRequestException("Stripe event does not match the persisted payment expectation.");
     }
 
-    private async Task<Payment?> FindPaymentForStripeEventAsync(StripeWebhookEventDTO stripeEvent)
+    private async Task<Payment?> FindPaymentForStripeEventAsync(StripeWebhookEventDTO stripeEvent, CancellationToken cancellationToken)
     {
         if (Guid.TryParse(stripeEvent.ClientReferenceId, out var paymentId))
         {
-            var byId = await _unitOfWork.GetRepository<Payment, Guid>().GetByIdAsync(paymentId);
+            var byId = await _unitOfWork.GetRepository<Payment, Guid>().GetByIdAsync(paymentId, cancellationToken);
             if (byId is not null)
             {
                 return byId;
@@ -333,7 +334,7 @@ public class PaymentService : IPaymentService
         if (!string.IsNullOrWhiteSpace(stripeEvent.CheckoutSessionId))
         {
             var spec = new PaymentByCheckoutSessionSpecification(stripeEvent.CheckoutSessionId);
-            var bySession = await _unitOfWork.GetRepository<Payment, Guid>().GetFirstOrDefaultAsync(spec);
+            var bySession = await _unitOfWork.GetRepository<Payment, Guid>().GetFirstOrDefaultAsync(spec, cancellationToken);
             if (bySession is not null)
             {
                 return bySession;
@@ -343,7 +344,7 @@ public class PaymentService : IPaymentService
         if (!string.IsNullOrWhiteSpace(stripeEvent.PaymentIntentId))
         {
             var spec = new PaymentByPaymentIntentSpecification(stripeEvent.PaymentIntentId);
-            var byIntent = await _unitOfWork.GetRepository<Payment, Guid>().GetFirstOrDefaultAsync(spec);
+            var byIntent = await _unitOfWork.GetRepository<Payment, Guid>().GetFirstOrDefaultAsync(spec, cancellationToken);
             if (byIntent is not null)
             {
                 return byIntent;
@@ -405,9 +406,9 @@ public class PaymentService : IPaymentService
         _unitOfWork.GetRepository<Payment, Guid>().Update(payment);
     }
 
-    private async Task ConfirmOrderIfNeededAsync(Guid orderId, DateTime now)
+    private async Task ConfirmOrderIfNeededAsync(Guid orderId, DateTime now, CancellationToken cancellationToken)
     {
-        var order = await _unitOfWork.GetRepository<Order, Guid>().GetByIdAsync(orderId);
+        var order = await _unitOfWork.GetRepository<Order, Guid>().GetByIdAsync(orderId, cancellationToken);
         if (order is null)
         {
             return;
@@ -434,10 +435,10 @@ public class PaymentService : IPaymentService
         _unitOfWork.GetRepository<Order, Guid>().Update(order);
     }
 
-    private async Task<bool> EventAlreadyProcessedAsync(string eventId)
+    private async Task<bool> EventAlreadyProcessedAsync(string eventId, CancellationToken cancellationToken)
     {
         var spec = new StripeWebhookEventByEventIdSpecification(eventId);
-        return await _unitOfWork.GetRepository<StripeWebhookEvent, Guid>().ExistsAsync(spec);
+        return await _unitOfWork.GetRepository<StripeWebhookEvent, Guid>().ExistsAsync(spec, cancellationToken);
     }
 
     private async Task RecordStripeEventAsync(
@@ -445,7 +446,7 @@ public class PaymentService : IPaymentService
         Payment payment,
         string processingResult,
         string? errorMessage,
-        DateTime now)
+        DateTime now, CancellationToken cancellationToken)
     {
         var webhookEvent = new StripeWebhookEvent
         {
@@ -460,7 +461,7 @@ public class PaymentService : IPaymentService
             ProcessedAt = now
         };
 
-        await _unitOfWork.GetRepository<StripeWebhookEvent, Guid>().AddAsync(webhookEvent);
+        await _unitOfWork.GetRepository<StripeWebhookEvent, Guid>().AddAsync(webhookEvent, cancellationToken);
     }
 
     private static bool IsDuplicateStripeWebhookEvent(DbUpdateException exception)

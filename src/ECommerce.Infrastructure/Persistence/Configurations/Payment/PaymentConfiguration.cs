@@ -9,6 +9,12 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Domain.Entities.Pay
         builder.HasKey(p => p.Id);
 
         builder.HasIndex(p => p.TransactionId).IsUnique();
+        builder.HasIndex(p => p.StripeCheckoutSessionId)
+            .IsUnique()
+            .HasFilter("[StripeCheckoutSessionId] IS NOT NULL");
+        builder.HasIndex(p => p.StripePaymentIntentId)
+            .IsUnique()
+            .HasFilter("[StripePaymentIntentId] IS NOT NULL");
 
         builder.Property(p => p.TransactionId)
             .IsRequired()
@@ -26,6 +32,18 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Domain.Entities.Pay
         builder.Property(p => p.GatewayResponse)
             .HasMaxLength(2000);
 
+        builder.Property(p => p.StripeCheckoutSessionId)
+            .HasMaxLength(200);
+
+        builder.Property(p => p.StripeCheckoutSessionStatus)
+            .HasMaxLength(50);
+
+        builder.Property(p => p.StripeCheckoutSessionUrl)
+            .HasMaxLength(2048);
+
+        builder.Property(p => p.StripePaymentIntentId)
+            .HasMaxLength(200);
+
         builder.Property(p => p.Status)
             .HasConversion<string>();
 
@@ -34,6 +52,12 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Domain.Entities.Pay
 
         builder.Property(p => p.Amount)
             .HasColumnType("decimal(18,2)");
+
+        builder.Property(p => p.AmountInMinorUnits)
+            .IsRequired();
+
+        builder.Property(p => p.PaidAt)
+            .IsRequired(false);
 
         builder.HasOne(p => p.Order)
             .WithMany(o => o.Payments)

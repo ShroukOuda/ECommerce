@@ -1,9 +1,11 @@
-namespace ECommerce.Domain.Enums.Payment;
+ namespace ECommerce.Domain.Enums.Payment;
 
 public enum PaymentStatus
 {
     Pending = 1,
-    Paid = 2,
-    Failed = 3,
-    Refunded = 4
+    Processing = 2,
+    Paid = 3,
+    Failed = 4,
+    Expired = 5,
+    Refunded = 6
 }

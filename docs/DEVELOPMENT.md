@@ -121,6 +121,22 @@ Seed data is applied automatically via EF Core's `HasData()` in `OnModelCreating
 | `ASPNETCORE_ENVIRONMENT` | Runtime environment | `Development` |
 | `ConnectionStrings__DefaultConnection` | Database connection string | *(appsettings)* |
 | `AUTO_MIGRATE` | Auto-run migrations on startup | `false` |
+| `Stripe__SecretKey` | Stripe secret key | *(empty)* |
+| `Stripe__WebhookSecret` | Stripe webhook signing secret | *(empty)* |
+| `Stripe__Currency` | Checkout currency | `usd` |
+| `Stripe__ClientUrl` | Angular client base URL | `http://localhost:4200` |
+
+## Stripe Local Testing
+
+1. Create a Stripe test-mode account and copy the test secret key and webhook secret.
+2. Start the API and forward webhooks with the Stripe CLI:
+
+```bash
+stripe listen --forward-to https://localhost:5001/api/v1/payments/webhook
+```
+
+3. Use the returned webhook signing secret as `Stripe__WebhookSecret`.
+4. Create a checkout session from the authenticated API and complete payment in the Stripe test checkout page.
 
 ## Debugging in Rider/VS
 

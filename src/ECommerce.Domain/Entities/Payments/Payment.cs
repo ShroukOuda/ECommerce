@@ -10,10 +10,15 @@ public class Payment : BaseEntity<Guid>
     public string? PaymentGateway { get; set; } 
     public string? GatewayTransactionId { get; set; }
     public string? GatewayResponse { get; set; }
+    public string? StripeCheckoutSessionId { get; set; }
+    public string? StripeCheckoutSessionStatus { get; set; }
+    public string? StripeCheckoutSessionUrl { get; set; }
+    public string? StripePaymentIntentId { get; set; }
     public PaymentStatus Status { get; set; }
     public PaymentMethod Method { get; set; }
     public decimal Amount { get; set; }
-    public DateTime PaidAt { get; set; }
+    public long AmountInMinorUnits { get; set; }
+    public DateTime? PaidAt { get; set; }
     
     //FK
     public Guid OrderId { get; set; }

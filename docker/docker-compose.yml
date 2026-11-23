@@ -30,6 +30,10 @@ services:
       ASPNETCORE_URLS: "http://+:8080"
       ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=ECommerceDB;User=sa;Password=Docker123#;TrustServerCertificate=true;Connect Timeout=60;"
       AUTO_MIGRATE: "true"
+      Stripe__SecretKey: "${STRIPE_SECRET_KEY:-}"
+      Stripe__WebhookSecret: "${STRIPE_WEBHOOK_SECRET:-}"
+      Stripe__Currency: "${STRIPE_CURRENCY:-usd}"
+      Stripe__ClientUrl: "${CLIENT_URL:-http://localhost:4200}"
     
     ports:
       - "8080:8080"

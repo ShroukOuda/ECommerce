@@ -1,5 +1,7 @@
 using System.Net;
 using System.Text.Json;
+using ECommerce.Domain.Exceptions;
+using FluentValidation;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace ECommerce.API.Middleware;
@@ -50,14 +52,28 @@ public class ExceptionsMiddleware
         }
         catch (Exception e)
         {
-            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+            var statusCode = GetStatusCode(e);
+            context.Response.StatusCode = statusCode;
             context.Response.ContentType = "application/json";
             ApiExceptions response = _environment.IsDevelopment() ?
-                new ApiExceptions((int)HttpStatusCode.InternalServerError, e.Message, e.StackTrace)
-                : new ApiExceptions((int)HttpStatusCode.InternalServerError, e.Message);
+                new ApiExceptions(statusCode, e.Message, e.StackTrace)
+                : new ApiExceptions(statusCode, e.Message);
             string json = JsonSerializer.Serialize(response);
             await context.Response.WriteAsync(json);
         }
+    }
+
+    private static int GetStatusCode(Exception exception)
+    {
+        return exception switch
+        {
+            ValidationException => (int)HttpStatusCode.BadRequest,
+            BadRequestException => (int)HttpStatusCode.BadRequest,
+            NotFoundException => (int)HttpStatusCode.NotFound,
+            UnauthorizedAccessException => (int)HttpStatusCode.Forbidden,
+            KeyNotFoundException => (int)HttpStatusCode.NotFound,
+            _ => (int)HttpStatusCode.InternalServerError
+        };
     }
 
     private bool IsRequestAllowed(HttpContext context)

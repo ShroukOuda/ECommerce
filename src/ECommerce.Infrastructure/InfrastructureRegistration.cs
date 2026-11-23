@@ -17,6 +17,7 @@ using ECommerce.Application.Interfaces.Seed;
 using ECommerce.Infrastructure.Persistence.Seed.Identity;
 using ECommerce.Infrastructure.Services.Email;
 using ECommerce.Application.Interfaces.Email;
+using ECommerce.Infrastructure.Services.Payments;
 
 namespace ECommerce.Infrastructure;
 
@@ -56,6 +57,9 @@ public static class InfrastructureRegistration
 
         //email settings
         services.Configure<EmailSettings>(configuration.GetSection(EmailSettings.SectionName));
+
+        //stripe settings
+        services.Configure<StripeSettings>(configuration.GetSection(StripeSettings.SectionName));
 
         //app settings
         services.Configure<AppSettings>(configuration.GetSection(AppSettings.SectionName));
@@ -99,6 +103,7 @@ public static class InfrastructureRegistration
 
         services.AddScoped<INotificationEmailService, NotificationEmailService>();
         services.AddScoped<EmailTemplateBuilder>();
+        services.AddScoped<IPaymentGatewayService, StripePaymentGatewayService>();
         
         
         //token encoder

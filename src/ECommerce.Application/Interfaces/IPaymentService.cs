@@ -4,7 +4,8 @@ namespace ECommerce.Application.Interfaces;
 
 public interface IPaymentService
 {
-    Task<IEnumerable<GetPaymentDTO>> GetPaymentsByOrderIdAsync(Guid orderId);
-    Task<GetPaymentDTO> GetPaymentByIdAsync(Guid id);
-    Task<GetPaymentDTO> CreatePaymentAsync(CreatePaymentDTO dto);
+    Task<CreateCheckoutSessionResponseDTO> CreateCheckoutSessionAsync(Guid orderId, string userId);
+    Task<IEnumerable<GetPaymentDTO>> GetPaymentsByOrderIdAsync(Guid orderId, string userId, bool isAdmin);
+    Task<GetPaymentDTO> GetPaymentByIdAsync(Guid id, string userId, bool isAdmin);
+    Task HandleStripeWebhookAsync(string payload, string signatureHeader);
 }

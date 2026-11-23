@@ -37,6 +37,20 @@ docker compose -f docker/docker-compose.yml up --build
 | `ASPNETCORE_URLS` | `http://+:8080` | Listening URL |
 | `ConnectionStrings__DefaultConnection` | *(see compose)* | SQL Server connection string |
 | `AUTO_MIGRATE` | `true` | Auto-run EF migrations on startup |
+| `Stripe__SecretKey` | *(empty)* | Stripe secret key |
+| `Stripe__WebhookSecret` | *(empty)* | Stripe webhook signing secret |
+| `Stripe__Currency` | `usd` | Stripe checkout currency |
+| `Stripe__ClientUrl` | `http://localhost:4200` | Angular client URL |
+
+### Stripe Webhooks
+
+For local testing, run the Stripe CLI and forward events to the API container port:
+
+```bash
+stripe listen --forward-to http://localhost:8080/api/v1/payments/webhook
+```
+
+Use the generated webhook signing secret in `Stripe__WebhookSecret`.
 
 ### SQL Server
 

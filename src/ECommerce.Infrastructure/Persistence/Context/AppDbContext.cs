@@ -66,6 +66,7 @@ public class AppDbContext : IdentityDbContext<User>
     
     //Payment
     public  DbSet<Payment> Payments { get; set; }
+    public  DbSet<StripeWebhookEvent> StripeWebhookEvents { get; set; }
     
     //Return
     public  DbSet<ReturnRequest> ReturnRequests { get; set; }

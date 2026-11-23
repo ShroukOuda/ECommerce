@@ -71,18 +71,24 @@ public class InventoryService : IInventoryService
             throw new NotFoundException(
                 $"Product with ID {productId} was not found.");
 
-        var newQuantity =
-            product.StockQuantity + dto.QuantityChange;
-
+        if (!dto.ProductVariantId.HasValue || dto.ProductVariantId == Guid.Empty)
+            throw new BadRequestException("Choose a productVariantId for inventory adjustment.");
+        var variantRepository = _unitOfWork.GetRepository<ProductVariant, Guid>();
+        var variant = await variantRepository.GetFirstOrDefaultAsync(new ProductVariantSpecification(dto.ProductVariantId.Value));
+        if (variant is null || variant.ProductId != productId)
+            throw new NotFoundException("The selected variant does not belong to this product.");
+        int newQuantity;
+        try { newQuantity = checked(variant.StockQuantity + dto.QuantityChange); }
+        catch (OverflowException) { throw new BadRequestException("Inventory quantity is too large."); }
         if (newQuantity < 0)
-            throw new InvalidOperationException(
-                "Inventory quantity cannot be negative.");
-
-        product.StockQuantity = newQuantity;
+            throw new BusinessRuleException("Inventory quantity cannot be negative.");
+        variant.StockQuantity = newQuantity;
+        variant.StockStatus = newQuantity == 0 ? ECommerce.Domain.Enums.Inventory.StockStatus.OutOfStock : ECommerce.Domain.Enums.Inventory.StockStatus.InStock;
 
         var history = _mapper.Map<InventoryHistory>(dto);
 
         history.ProductId = productId;
+        history.ProductVariantId = variant.Id;
         history.UserId = userId;
         history.NewQuantity = newQuantity;
 
@@ -91,7 +97,7 @@ public class InventoryService : IInventoryService
             .GetRepository<InventoryHistory, Guid>()
             .AddAsync(history);
 
-        productRepository.Update(product);
+        variantRepository.Update(variant);
 
         await _unitOfWork.SaveChangesAsync();
 

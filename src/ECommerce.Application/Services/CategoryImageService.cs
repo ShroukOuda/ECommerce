@@ -47,7 +47,7 @@ public class CategoryImageService : ICategoryImageService
 
         if (existingPhoto)
         {
-            throw new Exception($"{dto.SubType} already exists for Category {Id} " +
+            throw new ConflictException($"{dto.SubType} already exists for Category {Id} " +
                                 $"If you want to replace it, please delete the existing one first.");
             
         }

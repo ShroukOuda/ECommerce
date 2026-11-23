@@ -28,45 +28,50 @@ public class AddressService : IAddressService
         return _mapper.Map<IEnumerable<GetAddressDTO>>(addresses);
     }
 
-    public async Task<GetAddressDTO> GetAddressByIdAsync(Guid id)
+    public async Task<GetAddressDTO> GetAddressByIdAsync(Guid id, string userId)
     {
         var address = await _unitOfWork.GetRepository<Address,Guid>().GetByIdAsync(id);
-        if (address is null) throw new KeyNotFoundException($"Address with ID {id} not found.");
+        if (address is null || address.UserId != userId) throw new KeyNotFoundException($"Address with ID {id} not found.");
         return _mapper.Map<GetAddressDTO>(address);
     }
 
-    public async Task<GetAddressDTO> AddAddressAsync(AddAddressDTO dto)
+    public async Task<GetAddressDTO> AddAddressAsync(AddAddressDTO dto, string userId)
     {
-        var result = await _addValidator.ValidateAsync(dto);
-        if (!result.IsValid) throw new ValidationException(result.Errors);
+        dto.UserId = userId;
+        var validationResult = await _addValidator.ValidateAsync(dto);
+        if (!validationResult.IsValid) throw new ValidationException(validationResult.Errors);
         var address = _mapper.Map<Address>(dto);
+        address.UserId = userId;
         await _unitOfWork.GetRepository<Address, Guid>().AddAsync(address);
         await _unitOfWork.SaveChangesAsync();
         return _mapper.Map<GetAddressDTO>(address);
     }
 
-    public async Task<GetAddressDTO> UpdateAddressAsync(Guid id, UpdateAddressDTO dto)
+    public async Task<GetAddressDTO> UpdateAddressAsync(Guid id, UpdateAddressDTO dto, string userId)
     {
-        var result = await _updateValidator.ValidateAsync(dto);
-        if (!result.IsValid) throw new ValidationException(result.Errors);
+        var validationResult = await _updateValidator.ValidateAsync(dto);
+        if (!validationResult.IsValid) throw new ValidationException(validationResult.Errors);
 
          var spec = new AddressSpecification(id);
-        bool exists = await _unitOfWork.GetRepository<Address, Guid>().ExistsAsync(spec);
-        if (!exists) throw new KeyNotFoundException($"Address with ID {id} not found.");
+        var address = await _unitOfWork.GetRepository<Address, Guid>().GetFirstOrDefaultAsync(spec);
+        if (address is null || address.UserId != userId) throw new KeyNotFoundException($"Address with ID {id} not found.");
        
-        var address = _mapper.Map<Address>(dto);
+        var originalId = address.Id;
+        var originalCreatedAt = address.CreatedAt;
+        _mapper.Map(dto, address);
+        address.Id = originalId;
+        address.CreatedAt = originalCreatedAt;
         _unitOfWork.GetRepository<Address, Guid>().Update(address);
         await _unitOfWork.SaveChangesAsync();
         return _mapper.Map<GetAddressDTO>(address);
     }
 
-    public async Task DeleteAddressAsync(Guid id)
+    public async Task DeleteAddressAsync(Guid id, string userId)
     {
-        var spec = new AddressSpecification(id);
-        bool exists = await _unitOfWork.GetRepository<Address, Guid>().ExistsAsync(spec);
-        if (!exists) throw new KeyNotFoundException($"Address with ID {id} not found.");
-        var stub = new Address { Id = id };
-        _unitOfWork.GetRepository<Address, Guid>().Delete(stub);
+        var address = await _unitOfWork.GetRepository<Address, Guid>().GetByIdAsync(id);
+        if (address is null || address.UserId != userId)
+            throw new KeyNotFoundException($"Address with ID {id} not found.");
+        _unitOfWork.GetRepository<Address, Guid>().Delete(address);
         await _unitOfWork.SaveChangesAsync();
     }
 }

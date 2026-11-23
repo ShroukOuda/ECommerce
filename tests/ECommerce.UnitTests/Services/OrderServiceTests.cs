@@ -45,6 +45,8 @@ public class OrderServiceTests
             _createValidatorMock.Object,
             _couponServiceMock.Object);
 
+        _unitOfWorkMock.Setup(u => u.GetRepository<ECommerce.Domain.Entities.Users.Address, Guid>().GetByIdAsync(It.IsAny<Guid>()))
+            .ReturnsAsync((Guid id) => new ECommerce.Domain.Entities.Users.Address { Id = id, UserId = "user1" });
         // Default checkout fixtures: an owned active cart with
         // one priced item, a published product, an active
         // in-stock variant. Individual tests override these.

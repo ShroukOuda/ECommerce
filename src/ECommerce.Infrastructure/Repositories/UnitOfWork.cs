@@ -20,6 +20,9 @@ public class UnitOfWork : IUnitOfWork
         return (IGenericRepository<TEntity, TKey>)_repositories.GetOrAdd(typeof(TEntity).Name, _ => new GenericRepository<TEntity, TKey>(_context));
     }
 
+    public Task<int> SaveChangesAsync(CancellationToken cancellationToken)
+        => _context.SaveChangesAsync(cancellationToken);
+
     public async Task<int> SaveChangesAsync()
     {
         return await _context.SaveChangesAsync();

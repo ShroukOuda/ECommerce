@@ -6,4 +6,5 @@ public interface IUnitOfWork
         where TEntity : BaseEntity<TKey>
         where TKey : IEquatable<TKey>;
     public Task<int> SaveChangesAsync();
+    public Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

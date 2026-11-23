@@ -12,6 +12,7 @@ using FluentAssertions;
 using FluentValidation;
 using FluentValidation.Results;
 using Moq;
+using ECommerce.Application.Interfaces;
 
 namespace ECommerce.UnitTests.Services;
 

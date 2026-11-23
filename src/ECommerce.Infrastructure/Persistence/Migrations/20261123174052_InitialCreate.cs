@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace ECommerce.Infrastructure.Migrations
+namespace ECommerce.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration
@@ -305,6 +305,7 @@ namespace ECommerce.Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     GuestToken = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
                     DiscountAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    CouponCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Status = table.Column<int>(type: "int", nullable: false),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: true),
@@ -801,10 +802,15 @@ namespace ECommerce.Infrastructure.Migrations
                     PaymentGateway = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     GatewayTransactionId = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
                     GatewayResponse = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
+                    StripeCheckoutSessionId = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    StripeCheckoutSessionStatus = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    StripeCheckoutSessionUrl = table.Column<string>(type: "nvarchar(2048)", maxLength: 2048, nullable: true),
+                    StripePaymentIntentId = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Method = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Amount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    PaidAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    AmountInMinorUnits = table.Column<long>(type: "bigint", nullable: false),
+                    PaidAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     OrderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -1124,6 +1130,37 @@ namespace ECommerce.Infrastructure.Migrations
                         principalTable: "Products",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "StripeWebhookEvents",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    EventId = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    EventType = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Provider = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    StripeCheckoutSessionId = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    StripePaymentIntentId = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    PaymentId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    ProcessingResult = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    ErrorMessage = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
+                    ProcessedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_StripeWebhookEvents", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_StripeWebhookEvents_Payments_PaymentId",
+                        column: x => x.PaymentId,
+                        principalTable: "Payments",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -1546,6 +1583,20 @@ namespace ECommerce.Infrastructure.Migrations
                 column: "OrderId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Payments_StripeCheckoutSessionId",
+                table: "Payments",
+                column: "StripeCheckoutSessionId",
+                unique: true,
+                filter: "[StripeCheckoutSessionId] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Payments_StripePaymentIntentId",
+                table: "Payments",
+                column: "StripePaymentIntentId",
+                unique: true,
+                filter: "[StripePaymentIntentId] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Payments_TransactionId",
                 table: "Payments",
                 column: "TransactionId",
@@ -1715,6 +1766,17 @@ namespace ECommerce.Infrastructure.Migrations
                 column: "OrderId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_StripeWebhookEvents_EventId",
+                table: "StripeWebhookEvents",
+                column: "EventId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_StripeWebhookEvents_PaymentId",
+                table: "StripeWebhookEvents",
+                column: "PaymentId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_UserNotificationPreferences_NotificationPreferenceId",
                 table: "UserNotificationPreferences",
                 column: "NotificationPreferenceId");
@@ -1788,9 +1850,6 @@ namespace ECommerce.Infrastructure.Migrations
                 name: "OrderStatusHistories");
 
             migrationBuilder.DropTable(
-                name: "Payments");
-
-            migrationBuilder.DropTable(
                 name: "ProductImages");
 
             migrationBuilder.DropTable(
@@ -1810,6 +1869,9 @@ namespace ECommerce.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "Shippings");
+
+            migrationBuilder.DropTable(
+                name: "StripeWebhookEvents");
 
             migrationBuilder.DropTable(
                 name: "UserNotificationPreferences");
@@ -1840,6 +1902,9 @@ namespace ECommerce.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "ProductReviews");
+
+            migrationBuilder.DropTable(
+                name: "Payments");
 
             migrationBuilder.DropTable(
                 name: "NotificationPreferences");

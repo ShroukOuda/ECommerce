@@ -48,7 +48,7 @@ public class BrandLogoService : IBrandLogoService
 
         if (existingPhoto)
         {
-            throw new Exception($"{dto.SubType} already exists for Brand {brandId} " +
+            throw new ConflictException($"{dto.SubType} already exists for Brand {brandId} " +
                                 $"If you want to replace it, please delete the existing one first.");
             
         }

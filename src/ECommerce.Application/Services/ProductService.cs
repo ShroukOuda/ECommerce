@@ -1,7 +1,11 @@
 using ECommerce.Application.Interfaces.Services;
+using ECommerce.Application.Specifications.Brands;
+using ECommerce.Application.Specifications.Categories;
+using ECommerce.Application.Specifications.Products;
+using ECommerce.Domain.Entities.Brands;
+using ECommerce.Domain.Entities.Categories;
 using ECommerce.Domain.Entities.Products;
 using ECommerce.Domain.Interfaces.Repositories;
-using ECommerce.Application.Specifications.Products;
 
 namespace ECommerce.Application.Services;
 
@@ -95,13 +99,26 @@ public class ProductService : IProductService
         var validationResult = await _addProductDtoValidator.ValidateAsync(productDTO);
         if (!validationResult.IsValid)
             throw new ValidationException(validationResult.Errors);
-    
+
+        var categoryExists = await _unitOfWork
+            .GetRepository<Category, Guid>()
+            .ExistsAsync(new CategorySpecification(productDTO.CategoryId));
+
+        if (!categoryExists)
+            throw new NotFoundException($"Category with ID {productDTO.CategoryId} not found.");
+
+        var brandExists = await _unitOfWork
+            .GetRepository<Brand, Guid>()
+            .ExistsAsync(new BrandSpecification(productDTO.BrandId));
+
+        if (!brandExists)
+            throw new NotFoundException($"Brand with ID {productDTO.BrandId} not found.");
+
         var product = _mapper.Map<Product>(productDTO);
         await _unitOfWork.GetRepository<Product, Guid>().AddAsync(product);
         await _unitOfWork.SaveChangesAsync();
 
         return _mapper.Map<GetProductDetailsDTO>(product);
-       
     }
     
     public async Task<GetProductDetailsDTO> UpdateProductAsync(Guid productId, UpdateProductDTO productDto)

@@ -22,6 +22,9 @@ public class CustomWebApplicationFactory : WebApplicationFactory<ECommerce.API.P
         {
             configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
             {
+                ["DataInitialization:Enabled"] = "true",
+                ["JwtOptions:SecretKey"] = "isolated-test-signing-material-not-for-production-2026",
+                ["RateLimiting:MaxRequests"] = "10000",
                 ["EmailSettings:Provider"] = "smtp",
                 ["EmailSettings:SenderName"] = "MarketNest Test",
                 ["EmailSettings:SenderEmail"] = "noreply@test.local",
@@ -76,11 +79,6 @@ public class CustomWebApplicationFactory : WebApplicationFactory<ECommerce.API.P
                 TestAuthenticationHandler.SchemeName,
                 _ => { });
 
-            // Ensure the database is created
-            var sp = services.BuildServiceProvider();
-            using var scope = sp.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            db.Database.EnsureCreated();
         });
 
         builder.UseEnvironment("Testing");

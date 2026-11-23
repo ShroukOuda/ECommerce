@@ -36,8 +36,8 @@ public class AddressServiceTests
     [Fact]
     public async Task GetAddressesByUserIdAsync_ShouldReturnMappedAddresses()
     {
-        var addresses = new List<Address> { new() { Id = TestGuid.FromInt(1), City = "Cairo" } };
-        var addressDtos = new List<GetAddressDTO> { new() { Id = TestGuid.FromInt(1), City = "Cairo" } };
+        var addresses = new List<Address> { new() { Id = TestGuid.FromInt(1), City = "Cairo", UserId = "user1" } };
+        var addressDtos = new List<GetAddressDTO> { new() { Id = TestGuid.FromInt(1), City = "Cairo", UserId = "user1" } };
 
         _unitOfWorkMock.Setup(u => u.GetRepository<Address, Guid>().GetAllAsync(It.IsAny<AddressesByUserSpecification>()))
             .ReturnsAsync(addresses);
@@ -52,14 +52,14 @@ public class AddressServiceTests
     [Fact]
     public async Task GetAddressByIdAsync_WhenExists_ShouldReturnAddress()
     {
-        var address = new Address { Id = TestGuid.FromInt(1), City = "Cairo" };
-        var addressDto = new GetAddressDTO { Id = TestGuid.FromInt(1), City = "Cairo" };
+        var address = new Address { Id = TestGuid.FromInt(1), City = "Cairo", UserId = "user1" };
+        var addressDto = new GetAddressDTO { Id = TestGuid.FromInt(1), City = "Cairo", UserId = "user1" };
 
         _unitOfWorkMock.Setup(u => u.GetRepository<Address, Guid>().GetByIdAsync(TestGuid.FromInt(1)))
             .ReturnsAsync(address);
         _mapperMock.Setup(m => m.Map<GetAddressDTO>(address)).Returns(addressDto);
 
-        var result = await _addressService.GetAddressByIdAsync(TestGuid.FromInt(1));
+        var result = await _addressService.GetAddressByIdAsync(TestGuid.FromInt(1), "user1");
 
         result.Should().NotBeNull();
         result.City.Should().Be("Cairo");
@@ -71,7 +71,7 @@ public class AddressServiceTests
         _unitOfWorkMock.Setup(u => u.GetRepository<Address, Guid>().GetByIdAsync(TestGuid.FromInt(999)))
             .ReturnsAsync((Address?)null);
 
-        var act = () => _addressService.GetAddressByIdAsync(TestGuid.FromInt(999));
+        var act = () => _addressService.GetAddressByIdAsync(TestGuid.FromInt(999), "user1");
 
         await act.Should().ThrowAsync<KeyNotFoundException>();
     }
@@ -89,7 +89,7 @@ public class AddressServiceTests
             Country = "Egypt",
             Type = "Shipping"
         };
-        var address = new Address { City = "Cairo" };
+        var address = new Address { City = "Cairo", UserId = "user1" };
 
         _addValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
@@ -98,7 +98,7 @@ public class AddressServiceTests
             .Returns(Task.CompletedTask);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
-        await _addressService.AddAddressAsync(dto);
+        await _addressService.AddAddressAsync(dto, "user1");
 
         _unitOfWorkMock.Verify(u => u.GetRepository<Address, Guid>().AddAsync(address), Times.Once);
     }
@@ -112,7 +112,7 @@ public class AddressServiceTests
         _addValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult(failures));
 
-        var act = () => _addressService.AddAddressAsync(dto);
+        var act = () => _addressService.AddAddressAsync(dto, "user1");
 
         await act.Should().ThrowAsync<ValidationException>();
     }
@@ -129,17 +129,17 @@ public class AddressServiceTests
             Country = "Egypt",
             Type = "Billing"
         };
-        var address = new Address { Id = TestGuid.FromInt(1), City = "Cairo" };
+        var address = new Address { Id = TestGuid.FromInt(1), City = "Cairo", UserId = "user1" };
 
         _updateValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
-        _unitOfWorkMock.Setup(u => u.GetRepository<Address, Guid>().ExistsAsync(It.IsAny<AddressSpecification>()))
-            .ReturnsAsync(true);
+        _unitOfWorkMock.Setup(u => u.GetRepository<Address, Guid>().GetFirstOrDefaultAsync(It.IsAny<AddressSpecification>()))
+            .ReturnsAsync(address);
         _mapperMock.Setup(m => m.Map<Address>(dto)).Returns(address);
         _unitOfWorkMock.Setup(u => u.GetRepository<Address, Guid>().Update(It.IsAny<Address>()));
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
-        await _addressService.UpdateAddressAsync(TestGuid.FromInt(1), dto);
+        await _addressService.UpdateAddressAsync(TestGuid.FromInt(1), dto, "user1");
 
         _unitOfWorkMock.Verify(u => u.GetRepository<Address, Guid>().Update(address), Times.Once);
     }
@@ -147,11 +147,11 @@ public class AddressServiceTests
     [Fact]
     public async Task DeleteAddressAsync_WhenExists_ShouldDeleteAddress()
     {
-        _unitOfWorkMock.Setup(u => u.GetRepository<Address, Guid>().ExistsAsync(It.IsAny<AddressSpecification>()))
-            .ReturnsAsync(true);
+        _unitOfWorkMock.Setup(u => u.GetRepository<Address, Guid>().GetByIdAsync(TestGuid.FromInt(1)))
+            .ReturnsAsync(new Address { Id = TestGuid.FromInt(1), UserId = "user1" });
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
-        await _addressService.DeleteAddressAsync(TestGuid.FromInt(1));
+        await _addressService.DeleteAddressAsync(TestGuid.FromInt(1), "user1");
 
         _unitOfWorkMock.Verify(u => u.GetRepository<Address, Guid>().Delete(It.IsAny<Address>()), Times.Once);
     }
@@ -162,8 +162,40 @@ public class AddressServiceTests
         _unitOfWorkMock.Setup(u => u.GetRepository<Address, Guid>().ExistsAsync(It.IsAny<AddressSpecification>()))
             .ReturnsAsync(false);
 
-        var act = () => _addressService.DeleteAddressAsync(TestGuid.FromInt(999));
+        var act = () => _addressService.DeleteAddressAsync(TestGuid.FromInt(999), "user1");
 
         await act.Should().ThrowAsync<KeyNotFoundException>();
+    }
+
+    [Theory]
+    [InlineData("read")][InlineData("update")][InlineData("delete")]
+    public async Task AnotherOwnersAddress_IsNeverAccessible(string operation)
+    {
+        var address = new Address { Id = TestGuid.FromInt(1), UserId = "victim" };
+        _unitOfWorkMock.Setup(u => u.GetRepository<Address, Guid>().GetByIdAsync(address.Id)).ReturnsAsync(address);
+        _unitOfWorkMock.Setup(u => u.GetRepository<Address, Guid>().GetFirstOrDefaultAsync(It.IsAny<AddressSpecification>())).ReturnsAsync(address);
+        var dto = new UpdateAddressDTO();
+        _updateValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>())).ReturnsAsync(new ValidationResult());
+        Func<Task> action = operation switch
+        {
+            "read" => async () => { await _addressService.GetAddressByIdAsync(address.Id, "attacker"); },
+            "update" => async () => { await _addressService.UpdateAddressAsync(address.Id, dto, "attacker"); },
+            _ => () => _addressService.DeleteAddressAsync(address.Id, "attacker")
+        };
+        await action.Should().ThrowAsync<KeyNotFoundException>();
+        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateAddress_ClientCannotAssignAnotherOwner()
+    {
+        var dto = new AddAddressDTO { UserId = "victim" };
+        var address = new Address { UserId = "victim" };
+        _addValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>())).ReturnsAsync(new ValidationResult());
+        _mapperMock.Setup(m => m.Map<Address>(dto)).Returns(address);
+        _unitOfWorkMock.Setup(u => u.GetRepository<Address, Guid>().AddAsync(It.IsAny<Address>())).Returns(Task.CompletedTask);
+        await _addressService.AddAddressAsync(dto, "caller");
+        address.UserId.Should().Be("caller");
+        dto.UserId.Should().Be("caller");
     }
 }

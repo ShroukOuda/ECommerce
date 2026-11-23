@@ -26,6 +26,8 @@ public class InventoryServiceTests
         _unitOfWorkMock = new Mock<IUnitOfWork>();
         _mapperMock = new Mock<IMapper>();
         _createValidatorMock = new Mock<IValidator<CreateInventoryHistoryDTO>>();
+        _unitOfWorkMock.Setup(u => u.GetRepository<ProductVariant, Guid>().GetFirstOrDefaultAsync(It.IsAny<Application.Specifications.Products.ProductVariantSpecification>()))
+            .ReturnsAsync(new ProductVariant { Id = TestGuid.FromInt(2), ProductId = TestGuid.FromInt(1), StockQuantity = 5 });
         _inventoryService = new InventoryService(
             _unitOfWorkMock.Object,
             _mapperMock.Object,
@@ -63,7 +65,7 @@ public class InventoryServiceTests
     [Fact]
     public async Task AddInventoryHistoryAsync_WithValidData_ShouldUpdateStockAndAddHistory()
     {
-        var dto = new CreateInventoryHistoryDTO { QuantityChange = 10, ChangeType = InventoryChangeType.Restock };
+        var dto = new CreateInventoryHistoryDTO { ProductVariantId = TestGuid.FromInt(2), QuantityChange = 10, ChangeType = InventoryChangeType.Restock };
         var product = new Product { Id = TestGuid.FromInt(1), StockQuantity = 5 };
         var history = new InventoryHistory();
 
@@ -78,19 +80,20 @@ public class InventoryServiceTests
 
         await _inventoryService.AddInventoryHistoryAsync(TestGuid.FromInt(1), "user1", dto);
 
-        product.StockQuantity.Should().Be(15);
+        product.StockQuantity.Should().Be(5, "legacy product stock must not be allocated implicitly");
+        history.ProductVariantId.Should().Be(TestGuid.FromInt(2));
         history.ProductId.Should().Be(TestGuid.FromInt(1));
         history.UserId.Should().Be("user1");
         history.NewQuantity.Should().Be(15);
         _unitOfWorkMock.Verify(u => u.GetRepository<InventoryHistory, Guid>().AddAsync(history), Times.Once);
-        _unitOfWorkMock.Verify(u => u.GetRepository<Product, Guid>().Update(product), Times.Once);
+        _unitOfWorkMock.Verify(u => u.GetRepository<ProductVariant, Guid>().Update(It.Is<ProductVariant>(v => v.Id == TestGuid.FromInt(2) && v.StockQuantity == 15)), Times.Once);
         _unitOfWorkMock.Verify(u => u.SaveChangesAsync(), Times.Once);
     }
 
     [Fact]
     public async Task AddInventoryHistoryAsync_WhenChangeWouldMakeStockNegative_ShouldThrowInvalidOperationException()
     {
-        var dto = new CreateInventoryHistoryDTO { QuantityChange = -10, ChangeType = InventoryChangeType.Purchase };
+        var dto = new CreateInventoryHistoryDTO { ProductVariantId = TestGuid.FromInt(2), QuantityChange = -10, ChangeType = InventoryChangeType.Purchase };
         var product = new Product { Id = TestGuid.FromInt(1), StockQuantity = 5 };
 
         _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
@@ -106,7 +109,7 @@ public class InventoryServiceTests
     [Fact]
     public async Task AddInventoryHistoryAsync_WhenProductMissing_ShouldThrowNotFoundException()
     {
-        var dto = new CreateInventoryHistoryDTO { QuantityChange = 10, ChangeType = InventoryChangeType.Restock };
+        var dto = new CreateInventoryHistoryDTO { ProductVariantId = TestGuid.FromInt(2), QuantityChange = 10, ChangeType = InventoryChangeType.Restock };
 
         _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
@@ -130,5 +133,25 @@ public class InventoryServiceTests
         var act = () => _inventoryService.AddInventoryHistoryAsync(TestGuid.FromInt(1), "user1", dto);
 
         await act.Should().ThrowAsync<ValidationException>();
+    }
+
+    [Fact]
+    public async Task MissingVariant_RejectsWithoutMutation()
+    {
+        var dto = new CreateInventoryHistoryDTO { QuantityChange = 1, ChangeType = InventoryChangeType.Restock };
+        _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>())).ReturnsAsync(new ValidationResult());
+        _unitOfWorkMock.Setup(u => u.GetRepository<Product, Guid>().GetByIdAsync(TestGuid.FromInt(1))).ReturnsAsync(new Product());
+        await FluentActions.Invoking(() => _inventoryService.AddInventoryHistoryAsync(TestGuid.FromInt(1), "user1", dto)).Should().ThrowAsync<BadRequestException>();
+        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(), Times.Never);
+    }
+
+    [Fact]
+    public async Task WrongProductsVariant_RejectsWithoutMutation()
+    {
+        var dto = new CreateInventoryHistoryDTO { ProductVariantId = TestGuid.FromInt(2), QuantityChange = 1, ChangeType = InventoryChangeType.Restock };
+        _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>())).ReturnsAsync(new ValidationResult());
+        _unitOfWorkMock.Setup(u => u.GetRepository<Product, Guid>().GetByIdAsync(TestGuid.FromInt(3))).ReturnsAsync(new Product { Id = TestGuid.FromInt(3) });
+        await FluentActions.Invoking(() => _inventoryService.AddInventoryHistoryAsync(TestGuid.FromInt(3), "user1", dto)).Should().ThrowAsync<NotFoundException>();
+        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(), Times.Never);
     }
 }

@@ -8,6 +8,6 @@ public class PaymentByPaymentIntentSpecification : BaseSpecification<Payment, Gu
     public PaymentByPaymentIntentSpecification(string paymentIntentId)
         : base(p => p.StripePaymentIntentId == paymentIntentId)
     {
-        AsNoTracking();
+        // Used by mutation workflows; keep this graph tracked.
     }
 }

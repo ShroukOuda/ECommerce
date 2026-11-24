@@ -53,6 +53,15 @@ public class Program
                 Description = "Enter JWT token like: {your token}"
             });
 
+            options.AddSecurityDefinition("GuestCartToken", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Name = "X-Cart-Token",
+                Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+                In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+                Description = "Paste the guestToken returned by POST /api/v1/cart/session, without Bearer. Used only for cart requests; claim also requires JWT. Do not share or persist this token."
+            });
+            options.OperationFilter<ECommerce.API.Swagger.GuestCartTokenOperationFilter>();
+
             options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
             {
                 {

@@ -1,4 +1,5 @@
 using AutoMapper;
+using ECommerce.Application.Common;
 using ECommerce.Application.DTO.Payment;
 using ECommerce.Application.Interfaces;
 using ECommerce.Application.Interfaces.Services;
@@ -299,21 +300,9 @@ public class PaymentService : IPaymentService
     private static string BuildTransactionId(Guid orderId)
         => $"PAY-{orderId.ToString("N")[..8].ToUpperInvariant()}-{Guid.NewGuid().ToString("N")[..8].ToUpperInvariant()}";
 
-    private static string NormalizeCurrency(string currency)
-    {
-        if (!string.Equals(currency?.Trim(), "USD", StringComparison.OrdinalIgnoreCase))
-            throw new BadRequestException("The catalog is priced in USD. Other currencies are not supported.");
-        return "USD";
-    }
+    private static string NormalizeCurrency(string currency) => PaymentCurrencyRules.Normalize(currency);
 
-    private static long ToMinorUnits(decimal amount, string currency)
-    {
-        NormalizeCurrency(currency);
-        if (amount < 0 || decimal.Round(amount, 2) != amount)
-            throw new BadRequestException("USD amounts must be nonnegative and have at most two decimal places.");
-        try { return checked((long)(amount * 100m)); }
-        catch (OverflowException) { throw new BadRequestException("The order amount is too large."); }
-    }
+    private static long ToMinorUnits(decimal amount, string currency) => PaymentCurrencyRules.ToMinorUnits(amount, currency);
 
     private static void ValidateFinancialEvent(Payment payment, StripeWebhookEventDTO e)
     {

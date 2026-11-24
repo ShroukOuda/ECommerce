@@ -1,4 +1,5 @@
 using AutoMapper;
+using ECommerce.Application.Interfaces.Services;
 using FluentValidation;
 using ECommerce.Application.DTO.Coupon;
 using ECommerce.Application.DTO.Order;
@@ -25,17 +26,20 @@ public class OrderService : IOrderService
     private readonly IMapper _mapper;
     private readonly IValidator<CreateOrderDTO> _createValidator;
     private readonly ICouponService _couponService;
+    private readonly ICheckoutCurrencyProvider _currencyProvider;
 
     public OrderService(
         IUnitOfWork unitOfWork,
         IMapper mapper,
         IValidator<CreateOrderDTO> createValidator,
-        ICouponService couponService)
+        ICouponService couponService,
+        ICheckoutCurrencyProvider currencyProvider)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _createValidator = createValidator;
         _couponService = couponService;
+        _currencyProvider = currencyProvider;
     }
 
     // =========================================================
@@ -92,8 +96,8 @@ public class OrderService : IOrderService
                 validationResult.Errors);
         }
 
-        if (!string.Equals(dto.Currency?.Trim(), "USD", StringComparison.OrdinalIgnoreCase))
-            throw new BadRequestException("Catalog prices are USD. Other currencies are not supported.");
+        // Currency is server-owned. The legacy DTO field cannot select or relabel prices.
+        var currency = _currencyProvider.Currency;
 
         // Checkout converts the cart: items, quantities and
         // prices all come from the server-side cart and catalog,
@@ -145,7 +149,7 @@ public class OrderService : IOrderService
 
             OrderStatus = OrderStatus.Pending,
 
-            Currency = "USD",
+            Currency = currency,
 
             ShippingAddressId = dto.ShippingAddressId,
 

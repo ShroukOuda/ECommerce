@@ -54,7 +54,7 @@ Payments transition through `Pending`, `Processing`, `Paid`, `Failed`, `Expired`
 
 ## Remediation rules and remaining gates
 
-Catalog currency is server USD. No client-controlled currency conversion. USD amounts must be nonnegative exact cents; this checkout currently requires a positive total. Free-order fulfillment is an explicit future policy, not a silent Stripe workaround.
+New orders snapshot the single backend currency from `Stripe:Currency` (default `usd`). The legacy request currency field is ignored. Existing orders/payments retain their saved currency even after a settings change; prices are never converted automatically. Restart the API after changing settings. Stripe card presentment currencies are validated against the documented allowlist; account/payment-method availability is still checked by Stripe. Two-decimal currencies use exact cents, zero-decimal currencies require whole amounts, and ISK/UGX use their special whole-unit/x100 charge rules. Unsupported currencies or precision are rejected, never rounded. This checkout requires a positive total. Free-order fulfillment is an explicit future policy, not a silent Stripe workaround.
 
 Completed-but-unpaid sessions move to Processing, never Paid. Signed financial identity must match persisted payment/order metadata, client reference, session, known intent, exact minor-unit amount and currency. Paid/refunded/failed/expired terminal attempt states are not resurrected by late success. A late paid event records money without reviving a cancelled/refunded/fulfilled order.
 

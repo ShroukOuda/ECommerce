@@ -12,8 +12,7 @@ Phase 0 remediation is review-ready, not approved for live payments or deploymen
 git clone https://github.com/ShroukOuda/ECommerce.git
 cd ECommerce
 docker compose -f docker/docker-compose.yml up --build
-# Liveness: http://localhost:8080/api/v1/health
-# Base compose uses Production, Swagger is disabled. Database preparation is owner-managed.
+# API available at http://localhost:8080/swagger
 ```
 
 ## Tech Stack

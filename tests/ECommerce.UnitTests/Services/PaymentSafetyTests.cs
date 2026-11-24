@@ -153,10 +153,12 @@ public partial class PaymentServiceTests
         order.OrderStatus = OrderStatus.Cancelled;
         await _paymentService.HandleStripeWebhookAsync("payload", "signature");
         var paidAt = payment.PaidAt;
+        _orderRepositoryMock.Invocations.Clear();
         evt.EventId = "evt_second_success";
         await _paymentService.HandleStripeWebhookAsync("payload", "signature");
         _stripeEventRepositoryMock.Verify(x => x.AddAsync(It.Is<StripeWebhookEvent>(e =>
-            e.EventId == "evt_second_success" && e.ProcessingResult == "ManualReviewRequired"), It.IsAny<CancellationToken>()), Times.Once);
+            e.EventId == "evt_second_success" && e.ProcessingResult == "Ignored"), It.IsAny<CancellationToken>()), Times.Once);
+        _orderRepositoryMock.Verify(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
         evt.EventId = "evt_late_failure";
         evt.EventType = "checkout.session.async_payment_failed";
         evt.PaymentStatus = "unpaid";

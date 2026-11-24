@@ -814,4 +814,53 @@ public class OrderServiceTests
         variant.StockQuantity.Should().Be(10);
         _unitOfWorkMock.Verify(u => u.GetRepository<ProductVariant, Guid>().Update(variant), Times.Once);
     }
+
+    [Theory]
+    [InlineData(OrderStatus.Pending)]
+    [InlineData(OrderStatus.Confirmed)]
+    [InlineData(OrderStatus.Processing)]
+    [InlineData(OrderStatus.OnHold)]
+    public async Task AdminCancel_WhenAnyAttemptPaid_RequiresReviewBeforeAnyMutation(OrderStatus status)
+    {
+        var variant = DefaultVariant();
+        variant.StockQuantity = 8;
+        var order = new Order
+        {
+            Id = TestGuid.FromInt(1), OrderStatus = status,
+            OrderItems = new List<OrderItem> { new() { ProductVariantId = variant.Id, Quantity = 2 } },
+            Payments = new List<ECommerce.Domain.Entities.Payments.Payment>
+            {
+                new() { Status = ECommerce.Domain.Enums.Payment.PaymentStatus.Paid },
+                new() { Status = ECommerce.Domain.Enums.Payment.PaymentStatus.Failed, UpdatedAt = DateTime.UtcNow }
+            }
+        };
+        _unitOfWorkMock.Setup(u => u.GetRepository<Order, Guid>().GetFirstOrDefaultAsync(It.IsAny<OrderDetailsSpecification>()))
+            .ReturnsAsync(order);
+
+        // Retrying cannot cancel, restock, mutate payment or create history.
+        for (var attempt = 0; attempt < 2; attempt++)
+        {
+            var act = () => _orderService.UpdateOrderStatusAsync(order.Id, new() { OrderStatus = "Cancelled" });
+            await act.Should().ThrowAsync<ECommerce.Domain.Exceptions.ConflictException>().WithMessage("*manual review*");
+        }
+        order.OrderStatus.Should().Be(status);
+        order.OrderStatusHistories.Should().BeEmpty();
+        variant.StockQuantity.Should().Be(8);
+        order.Payments.First().Status.Should().Be(ECommerce.Domain.Enums.Payment.PaymentStatus.Paid);
+        _unitOfWorkMock.Verify(u => u.GetRepository<ProductVariant, Guid>(), Times.Never);
+        _unitOfWorkMock.Verify(u => u.GetRepository<Order, Guid>().Update(It.IsAny<Order>()), Times.Never);
+        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(), Times.Never);
+    }
+
+    [Fact]
+    public async Task AdminCancel_AlreadyCancelledPaidOrder_RemainsNoOp()
+    {
+        var order = new Order { Id = TestGuid.FromInt(1), OrderStatus = OrderStatus.Cancelled,
+            Payments = new List<ECommerce.Domain.Entities.Payments.Payment> { new() { Status = ECommerce.Domain.Enums.Payment.PaymentStatus.Paid } } };
+        _unitOfWorkMock.Setup(u => u.GetRepository<Order, Guid>().GetFirstOrDefaultAsync(It.IsAny<OrderDetailsSpecification>())).ReturnsAsync(order);
+        await _orderService.UpdateOrderStatusAsync(order.Id, new() { OrderStatus = "Cancelled" });
+        order.OrderStatusHistories.Should().BeEmpty();
+        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(), Times.Never);
+        _unitOfWorkMock.Verify(u => u.GetRepository<ProductVariant, Guid>(), Times.Never);
+    }
 }

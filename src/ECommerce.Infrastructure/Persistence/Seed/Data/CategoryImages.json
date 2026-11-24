@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "6ebf3467-83ce-5a1c-bac7-a7d3f1b44404",
+    "CategoryId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "ImageUrl": "/images/seed/laptops.svg",
+    "AltText": "Laptops demo illustration",
+    "SubType": "Thumbnail",
+    "IsMain": true
+  },
+  {
+    "Id": "7f2488f5-166d-525a-afa3-e078d1356274",
+    "CategoryId": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+    "ImageUrl": "/images/seed/smartphones.svg",
+    "AltText": "Smartphones demo illustration",
+    "SubType": "Thumbnail",
+    "IsMain": true
+  },
+  {
+    "Id": "03472446-9699-5a8f-9019-895625e05db6",
+    "CategoryId": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+    "ImageUrl": "/images/seed/tablets.svg",
+    "AltText": "Tablets demo illustration",
+    "SubType": "Thumbnail",
+    "IsMain": true
+  },
+  {
+    "Id": "52ef2ffd-d9d7-509d-8ac5-713b7a6e2af6",
+    "CategoryId": "dddddddd-dddd-dddd-dddd-dddddddddddd",
+    "ImageUrl": "/images/seed/accessories.svg",
+    "AltText": "Accessories demo illustration",
+    "SubType": "Thumbnail",
+    "IsMain": true
+  },
+  {
+    "Id": "11737ca8-2176-5160-b962-6bfe7fbc537c",
+    "CategoryId": "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+    "ImageUrl": "/images/seed/monitors.svg",
+    "AltText": "Monitors demo illustration",
+    "SubType": "Thumbnail",
+    "IsMain": true
+  }
+]

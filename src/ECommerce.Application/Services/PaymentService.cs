@@ -175,11 +175,21 @@ public class PaymentService : IPaymentService
 
         ValidateFinancialEvent(payment, stripeEvent);
         var now = DateTime.UtcNow;
-        var nextStatus = ResolveNextStatus(payment, stripeEvent);
+        // Cancellation is a fulfillment decision, not proof that no money arrived.
+        // Read the order for verified success, including a late success after local expiry/failure.
+        var confirmedSuccess = (stripeEvent.EventType is "checkout.session.completed" or "checkout.session.async_payment_succeeded")
+            && IsConfirmedPayment(stripeEvent);
+        var order = confirmedSuccess && payment.Status != PaymentStatus.Refunded
+            ? await _unitOfWork.GetRepository<Order, Guid>().GetByIdAsync(payment.OrderId, cancellationToken)
+            : null;
+        var cancelledOrder = order?.OrderStatus == OrderStatus.Cancelled;
+        var nextStatus = ResolveNextStatus(payment, stripeEvent, cancelledOrder);
+        var manualReview = cancelledOrder && confirmedSuccess
+            && (nextStatus == PaymentStatus.Paid || payment.Status == PaymentStatus.Paid);
 
         if (nextStatus is null)
         {
-            await RecordStripeEventAsync(stripeEvent, payment, "Ignored", null, now, cancellationToken);
+            await RecordStripeEventAsync(stripeEvent, payment, manualReview ? "ManualReviewRequired" : "Ignored", null, now, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return;
         }
@@ -188,10 +198,10 @@ public class PaymentService : IPaymentService
 
         if (nextStatus == PaymentStatus.Paid)
         {
-            await ConfirmOrderIfNeededAsync(payment.OrderId, now, cancellationToken);
+            ConfirmOrderIfNeeded(order, now);
         }
 
-        await RecordStripeEventAsync(stripeEvent, payment, "Processed", null, now, cancellationToken);
+        await RecordStripeEventAsync(stripeEvent, payment, manualReview ? "ManualReviewRequired" : "Processed", null, now, cancellationToken);
 
         try
         {
@@ -354,12 +364,17 @@ public class PaymentService : IPaymentService
         return null;
     }
 
-    private static PaymentStatus? ResolveNextStatus(Payment payment, StripeWebhookEventDTO stripeEvent)
+    private static PaymentStatus? ResolveNextStatus(Payment payment, StripeWebhookEventDTO stripeEvent, bool cancelledOrder)
     {
         if (payment.Status is PaymentStatus.Paid or PaymentStatus.Refunded)
         {
             return null;
         }
+
+        if (cancelledOrder && (payment.Status is PaymentStatus.Failed or PaymentStatus.Expired)
+            && (stripeEvent.EventType is "checkout.session.completed" or "checkout.session.async_payment_succeeded")
+            && IsConfirmedPayment(stripeEvent))
+            return PaymentStatus.Paid;
 
         return stripeEvent.EventType switch
         {
@@ -406,20 +421,14 @@ public class PaymentService : IPaymentService
         _unitOfWork.GetRepository<Payment, Guid>().Update(payment);
     }
 
-    private async Task ConfirmOrderIfNeededAsync(Guid orderId, DateTime now, CancellationToken cancellationToken)
+    private void ConfirmOrderIfNeeded(Order? order, DateTime now)
     {
-        var order = await _unitOfWork.GetRepository<Order, Guid>().GetByIdAsync(orderId, cancellationToken);
         if (order is null)
         {
             return;
         }
 
         if (order.OrderStatus != OrderStatus.Pending)
-        {
-            return;
-        }
-
-        if (order.OrderStatus is OrderStatus.Cancelled or OrderStatus.Refunded)
         {
             return;
         }

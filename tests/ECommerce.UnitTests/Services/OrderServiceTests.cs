@@ -875,4 +875,37 @@ public class OrderServiceTests
         _unitOfWorkMock.Verify(u => u.SaveChangesAsync(), Times.Never);
         _unitOfWorkMock.Verify(u => u.GetRepository<ProductVariant, Guid>(), Times.Never);
     }
+
+    [Theory]
+    [InlineData(false, 5)]
+    [InlineData(true, 5)]
+    [InlineData(false, 1)]
+    public async Task SimpleProduct_ReservesProductStock_OrRejectsUnsafeOmission(bool hasVariants, int stock)
+    {
+        var dto = DefaultCreateDto();
+        var cart = DefaultCart(); cart.CartItems.First().VariantId = null;
+        var product = DefaultProduct(); product.StockQuantity = stock;
+        _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>())).ReturnsAsync(new ValidationResult());
+        _unitOfWorkMock.Setup(u => u.GetRepository<Cart, Guid>().GetFirstOrDefaultAsync(It.IsAny<CartDetailsSpecification>())).ReturnsAsync(cart);
+        _unitOfWorkMock.Setup(u => u.GetRepository<Product, Guid>().GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync(product);
+        _unitOfWorkMock.Setup(u => u.GetRepository<ProductVariant, Guid>().ExistsAsync(It.IsAny<ProductVariantsByProductSpecification>())).ReturnsAsync(hasVariants);
+        Order? captured = null;
+        _unitOfWorkMock.Setup(u => u.GetRepository<Order, Guid>().AddAsync(It.IsAny<Order>())).Callback<Order>(o => captured = o).Returns(Task.CompletedTask);
+        if (hasVariants || stock < 2)
+        {
+            await FluentActions.Invoking(() => _orderService.CreateOrderAsync("user1", dto)).Should().ThrowAsync<Exception>();
+            _unitOfWorkMock.Verify(u => u.SaveChangesAsync(), Times.Never);
+        }
+        else
+        {
+            await _orderService.CreateOrderAsync("user1", dto);
+            captured!.OrderItems.Should().ContainSingle().Which.ProductVariantId.Should().BeNull();
+            product.StockQuantity.Should().Be(3);
+            _unitOfWorkMock.Verify(u => u.GetRepository<Product, Guid>().Update(product), Times.Once);
+            // Cancel must restore the original product stock even if variants are added later.
+            _unitOfWorkMock.Setup(u => u.GetRepository<Order, Guid>().GetFirstOrDefaultAsync(It.IsAny<OrderByUserSpecification>())).ReturnsAsync(captured);
+            await _orderService.CancelOrderAsync(captured.Id, "user1");
+            product.StockQuantity.Should().Be(5);
+        }
+    }
 }

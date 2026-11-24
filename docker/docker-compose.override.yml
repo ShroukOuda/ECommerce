@@ -4,6 +4,7 @@ services:
       target: development
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
+      AUTO_MIGRATE: "true"
       DataInitialization__Enabled: "false"
       Logging__LogLevel__Default: "Debug"
       Logging__LogLevel__Microsoft.AspNetCore: "Warning"

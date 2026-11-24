@@ -4,7 +4,7 @@
 
 ## Review status
 
-Phase 0 remediation is review-ready, not approved for live payments or deployment. See [the resolution matrix](docs/PHASE0-REMEDIATION.md) for remaining SQL concurrency, reconciliation, inventory policy and owner-managed schema gates. No migrations are created or applied by startup. Existing migration files and snapshot are unchanged.
+Phase 0 remediation is review-ready, not approved for live payments or deployment. See [the resolution matrix](docs/PHASE0-REMEDIATION.md) for remaining SQL concurrency, reconciliation, inventory policy and owner-managed schema gates. The owner generates migrations locally. Per her clarification, startup again applies existing pending migrations when AUTO_MIGRATE=true or the environment is Development. No API/Docker startup or database update was executed during this remediation. Existing migration files and snapshot are unchanged.
 
 ## Quick Start
 

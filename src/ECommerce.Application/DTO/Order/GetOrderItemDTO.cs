@@ -10,6 +10,6 @@ public class GetOrderItemDTO
     public decimal UnitPrice { get; set; }
     public decimal TotalPrice { get; set; }
     public Guid ProductId { get; set; }
-    public Guid ProductVariantId { get; set; }
+    public Guid? ProductVariantId { get; set; }
     public List<GetOrderItemOptionDTO> Options { get; set; } = new();
 }

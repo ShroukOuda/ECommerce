@@ -578,9 +578,6 @@ namespace ECommerce.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("CategoryId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("CategoryId1")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -606,8 +603,6 @@ namespace ECommerce.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
-
-                    b.HasIndex("CategoryId1");
 
                     b.HasIndex("UserId", "CategoryId")
                         .IsUnique();
@@ -2569,14 +2564,10 @@ namespace ECommerce.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("ECommerce.Domain.Entities.Notifications.CategorySubscription", b =>
                 {
                     b.HasOne("ECommerce.Domain.Entities.Categories.Category", "Category")
-                        .WithMany()
+                        .WithMany("CategorySubscriptions")
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("ECommerce.Domain.Entities.Categories.Category", null)
-                        .WithMany("CategorySubscriptions")
-                        .HasForeignKey("CategoryId1");
 
                     b.HasOne("ECommerce.Domain.Entities.Users.User", "User")
                         .WithMany("CategorySubscriptions")

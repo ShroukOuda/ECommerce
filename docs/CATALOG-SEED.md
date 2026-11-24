@@ -17,7 +17,7 @@ Do not start with seed enabled against the old schema. Startup auto-applies exis
 
 Existing fixed IDs for 5 brands, 5 categories and 12 products are preserved. There are 16 active variants across the first 8 products and 4 simple products without variants (Magic Mouse, Galaxy Buds, ThinkVision Monitor and ProArt Monitor). Demo prices/specifications are fixtures, not current offers. Synthetic sales/review counters are zero for fresh rows.
 
-JSON files live under Infrastructure/Persistence/Seed/Data. ProductImages, CategoryImages and BrandLogos use root-relative `/images/seed/...svg` paths. Files live under API/wwwroot/images/seed, not remote image hosts. With the user's current origin, for example, open `http://localhost:5000/images/seed/laptops.svg`. `wwwroot` itself is not in the served URL.
+JSON files live under Infrastructure/Persistence/Seed/Data. ProductImages, CategoryImages and BrandLogos use root-relative `/Images/seed/...svg` paths. Files live under API/wwwroot/Images/seed, not remote image hosts. With the user's current origin, for example, open `http://localhost:5000/Images/seed/laptops.svg`. `wwwroot` itself is not in the served URL.
 
 The SVG files are original generic demo illustrations, not photographs of branded models or official brand logos. Alt text labels this. The product image table has one main image per product after the migration.
 
@@ -38,3 +38,5 @@ The seed adds missing IDs rather than skipping whole nonempty tables. Repeating 
 - Existing carts/orders retain their stored IDs. If variants are added after a simple item enters a cart, checkout rejects omitted selection and asks for a variant. Cancelling a previously placed simple order still restocks the original product, not a later variant.
 
 These tests cover ordinary single-process behavior and InMemory models, not production SQL race safety. SQL concurrency and provider end-to-end payment checks remain release gates.
+
+Image path case follows the actual `wwwroot/Images/seed` folder. This JSON correction does not rewrite previously seeded image rows: the seeder still inserts missing IDs only. If a database already holds `/images/seed/...` URLs, review a separate targeted correction rather than rerunning seed expecting it to overwrite them. No migration is needed for this URL-only correction.

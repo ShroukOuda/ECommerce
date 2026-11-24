@@ -114,6 +114,88 @@ public partial class PaymentServiceTests
         _paymentRepositoryMock.Verify(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    [Theory]
+    [InlineData("checkout.session.completed", PaymentStatus.Pending)]
+    [InlineData("checkout.session.completed", PaymentStatus.Processing)]
+    [InlineData("checkout.session.completed", PaymentStatus.Failed)]
+    [InlineData("checkout.session.completed", PaymentStatus.Expired)]
+    [InlineData("checkout.session.async_payment_succeeded", PaymentStatus.Pending)]
+    [InlineData("checkout.session.async_payment_succeeded", PaymentStatus.Processing)]
+    [InlineData("checkout.session.async_payment_succeeded", PaymentStatus.Failed)]
+    [InlineData("checkout.session.async_payment_succeeded", PaymentStatus.Expired)]
+    public async Task CancelledOrder_VerifiedLateMoney_IsPaidAndDurablyFlagged(string type, PaymentStatus previous)
+    {
+        var (payment, order, _) = ArrangeWebhook(type);
+        order.OrderStatus = OrderStatus.Cancelled;
+        payment.Status = previous;
+        var records = new List<StripeWebhookEvent>();
+        _stripeEventRepositoryMock.Setup(x => x.AddAsync(It.IsAny<StripeWebhookEvent>(), It.IsAny<CancellationToken>()))
+            .Callback<StripeWebhookEvent, CancellationToken>((e, _) => records.Add(e)).Returns(Task.CompletedTask);
+
+        await _paymentService.HandleStripeWebhookAsync("payload", "signature");
+
+        payment.Status.Should().Be(PaymentStatus.Paid);
+        payment.PaidAt.Should().NotBeNull();
+        payment.AmountInMinorUnits.Should().Be(1234);
+        order.OrderStatus.Should().Be(OrderStatus.Cancelled);
+        order.OrderStatusHistories.Should().BeEmpty();
+        _orderRepositoryMock.Verify(x => x.Update(It.IsAny<Order>()), Times.Never);
+        records.Should().ContainSingle(e => e.ProcessingResult == "ManualReviewRequired" && e.PaymentId == payment.Id);
+        _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _paymentGatewayMock.Verify(x => x.ParseWebhookEvent("payload", "signature"), Times.Once);
+        _paymentGatewayMock.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task CancelledOrder_RepeatAndFailureAfterPaid_KeepReviewAndFinancialTruth()
+    {
+        var (payment, order, evt) = ArrangeWebhook("checkout.session.completed");
+        order.OrderStatus = OrderStatus.Cancelled;
+        await _paymentService.HandleStripeWebhookAsync("payload", "signature");
+        var paidAt = payment.PaidAt;
+        evt.EventId = "evt_second_success";
+        await _paymentService.HandleStripeWebhookAsync("payload", "signature");
+        _stripeEventRepositoryMock.Verify(x => x.AddAsync(It.Is<StripeWebhookEvent>(e =>
+            e.EventId == "evt_second_success" && e.ProcessingResult == "ManualReviewRequired"), It.IsAny<CancellationToken>()), Times.Once);
+        evt.EventId = "evt_late_failure";
+        evt.EventType = "checkout.session.async_payment_failed";
+        evt.PaymentStatus = "unpaid";
+        await _paymentService.HandleStripeWebhookAsync("payload", "signature");
+        payment.Status.Should().Be(PaymentStatus.Paid);
+        payment.PaidAt.Should().Be(paidAt);
+        order.OrderStatus.Should().Be(OrderStatus.Cancelled);
+        order.OrderStatusHistories.Should().BeEmpty();
+    }
+
+    [Theory]
+    [InlineData("unpaid", PaymentStatus.Pending)]
+    [InlineData("paid", PaymentStatus.Refunded)]
+    public async Task CancelledOrder_WithoutEligiblePaidEvidence_DoesNotFlagReview(string evidence, PaymentStatus previous)
+    {
+        var (payment, order, _) = ArrangeWebhook("checkout.session.completed", evidence);
+        order.OrderStatus = OrderStatus.Cancelled;
+        payment.Status = previous;
+        await _paymentService.HandleStripeWebhookAsync("payload", "signature");
+        _stripeEventRepositoryMock.Verify(x => x.AddAsync(It.Is<StripeWebhookEvent>(e =>
+            e.ProcessingResult == "ManualReviewRequired"), It.IsAny<CancellationToken>()), Times.Never);
+        payment.Status.Should().Be(previous == PaymentStatus.Pending ? PaymentStatus.Processing : previous);
+        order.OrderStatus.Should().Be(OrderStatus.Cancelled);
+    }
+
+    [Fact]
+    public async Task CancelledOrder_MismatchedLateSuccess_DoesNotMarkPaidOrReview()
+    {
+        var (payment, order, evt) = ArrangeWebhook("checkout.session.async_payment_succeeded");
+        order.OrderStatus = OrderStatus.Cancelled;
+        payment.Status = PaymentStatus.Expired;
+        evt.AmountTotal++;
+        await FluentActions.Awaiting(() => _paymentService.HandleStripeWebhookAsync("payload", "signature"))
+            .Should().ThrowAsync<BadRequestException>();
+        payment.Status.Should().Be(PaymentStatus.Expired);
+        _stripeEventRepositoryMock.Verify(x => x.AddAsync(It.IsAny<StripeWebhookEvent>(), It.IsAny<CancellationToken>()), Times.Never);
+        _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     private Order ArrangeCheckout(Payment? existing = null)
     {
         var order = new Order { Id = existing?.OrderId ?? Guid.NewGuid(), UserId = "owner", Currency = "USD", TotalAmount = 12.34m, OrderStatus = OrderStatus.Pending };

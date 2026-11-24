@@ -93,6 +93,15 @@ public class Program
 
            
         
+        // Apply existing migrations on startup using the original owner-approved behavior.
+        if (builder.Configuration.GetValue<bool>("AUTO_MIGRATE", false) ||
+            app.Environment.IsDevelopment())
+        {
+            using var scope = app.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            db.Database.Migrate();
+        }
+
         if (builder.Configuration.GetValue<bool>("DataInitialization:Enabled", false))
         using (var scope = app.Services.CreateScope())
         {

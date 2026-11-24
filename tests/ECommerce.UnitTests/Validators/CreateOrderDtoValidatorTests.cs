@@ -36,15 +36,16 @@ public class CreateOrderDtoValidatorTests
     }
 
     [Fact]
-    public async Task Validate_WithEmptyCurrency_ShouldFail()
+    public async Task Validate_WithEmptyCurrency_ShouldPassBecauseCurrencyIsServerOwned()
     {
         var dto = new CreateOrderDTO
         {
 
+            CartId = TestGuid.FromInt(100),
             Currency = "",
             Items = new List<CreateOrderItemDTO> { new() { ProductId = TestGuid.FromInt(1), Quantity = 2 } }
         };
         var result = await _validator.ValidateAsync(dto);
-        result.IsValid.Should().BeFalse();
+        result.IsValid.Should().BeTrue();
     }
 }

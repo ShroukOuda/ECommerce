@@ -14,11 +14,11 @@ public class OrderItem : BaseEntity<Guid>
     //FK
     public Guid OrderId { get; set; }
     public Guid ProductId { get; set; }
-    public Guid ProductVariantId { get; set; }
+    public Guid? ProductVariantId { get; set; }
     
     //Navigation Properties
     public  Order Order { get; set; } = null!;
     public  Product Product { get; set; } = null!;
-    public  ProductVariant ProductVariant { get; set; } = null!;
+    public ProductVariant? ProductVariant { get; set; }
     public  ICollection<OrderItemOption> OrderItemOptions { get; set; } = new List<OrderItemOption>();
 }

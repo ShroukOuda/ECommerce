@@ -18,11 +18,11 @@ public class CreateInventoryHistoryDtoValidatorTests
     }
 
     [Fact]
-    public async Task Validate_WithoutProductVariantId_ShouldFail()
+    public async Task Validate_WithoutProductVariantId_ShouldPassForSimpleProduct()
     {
         var dto = new CreateInventoryHistoryDTO { QuantityChange = -3, ChangeType = InventoryChangeType.Adjustment };
         var result = await _validator.ValidateAsync(dto);
-        result.IsValid.Should().BeFalse();
+        result.IsValid.Should().BeTrue();
     }
 
     [Fact]

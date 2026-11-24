@@ -56,21 +56,20 @@ public class CartService : ICartService
             throw new ArgumentException(
                 $"Product {dto.ProductId} is not available.");
 
-        var variant = await _unitOfWork
-            .GetRepository<ProductVariant, Guid>()
-            .GetFirstOrDefaultAsync(
-                new ProductVariantSpecification(dto.VariantId));
-
-        if (variant is null ||
-            variant.ProductId != product.Id ||
-            variant.Status != ProductVariantStatus.Active)
-            throw new ArgumentException(
-                $"Product variant {dto.VariantId} is not available for product {product.Id}.");
+        ProductVariant? variant = null;
+        if (dto.VariantId.HasValue)
+        {
+            variant = await _unitOfWork.GetRepository<ProductVariant, Guid>()
+                .GetFirstOrDefaultAsync(new ProductVariantSpecification(dto.VariantId.Value));
+            if (variant is null || variant.ProductId != product.Id || variant.Status != ProductVariantStatus.Active)
+                throw new ArgumentException("Choose an active variant belonging to this product.");
+        }
+        else if (await _unitOfWork.GetRepository<ProductVariant, Guid>()
+            .ExistsAsync(new ProductVariantsByProductSpecification(product.Id)))
+            throw new BadRequestException("This product has variants. Choose a variant.");
 
         var item = _mapper.Map<CartItem>(dto);
-        item.Price =
-            (product.IsOnSale ? product.SalePrice : product.BasePrice)
-            + variant.PriceAdjustment;
+        item.Price = (product.IsOnSale ? product.SalePrice : product.BasePrice) + (variant?.PriceAdjustment ?? 0m);
 
         await _unitOfWork.GetRepository<CartItem, Guid>().AddAsync(item);
         await _unitOfWork.SaveChangesAsync();

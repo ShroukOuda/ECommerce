@@ -1,0 +1,178 @@
+[
+  {
+    "Id": "a9b3f51c-c984-51f8-9b50-c8317ba750c3",
+    "ProductId": "10000000-0000-0000-0000-000000000001",
+    "Sku": "APL-MBA-M3-001-1",
+    "VariantName": "Silver",
+    "Color": "Silver",
+    "PriceAdjustment": 0,
+    "StockQuantity": 12,
+    "Status": "Active",
+    "StockStatus": "InStock"
+  },
+  {
+    "Id": "8044d156-d722-5ff8-bd1e-e0c049339573",
+    "ProductId": "10000000-0000-0000-0000-000000000001",
+    "Sku": "APL-MBA-M3-001-2",
+    "VariantName": "Black",
+    "Color": "Black",
+    "PriceAdjustment": 20,
+    "StockQuantity": 12,
+    "Status": "Active",
+    "StockStatus": "InStock"
+  },
+  {
+    "Id": "ac4ba44a-e9a8-56e4-8b74-911731ea041e",
+    "ProductId": "10000000-0000-0000-0000-000000000002",
+    "Sku": "SAM-GS25-001-1",
+    "VariantName": "Silver",
+    "Color": "Silver",
+    "PriceAdjustment": 0,
+    "StockQuantity": 12,
+    "Status": "Active",
+    "StockStatus": "InStock"
+  },
+  {
+    "Id": "253429ed-6002-53a0-84ce-925ff2739750",
+    "ProductId": "10000000-0000-0000-0000-000000000002",
+    "Sku": "SAM-GS25-001-2",
+    "VariantName": "Black",
+    "Color": "Black",
+    "PriceAdjustment": 20,
+    "StockQuantity": 12,
+    "Status": "Active",
+    "StockStatus": "InStock"
+  },
+  {
+    "Id": "96504cd8-caa2-5ddc-941f-d93fc629579f",
+    "ProductId": "10000000-0000-0000-0000-000000000003",
+    "Sku": "MS-SL-001-1",
+    "VariantName": "Silver",
+    "Color": "Silver",
+    "PriceAdjustment": 0,
+    "StockQuantity": 12,
+    "Status": "Active",
+    "StockStatus": "InStock"
+  },
+  {
+    "Id": "802e9b22-ad09-5527-bc61-4c124713b2f3",
+    "ProductId": "10000000-0000-0000-0000-000000000003",
+    "Sku": "MS-SL-001-2",
+    "VariantName": "Black",
+    "Color": "Black",
+    "PriceAdjustment": 20,
+    "StockQuantity": 12,
+    "Status": "Active",
+    "StockStatus": "InStock"
+  },
+  {
+    "Id": "1f2e584f-876e-535a-9b76-2819d20a7e22",
+    "ProductId": "10000000-0000-0000-0000-000000000004",
+    "Sku": "LEN-X1C-001-1",
+    "VariantName": "Silver",
+    "Color": "Silver",
+    "PriceAdjustment": 0,
+    "StockQuantity": 12,
+    "Status": "Active",
+    "StockStatus": "InStock"
+  },
+  {
+    "Id": "b01f36d6-b585-5695-b4da-de54d12ab695",
+    "ProductId": "10000000-0000-0000-0000-000000000004",
+    "Sku": "LEN-X1C-001-2",
+    "VariantName": "Black",
+    "Color": "Black",
+    "PriceAdjustment": 20,
+    "StockQuantity": 12,
+    "Status": "Active",
+    "StockStatus": "InStock"
+  },
+  {
+    "Id": "50d9feca-ab29-51dc-9742-b2bf9e38238a",
+    "ProductId": "10000000-0000-0000-0000-000000000005",
+    "Sku": "ASUS-ROG-001-1",
+    "VariantName": "Silver",
+    "Color": "Silver",
+    "PriceAdjustment": 0,
+    "StockQuantity": 12,
+    "Status": "Active",
+    "StockStatus": "InStock"
+  },
+  {
+    "Id": "6f9e45db-f1d2-5091-bf32-faf5a17df85e",
+    "ProductId": "10000000-0000-0000-0000-000000000005",
+    "Sku": "ASUS-ROG-001-2",
+    "VariantName": "Black",
+    "Color": "Black",
+    "PriceAdjustment": 20,
+    "StockQuantity": 12,
+    "Status": "Active",
+    "StockStatus": "InStock"
+  },
+  {
+    "Id": "a851f1b2-2859-5cf2-88b5-6e0a41fdfed5",
+    "ProductId": "10000000-0000-0000-0000-000000000006",
+    "Sku": "APL-IPAD-AIR-001-1",
+    "VariantName": "Silver",
+    "Color": "Silver",
+    "PriceAdjustment": 0,
+    "StockQuantity": 12,
+    "Status": "Active",
+    "StockStatus": "InStock"
+  },
+  {
+    "Id": "e3e604a0-2f02-5e71-b4e1-d27081f28945",
+    "ProductId": "10000000-0000-0000-0000-000000000006",
+    "Sku": "APL-IPAD-AIR-001-2",
+    "VariantName": "Black",
+    "Color": "Black",
+    "PriceAdjustment": 20,
+    "StockQuantity": 12,
+    "Status": "Active",
+    "StockStatus": "InStock"
+  },
+  {
+    "Id": "365bfdf3-0219-5d95-be60-bb2d9691d2da",
+    "ProductId": "10000000-0000-0000-0000-000000000007",
+    "Sku": "SAM-TABS10-001-1",
+    "VariantName": "Silver",
+    "Color": "Silver",
+    "PriceAdjustment": 0,
+    "StockQuantity": 12,
+    "Status": "Active",
+    "StockStatus": "InStock"
+  },
+  {
+    "Id": "d958c3e2-078f-5b86-ba90-b898127858b9",
+    "ProductId": "10000000-0000-0000-0000-000000000007",
+    "Sku": "SAM-TABS10-001-2",
+    "VariantName": "Black",
+    "Color": "Black",
+    "PriceAdjustment": 20,
+    "StockQuantity": 12,
+    "Status": "Active",
+    "StockStatus": "InStock"
+  },
+  {
+    "Id": "0d834057-b1d1-5fe3-9101-ea7dad55ffea",
+    "ProductId": "10000000-0000-0000-0000-000000000008",
+    "Sku": "MS-SP-001-1",
+    "VariantName": "Silver",
+    "Color": "Silver",
+    "PriceAdjustment": 0,
+    "StockQuantity": 12,
+    "Status": "Active",
+    "StockStatus": "InStock"
+  },
+  {
+    "Id": "292c82ee-e9d0-5712-add1-a75362f717e7",
+    "ProductId": "10000000-0000-0000-0000-000000000008",
+    "Sku": "MS-SP-001-2",
+    "VariantName": "Black",
+    "Color": "Black",
+    "PriceAdjustment": 20,
+    "StockQuantity": 12,
+    "Status": "Active",
+    "StockStatus": "InStock"
+  }
+]

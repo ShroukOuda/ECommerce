@@ -10,11 +10,11 @@ public class CartItem : BaseEntity<Guid>
     //FK
     public Guid CartId { get; set; }
     public Guid ProductId { get; set; }
-    public Guid VariantId { get; set; }
+    public Guid? VariantId { get; set; }
     
     //Navigation Properties
     public  Cart Cart { get; set; } = null!;
     public  Product Product { get; set; } = null!;
-    public  ProductVariant ProductVariant { get; set; } = null!;
+    public ProductVariant? ProductVariant { get; set; }
     public  ICollection<CartItemOption> CartItemOptions { get; set; } = new List<CartItemOption>();
 }

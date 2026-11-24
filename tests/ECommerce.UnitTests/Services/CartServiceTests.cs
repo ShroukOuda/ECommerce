@@ -258,4 +258,26 @@ public class CartServiceTests
 
         _unitOfWorkMock.Verify(u => u.GetRepository<CartItem, Guid>().DeleteRange(It.IsAny<IEnumerable<CartItem>>()), Times.Never);
     }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task AddWithoutVariant_UsesProductOnlyWhenNoVariantsExist(bool hasVariants)
+    {
+        var dto = new AddCartItemDTO { CartId = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 1 };
+        _addItemValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>())).ReturnsAsync(new ValidationResult());
+        _unitOfWorkMock.Setup(u => u.GetRepository<Product, Guid>().GetByIdAsync(dto.ProductId)).ReturnsAsync(new Product { Id = dto.ProductId, BasePrice = 17m, Status = ProductStatus.Published });
+        _unitOfWorkMock.Setup(u => u.GetRepository<ProductVariant, Guid>().ExistsAsync(It.IsAny<ProductVariantsByProductSpecification>())).ReturnsAsync(hasVariants);
+        var item = new CartItem();
+        _mapperMock.Setup(m => m.Map<CartItem>(dto)).Returns(item);
+        _unitOfWorkMock.Setup(u => u.GetRepository<CartItem, Guid>().AddAsync(item)).Returns(Task.CompletedTask);
+        if (hasVariants)
+            await FluentActions.Invoking(() => _cartService.AddCartItemAsync(dto, "user1")).Should().ThrowAsync<ECommerce.Domain.Exceptions.BadRequestException>();
+        else
+        {
+            await _cartService.AddCartItemAsync(dto, "user1");
+            item.Price.Should().Be(17m);
+            _unitOfWorkMock.Verify(u => u.GetRepository<CartItem, Guid>().AddAsync(item), Times.Once);
+        }
+    }
 }

@@ -1,0 +1,110 @@
+[
+  {
+    "Id": "d216cb16-3c0f-5914-b57e-d8f400a36453",
+    "ProductId": "10000000-0000-0000-0000-000000000001",
+    "ImageUrl": "/images/seed/laptops.svg",
+    "AltText": "Demo illustration: MacBook Air M3 (not a product photograph)",
+    "IsMain": true,
+    "SortOrder": 0,
+    "UploadedAt": "2026-11-24T00:00:00Z"
+  },
+  {
+    "Id": "d41a56ed-d8b8-571e-a098-b8cef2b97352",
+    "ProductId": "10000000-0000-0000-0000-000000000002",
+    "ImageUrl": "/images/seed/smartphones.svg",
+    "AltText": "Demo illustration: Samsung Galaxy S25 (not a product photograph)",
+    "IsMain": true,
+    "SortOrder": 0,
+    "UploadedAt": "2026-11-24T00:00:00Z"
+  },
+  {
+    "Id": "2c40c18b-4b48-53d3-b954-78479bf46962",
+    "ProductId": "10000000-0000-0000-0000-000000000003",
+    "ImageUrl": "/images/seed/laptops.svg",
+    "AltText": "Demo illustration: Microsoft Surface Laptop (not a product photograph)",
+    "IsMain": true,
+    "SortOrder": 0,
+    "UploadedAt": "2026-11-24T00:00:00Z"
+  },
+  {
+    "Id": "30e3ae5a-da93-5b7d-8017-3d683c2b8283",
+    "ProductId": "10000000-0000-0000-0000-000000000004",
+    "ImageUrl": "/images/seed/laptops.svg",
+    "AltText": "Demo illustration: Lenovo ThinkPad X1 Carbon (not a product photograph)",
+    "IsMain": true,
+    "SortOrder": 0,
+    "UploadedAt": "2026-11-24T00:00:00Z"
+  },
+  {
+    "Id": "c1e374ed-fd71-58fe-9ce8-28bd7fb1ef20",
+    "ProductId": "10000000-0000-0000-0000-000000000005",
+    "ImageUrl": "/images/seed/laptops.svg",
+    "AltText": "Demo illustration: Asus ROG Gaming Laptop (not a product photograph)",
+    "IsMain": true,
+    "SortOrder": 0,
+    "UploadedAt": "2026-11-24T00:00:00Z"
+  },
+  {
+    "Id": "b5978bc8-bacb-57b1-97a7-868e7d8bb213",
+    "ProductId": "10000000-0000-0000-0000-000000000006",
+    "ImageUrl": "/images/seed/tablets.svg",
+    "AltText": "Demo illustration: iPad Air (not a product photograph)",
+    "IsMain": true,
+    "SortOrder": 0,
+    "UploadedAt": "2026-11-24T00:00:00Z"
+  },
+  {
+    "Id": "6e67b4d8-6510-5eef-97b8-16464d36ce9d",
+    "ProductId": "10000000-0000-0000-0000-000000000007",
+    "ImageUrl": "/images/seed/tablets.svg",
+    "AltText": "Demo illustration: Samsung Galaxy Tab S10 (not a product photograph)",
+    "IsMain": true,
+    "SortOrder": 0,
+    "UploadedAt": "2026-11-24T00:00:00Z"
+  },
+  {
+    "Id": "3cc99c7e-cc54-53e0-86fc-04ef01abcf33",
+    "ProductId": "10000000-0000-0000-0000-000000000008",
+    "ImageUrl": "/images/seed/tablets.svg",
+    "AltText": "Demo illustration: Microsoft Surface Pro (not a product photograph)",
+    "IsMain": true,
+    "SortOrder": 0,
+    "UploadedAt": "2026-11-24T00:00:00Z"
+  },
+  {
+    "Id": "8f903dcd-9237-57d5-8929-e795da274090",
+    "ProductId": "10000000-0000-0000-0000-000000000009",
+    "ImageUrl": "/images/seed/accessories.svg",
+    "AltText": "Demo illustration: Apple Magic Mouse (not a product photograph)",
+    "IsMain": true,
+    "SortOrder": 0,
+    "UploadedAt": "2026-11-24T00:00:00Z"
+  },
+  {
+    "Id": "85656d84-cbb7-5439-a9dd-428531f62fc7",
+    "ProductId": "10000000-0000-0000-0000-000000000010",
+    "ImageUrl": "/images/seed/accessories.svg",
+    "AltText": "Demo illustration: Samsung Galaxy Buds (not a product photograph)",
+    "IsMain": true,
+    "SortOrder": 0,
+    "UploadedAt": "2026-11-24T00:00:00Z"
+  },
+  {
+    "Id": "76e6cebb-8893-5b40-b662-0d8f2003fd6b",
+    "ProductId": "10000000-0000-0000-0000-000000000011",
+    "ImageUrl": "/images/seed/monitors.svg",
+    "AltText": "Demo illustration: Lenovo ThinkVision Monitor (not a product photograph)",
+    "IsMain": true,
+    "SortOrder": 0,
+    "UploadedAt": "2026-11-24T00:00:00Z"
+  },
+  {
+    "Id": "3dba2484-938d-5075-a2e7-0ed9bb98500c",
+    "ProductId": "10000000-0000-0000-0000-000000000012",
+    "ImageUrl": "/images/seed/monitors.svg",
+    "AltText": "Demo illustration: Asus ProArt Monitor (not a product photograph)",
+    "IsMain": true,
+    "SortOrder": 0,
+    "UploadedAt": "2026-11-24T00:00:00Z"
+  }
+]

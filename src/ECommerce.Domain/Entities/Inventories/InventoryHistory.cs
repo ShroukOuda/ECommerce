@@ -14,11 +14,11 @@ public class InventoryHistory : BaseEntity<Guid>
 
     //FK
     public Guid ProductId { get; set; }
-    public Guid ProductVariantId { get; set; }
+    public Guid? ProductVariantId { get; set; }
     public string UserId { get; set; } = null!;
     
     //Navigation Properties
     public  Product Product { get; set; } = null!;
-    public  ProductVariant ProductVariant { get; set; } = null!;
+    public ProductVariant? ProductVariant { get; set; }
     public  User User { get; set; } = null!;
 }

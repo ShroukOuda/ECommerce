@@ -71,24 +71,28 @@ public class InventoryService : IInventoryService
             throw new NotFoundException(
                 $"Product with ID {productId} was not found.");
 
-        if (!dto.ProductVariantId.HasValue || dto.ProductVariantId == Guid.Empty)
-            throw new BadRequestException("Choose a productVariantId for inventory adjustment.");
         var variantRepository = _unitOfWork.GetRepository<ProductVariant, Guid>();
-        var variant = await variantRepository.GetFirstOrDefaultAsync(new ProductVariantSpecification(dto.ProductVariantId.Value));
-        if (variant is null || variant.ProductId != productId)
-            throw new NotFoundException("The selected variant does not belong to this product.");
+        ProductVariant? variant = null;
+        if (dto.ProductVariantId.HasValue)
+        {
+            variant = await variantRepository.GetFirstOrDefaultAsync(new ProductVariantSpecification(dto.ProductVariantId.Value));
+            if (variant is null || variant.ProductId != productId)
+                throw new NotFoundException("The selected variant does not belong to this product.");
+        }
+        else if (await variantRepository.ExistsAsync(new ProductVariantsByProductSpecification(productId)))
+            throw new BadRequestException("Choose a productVariantId for a product with variants.");
         int newQuantity;
-        try { newQuantity = checked(variant.StockQuantity + dto.QuantityChange); }
+        try { newQuantity = checked((variant?.StockQuantity ?? product.StockQuantity) + dto.QuantityChange); }
         catch (OverflowException) { throw new BadRequestException("Inventory quantity is too large."); }
-        if (newQuantity < 0)
-            throw new BusinessRuleException("Inventory quantity cannot be negative.");
-        variant.StockQuantity = newQuantity;
-        variant.StockStatus = newQuantity == 0 ? ECommerce.Domain.Enums.Inventory.StockStatus.OutOfStock : ECommerce.Domain.Enums.Inventory.StockStatus.InStock;
+        if (newQuantity < 0) throw new BusinessRuleException("Inventory quantity cannot be negative.");
+        var stockStatus = newQuantity == 0 ? ECommerce.Domain.Enums.Inventory.StockStatus.OutOfStock : ECommerce.Domain.Enums.Inventory.StockStatus.InStock;
+        if (variant is not null) { variant.StockQuantity = newQuantity; variant.StockStatus = stockStatus; }
+        else { product.StockQuantity = newQuantity; product.StockStatus = stockStatus; }
 
         var history = _mapper.Map<InventoryHistory>(dto);
 
         history.ProductId = productId;
-        history.ProductVariantId = variant.Id;
+        history.ProductVariantId = variant?.Id;
         history.UserId = userId;
         history.NewQuantity = newQuantity;
 
@@ -97,7 +101,8 @@ public class InventoryService : IInventoryService
             .GetRepository<InventoryHistory, Guid>()
             .AddAsync(history);
 
-        variantRepository.Update(variant);
+        if (variant is not null) variantRepository.Update(variant);
+        else productRepository.Update(product);
 
         await _unitOfWork.SaveChangesAsync();
 

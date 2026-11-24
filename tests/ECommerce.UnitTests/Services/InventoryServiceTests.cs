@@ -136,11 +136,12 @@ public class InventoryServiceTests
     }
 
     [Fact]
-    public async Task MissingVariant_RejectsWithoutMutation()
+    public async Task MissingVariant_OnVariantProduct_RejectsWithoutMutation()
     {
         var dto = new CreateInventoryHistoryDTO { QuantityChange = 1, ChangeType = InventoryChangeType.Restock };
         _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>())).ReturnsAsync(new ValidationResult());
         _unitOfWorkMock.Setup(u => u.GetRepository<Product, Guid>().GetByIdAsync(TestGuid.FromInt(1))).ReturnsAsync(new Product());
+        _unitOfWorkMock.Setup(u => u.GetRepository<ProductVariant, Guid>().ExistsAsync(It.IsAny<ECommerce.Application.Specifications.Products.ProductVariantsByProductSpecification>())).ReturnsAsync(true);
         await FluentActions.Invoking(() => _inventoryService.AddInventoryHistoryAsync(TestGuid.FromInt(1), "user1", dto)).Should().ThrowAsync<BadRequestException>();
         _unitOfWorkMock.Verify(u => u.SaveChangesAsync(), Times.Never);
     }

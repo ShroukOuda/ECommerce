@@ -17,7 +17,7 @@ public class ProductImageConfiguration : IEntityTypeConfiguration<ProductImage>
         builder.HasIndex(pi => pi.ProductId)
             .HasDatabaseName("IX_ProductImages_ProductId");
 
-        builder.HasIndex(pi => pi.IsMain)
+        builder.HasIndex(pi => pi.ProductId, "UQ_Product_MainImage")
             .HasDatabaseName("UQ_Product_MainImage")
             .HasFilter("IsMain = 1")
             .IsUnique();

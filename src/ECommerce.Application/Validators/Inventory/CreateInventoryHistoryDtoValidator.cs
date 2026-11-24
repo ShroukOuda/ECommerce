@@ -6,6 +6,8 @@ public class CreateInventoryHistoryDtoValidator : AbstractValidator<CreateInvent
 {
     public CreateInventoryHistoryDtoValidator()
     {
-        RuleFor(x => x.ChangeType).NotEmpty();
+        RuleFor(x => x.ChangeType).NotEmpty().IsInEnum();
+        RuleFor(x => x.ProductVariantId).NotEmpty().WithMessage("Choose a product variant.");
+        RuleFor(x => x.QuantityChange).NotEqual(0);
     }
 }

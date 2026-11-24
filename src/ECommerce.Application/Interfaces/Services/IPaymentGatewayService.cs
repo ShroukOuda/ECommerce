@@ -11,5 +11,7 @@ public interface IPaymentGatewayService
         Order order,
         CancellationToken cancellationToken = default);
 
+    Task<CreateCheckoutSessionResponseDTO> GetCheckoutSessionAsync(string sessionId, CancellationToken cancellationToken = default);
+
     StripeWebhookEventDTO ParseWebhookEvent(string payload, string signatureHeader);
 }

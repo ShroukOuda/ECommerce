@@ -41,8 +41,8 @@ public class ProductOptionService : IProductOptionService
 
     public async Task<GetProductOptionDTO> AddOptionAsync(AddProductOptionDTO dto)
     {
-        var result = await _addValidator.ValidateAsync(dto);
-        if (!result.IsValid) throw new ValidationException(result.Errors);
+        var validationResult = await _addValidator.ValidateAsync(dto);
+        if (!validationResult.IsValid) throw new ValidationException(validationResult.Errors);
         var option = _mapper.Map<ProductOption>(dto);
         await _unitOfWork.GetRepository<ProductOption, Guid>().AddAsync(option);
         await _unitOfWork.SaveChangesAsync();
@@ -51,12 +51,16 @@ public class ProductOptionService : IProductOptionService
 
     public async Task<GetProductOptionDTO> UpdateOptionAsync(Guid id, UpdateProductOptionDTO dto)
     {
-        var result = await _updateValidator.ValidateAsync(dto);
-        if (!result.IsValid) throw new ValidationException(result.Errors);
+        var validationResult = await _updateValidator.ValidateAsync(dto);
+        if (!validationResult.IsValid) throw new ValidationException(validationResult.Errors);
         var spec = new ProductOptionSpecification(id);
-        bool exists = await _unitOfWork.GetRepository<ProductOption, Guid>().ExistsAsync(spec);
-        if (!exists) throw new KeyNotFoundException($"Product option with ID {id} not found.");
-        var option = _mapper.Map<ProductOption>(dto);
+        var option = await _unitOfWork.GetRepository<ProductOption, Guid>().GetFirstOrDefaultAsync(spec);
+        if (option is null) throw new KeyNotFoundException($"Product option with ID {id} not found.");
+        var originalId = option.Id;
+        var originalCreatedAt = option.CreatedAt;
+        _mapper.Map(dto, option);
+        option.Id = originalId;
+        option.CreatedAt = originalCreatedAt;
         _unitOfWork.GetRepository<ProductOption, Guid>().Update(option);
         await _unitOfWork.SaveChangesAsync();
         return _mapper.Map<GetProductOptionDTO>(option);
@@ -74,8 +78,8 @@ public class ProductOptionService : IProductOptionService
 
     public async Task<GetProductOptionValueDTO> AddOptionValueAsync(Guid optionId, AddProductOptionValueDTO dto)
     {
-        var result = await _addValueValidator.ValidateAsync(dto);
-        if (!result.IsValid) throw new ValidationException(result.Errors);
+        var validationResult = await _addValueValidator.ValidateAsync(dto);
+        if (!validationResult.IsValid) throw new ValidationException(validationResult.Errors);
 
         var spec = new ProductOptionSpecification(optionId);
         bool exists = await _unitOfWork.GetRepository<ProductOption, Guid>().ExistsAsync(spec);

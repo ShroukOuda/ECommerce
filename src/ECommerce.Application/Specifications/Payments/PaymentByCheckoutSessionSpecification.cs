@@ -8,6 +8,6 @@ public class PaymentByCheckoutSessionSpecification : BaseSpecification<Payment, 
     public PaymentByCheckoutSessionSpecification(string checkoutSessionId)
         : base(p => p.StripeCheckoutSessionId == checkoutSessionId)
     {
-        AsNoTracking();
+        // Used by mutation workflows; keep this graph tracked.
     }
 }

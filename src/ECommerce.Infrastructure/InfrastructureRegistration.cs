@@ -123,7 +123,6 @@ public static class InfrastructureRegistration
         //db context
         services.AddDbContext<AppDbContext>(option =>
         {
-            option.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
             option.UseSqlServer(
                 configuration.GetConnectionString("DefaultConnection"),
                 sqlServerOptionsAction: sqlOptions =>
@@ -152,11 +151,6 @@ public static class InfrastructureRegistration
         .AddDefaultTokenProviders();
         
         // JWT Authentication
-        var jwtOptions = configuration.GetSection("JwtOptions").Get<JwtOptions>();
-        
-        if (jwtOptions is null || string.IsNullOrEmpty(jwtOptions.SecretKey))
-            throw new Exception("JWT configuration is missing or invalid.");
-        
         services.AddAuthentication(options =>
         {
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -164,6 +158,9 @@ public static class InfrastructureRegistration
         })
         .AddJwtBearer(options =>
         {
+            var jwtOptions = configuration.GetSection("JwtOptions").Get<JwtOptions>();
+            if (jwtOptions is null || string.IsNullOrWhiteSpace(jwtOptions.SecretKey) || jwtOptions.SecretKey.Length < 32)
+                throw new InvalidOperationException("Set a private JWT signing key with at least 32 characters before authenticating.");
             options.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,

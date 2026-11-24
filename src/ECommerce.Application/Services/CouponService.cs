@@ -273,27 +273,27 @@ public class CouponService : ICouponService
                 "You cannot use this cart.");
 
         if (!cart.CartItems.Any())
-            throw new InvalidOperationException(
+            throw new BusinessRuleException(
                 "Cannot apply a coupon to an empty cart.");
 
         if (coupon.Status != CouponStatus.Active)
-            throw new InvalidOperationException(
+            throw new BusinessRuleException(
                 "This coupon is not active.");
 
         var now = DateTime.UtcNow;
 
         if (now < coupon.ValidFrom)
-            throw new InvalidOperationException(
+            throw new BusinessRuleException(
                 "This coupon is not valid yet.");
 
         if (now > coupon.ValidUntil)
-            throw new InvalidOperationException(
+            throw new BusinessRuleException(
                 "This coupon has expired.");
 
         if (coupon.UsageLimit > 0 &&
             coupon.UsedCount >= coupon.UsageLimit)
         {
-            throw new InvalidOperationException(
+            throw new BusinessRuleException(
                 "This coupon has reached its usage limit.");
         }
 
@@ -301,7 +301,7 @@ public class CouponService : ICouponService
 
         if (subtotal < coupon.MinPurchaseAmount)
         {
-            throw new InvalidOperationException(
+            throw new BusinessRuleException(
                 $"Minimum purchase amount is {coupon.MinPurchaseAmount}.");
         }
 
@@ -315,7 +315,7 @@ public class CouponService : ICouponService
         if (coupon.PerUserLimit > 0 &&
             userUsageCount >= coupon.PerUserLimit)
         {
-            throw new InvalidOperationException(
+            throw new BusinessRuleException(
                 "You have already reached the usage limit for this coupon.");
         }
     }

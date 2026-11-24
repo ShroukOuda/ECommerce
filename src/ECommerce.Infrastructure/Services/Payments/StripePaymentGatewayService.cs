@@ -19,10 +19,6 @@ public class StripePaymentGatewayService : IPaymentGatewayService
     {
         _settings = options.Value;
 
-        if (!string.IsNullOrWhiteSpace(_settings.SecretKey))
-        {
-            StripeConfiguration.ApiKey = _settings.SecretKey;
-        }
     }
 
     public async Task<CreateCheckoutSessionResponseDTO> CreateCheckoutSessionAsync(
@@ -30,9 +26,10 @@ public class StripePaymentGatewayService : IPaymentGatewayService
         Order order,
         CancellationToken cancellationToken = default)
     {
-        EnsureConfigured();
+        if (string.IsNullOrWhiteSpace(_settings.SecretKey))
+            throw new InvalidOperationException("Stripe secret key is not configured.");
 
-        var sessionService = new SessionService();
+        var sessionService = new SessionService(new StripeClient(_settings.SecretKey));
         var requestOptions = new RequestOptions
         {
             IdempotencyKey = payment.TransactionId
@@ -83,7 +80,7 @@ public class StripePaymentGatewayService : IPaymentGatewayService
             }
         };
 
-        var session = await sessionService.CreateAsync(sessionOptions, requestOptions);
+        var session = await sessionService.CreateAsync(sessionOptions, requestOptions, cancellationToken);
 
         return new CreateCheckoutSessionResponseDTO
         {
@@ -101,9 +98,26 @@ public class StripePaymentGatewayService : IPaymentGatewayService
         };
     }
 
+    public async Task<CreateCheckoutSessionResponseDTO> GetCheckoutSessionAsync(string sessionId, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(_settings.SecretKey))
+            throw new InvalidOperationException("Stripe secret key is not configured.");
+        var session = await new SessionService(new StripeClient(_settings.SecretKey)).GetAsync(sessionId, cancellationToken: cancellationToken);
+        return new CreateCheckoutSessionResponseDTO
+        {
+            CheckoutSessionId = session.Id, CheckoutSessionUrl = session.Url,
+            CheckoutSessionStatus = session.Status, Status = session.PaymentStatus,
+            PaymentIntentId = session.PaymentIntentId,
+            AmountInMinorUnits = session.AmountTotal ?? 0, Currency = session.Currency
+        };
+    }
+
     public StripeWebhookEventDTO ParseWebhookEvent(string payload, string signatureHeader)
     {
-        EnsureConfigured();
+        if (string.IsNullOrWhiteSpace(_settings.WebhookSecret))
+            throw new InvalidOperationException("Stripe webhook secret is not configured.");
+        if (string.IsNullOrWhiteSpace(signatureHeader))
+            throw new BadRequestException("Stripe signature is required.");
 
         try
         {
@@ -124,6 +138,8 @@ public class StripePaymentGatewayService : IPaymentGatewayService
                 PaymentStatus = checkoutSession?.PaymentStatus,
                 CheckoutSessionStatus = checkoutSession?.Status,
                 ClientReferenceId = checkoutSession?.ClientReferenceId,
+                PaymentId = checkoutSession?.Metadata?.GetValueOrDefault("payment_id"),
+                OrderId = checkoutSession?.Metadata?.GetValueOrDefault("order_id"),
                 AmountTotal = checkoutSession?.AmountTotal,
                 Currency = checkoutSession?.Currency,
                 PayloadSummary = $"Stripe event {stripeEvent.Type} for session {checkoutSession?.Id ?? "unknown"}"
@@ -132,19 +148,6 @@ public class StripePaymentGatewayService : IPaymentGatewayService
         catch (StripeException ex)
         {
             throw new BadRequestException("Invalid Stripe webhook signature.", ex);
-        }
-    }
-
-    private void EnsureConfigured()
-    {
-        if (string.IsNullOrWhiteSpace(_settings.SecretKey))
-        {
-            throw new InvalidOperationException("Stripe secret key is not configured.");
-        }
-
-        if (string.IsNullOrWhiteSpace(_settings.WebhookSecret))
-        {
-            throw new InvalidOperationException("Stripe webhook secret is not configured.");
         }
     }
 

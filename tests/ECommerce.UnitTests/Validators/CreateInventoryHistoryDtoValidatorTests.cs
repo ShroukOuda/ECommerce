@@ -18,11 +18,11 @@ public class CreateInventoryHistoryDtoValidatorTests
     }
 
     [Fact]
-    public async Task Validate_WithoutProductVariantId_ShouldPass()
+    public async Task Validate_WithoutProductVariantId_ShouldFail()
     {
         var dto = new CreateInventoryHistoryDTO { QuantityChange = -3, ChangeType = InventoryChangeType.Adjustment };
         var result = await _validator.ValidateAsync(dto);
-        result.IsValid.Should().BeTrue();
+        result.IsValid.Should().BeFalse();
     }
 
     [Fact]
@@ -44,7 +44,7 @@ public class CreateInventoryHistoryDtoValidatorTests
     [InlineData(InventoryChangeType.Transfer)]
     public async Task Validate_WithDefinedChangeType_ShouldPass(InventoryChangeType changeType)
     {
-        var dto = new CreateInventoryHistoryDTO { QuantityChange = 1, ChangeType = changeType };
+        var dto = new CreateInventoryHistoryDTO { ProductVariantId = Guid.NewGuid(), QuantityChange = 1, ChangeType = changeType };
         var result = await _validator.ValidateAsync(dto);
         result.IsValid.Should().BeTrue();
     }

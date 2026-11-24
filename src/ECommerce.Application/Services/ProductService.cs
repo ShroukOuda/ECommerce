@@ -97,8 +97,7 @@ public class ProductService : IProductService
     public async Task<GetProductDetailsDTO> AddProductAsync(AddProductDTO productDTO)
     {
         var validationResult = await _addProductDtoValidator.ValidateAsync(productDTO);
-        if (!validationResult.IsValid)
-            throw new ValidationException(validationResult.Errors);
+        if (!validationResult.IsValid) throw new ValidationException(validationResult.Errors);
 
         var categoryExists = await _unitOfWork
             .GetRepository<Category, Guid>()
@@ -124,17 +123,20 @@ public class ProductService : IProductService
     public async Task<GetProductDetailsDTO> UpdateProductAsync(Guid productId, UpdateProductDTO productDto)
     {
         var validationResult = await _updateProductDtoValidator.ValidateAsync(productDto);
-        if (!validationResult.IsValid)
-            throw new ValidationException(validationResult.Errors);
+        if (!validationResult.IsValid) throw new ValidationException(validationResult.Errors);
         
         
         var spec = new ProductSpecification(productId);
-        bool exists = await _unitOfWork.GetRepository<Product, Guid>().ExistsAsync(spec);
+        var product = await _unitOfWork.GetRepository<Product, Guid>().GetFirstOrDefaultAsync(spec);
         
-        if (!exists)
+        if (product is null)
             throw new KeyNotFoundException($"Product with ID {productId} not found.");
 
-        var product = _mapper.Map<Product>(productDto);
+        var originalId = product.Id;
+        var originalCreatedAt = product.CreatedAt;
+        _mapper.Map(productDto, product);
+        product.Id = originalId;
+        product.CreatedAt = originalCreatedAt;
         _unitOfWork.GetRepository<Product, Guid>().Update(product);
         await _unitOfWork.SaveChangesAsync();
 

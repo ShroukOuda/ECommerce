@@ -36,22 +36,26 @@ public class PaymentService : IPaymentService
         _paymentGatewayService = paymentGatewayService;
     }
 
-    public async Task<CreateCheckoutSessionResponseDTO> CreateCheckoutSessionAsync(Guid orderId, string userId)
+    public async Task<CreateCheckoutSessionResponseDTO> CreateCheckoutSessionAsync(Guid orderId, string userId, CancellationToken cancellationToken = default)
     {
-        var validationResult = await _createCheckoutValidator.ValidateAsync(new CreateCheckoutSessionDTO { OrderId = orderId });
+        cancellationToken.ThrowIfCancellationRequested();
+        var validationResult = await _createCheckoutValidator.ValidateAsync(new CreateCheckoutSessionDTO { OrderId = orderId }, cancellationToken);
         if (!validationResult.IsValid)
         {
             throw new ValidationException(validationResult.Errors);
         }
 
-        var order = await GetOwnedOrderAsync(orderId, userId);
+        var order = await GetOwnedOrderAsync(orderId, userId, cancellationToken);
 
         if (order.OrderStatus is OrderStatus.Cancelled or OrderStatus.Refunded)
         {
             throw new BadRequestException("This order can no longer be paid.");
         }
 
-        var existingPayment = await GetLatestPaymentForOrderAsync(orderId);
+        if (order.OrderStatus != OrderStatus.Pending)
+            throw new BadRequestException("Only pending orders are eligible for checkout.");
+
+        var existingPayment = await GetLatestPaymentForOrderAsync(orderId, cancellationToken);
 
         if (existingPayment is not null)
         {
@@ -62,21 +66,41 @@ public class PaymentService : IPaymentService
 
             if (IsReusableCheckoutSession(existingPayment))
             {
-                return ToCheckoutResponse(existingPayment);
+                var remote = await _paymentGatewayService.GetCheckoutSessionAsync(existingPayment.StripeCheckoutSessionId!, cancellationToken);
+                if (remote.AmountInMinorUnits != existingPayment.AmountInMinorUnits
+                    || !string.Equals(remote.Currency, existingPayment.Currency, StringComparison.OrdinalIgnoreCase))
+                    throw new ConflictException("Provider session does not match the payment expectation.");
+                if (remote.CheckoutSessionStatus == "open" && remote.Status != "paid")
+                    return ToCheckoutResponse(existingPayment);
+                // Only the signed webhook can confirm money. Never create another session while one completed.
+                throw new ConflictException("The provider session is no longer open. Wait for its webhook before retrying.");
             }
         }
 
-        var payment = existingPayment is null
-            ? BuildNewPayment(order, userId)
-            : existingPayment;
+        if (existingPayment?.Status == PaymentStatus.Processing)
+            throw new ConflictException("This payment is still processing. Wait for the provider result.");
 
-        if (existingPayment is null)
+        if (existingPayment?.Status == PaymentStatus.Refunded)
+            throw new BadRequestException("A refunded order cannot be paid again.");
+
+        if (order.OrderStatus != OrderStatus.Pending)
+            throw new BadRequestException("Only pending orders are eligible for checkout.");
+
+        // A remote timeout or local save failure must retry the SAME provider operation.
+        var recoverIncompleteAttempt = existingPayment?.Status == PaymentStatus.Pending
+            && string.IsNullOrWhiteSpace(existingPayment.StripeCheckoutSessionId);
+        var payment = recoverIncompleteAttempt ? existingPayment! : BuildNewPayment(order, userId);
+        if (!recoverIncompleteAttempt)
         {
-            await _unitOfWork.GetRepository<Payment, Guid>().AddAsync(payment);
-            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.GetRepository<Payment, Guid>().AddAsync(payment, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
         }
+        // Stripe idempotency retention is finite. Old unresolved operations require reconciliation, not a new charge.
+        if (recoverIncompleteAttempt && payment.CreatedAt < DateTime.UtcNow.AddHours(-23))
+            throw new ConflictException("An old checkout attempt needs provider reconciliation before retrying.");
 
-        var checkoutSession = await _paymentGatewayService.CreateCheckoutSessionAsync(payment, order);
+        var checkoutSession = await _paymentGatewayService.CreateCheckoutSessionAsync(payment, order, cancellationToken);
 
         payment.PaymentGateway = StripeProviderName;
         payment.Status = PaymentStatus.Pending;
@@ -89,7 +113,7 @@ public class PaymentService : IPaymentService
         payment.GatewayResponse = checkoutSession.Status;
 
         _unitOfWork.GetRepository<Payment, Guid>().Update(payment);
-        await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         checkoutSession.PaymentId = payment.Id;
         checkoutSession.OrderId = order.Id;
@@ -103,18 +127,18 @@ public class PaymentService : IPaymentService
         return checkoutSession;
     }
 
-    public async Task<IEnumerable<GetPaymentDTO>> GetPaymentsByOrderIdAsync(Guid orderId, string userId, bool isAdmin)
+    public async Task<IEnumerable<GetPaymentDTO>> GetPaymentsByOrderIdAsync(Guid orderId, string userId, bool isAdmin, CancellationToken cancellationToken = default)
     {
-        var order = await GetAccessibleOrderAsync(orderId, userId, isAdmin);
+        var order = await GetAccessibleOrderAsync(orderId, userId, isAdmin, cancellationToken);
 
         var spec = new PaymentsByOrderSpecification(order.Id);
-        var payments = await _unitOfWork.GetRepository<Payment, Guid>().GetAllAsync(spec);
+        var payments = await _unitOfWork.GetRepository<Payment, Guid>().GetAllAsync(spec, cancellationToken);
         return _mapper.Map<IEnumerable<GetPaymentDTO>>(payments);
     }
 
-    public async Task<GetPaymentDTO> GetPaymentByIdAsync(Guid id, string userId, bool isAdmin)
+    public async Task<GetPaymentDTO> GetPaymentByIdAsync(Guid id, string userId, bool isAdmin, CancellationToken cancellationToken = default)
     {
-        var payment = await _unitOfWork.GetRepository<Payment, Guid>().GetByIdAsync(id);
+        var payment = await _unitOfWork.GetRepository<Payment, Guid>().GetByIdAsync(id, cancellationToken);
         if (payment is null)
         {
             throw new NotFoundException($"Payment with ID {id} not found.");
@@ -128,29 +152,44 @@ public class PaymentService : IPaymentService
         return _mapper.Map<GetPaymentDTO>(payment);
     }
 
-    public async Task HandleStripeWebhookAsync(string payload, string signatureHeader)
+    public async Task HandleStripeWebhookAsync(string payload, string signatureHeader, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var stripeEvent = _paymentGatewayService.ParseWebhookEvent(payload, signatureHeader);
 
-        if (await EventAlreadyProcessedAsync(stripeEvent.EventId))
+        if (stripeEvent.EventType is not ("checkout.session.completed" or "checkout.session.async_payment_succeeded"
+            or "checkout.session.async_payment_failed" or "checkout.session.expired"))
+            return;
+
+        if (await EventAlreadyProcessedAsync(stripeEvent.EventId, cancellationToken))
         {
             return;
         }
 
-        var payment = await FindPaymentForStripeEventAsync(stripeEvent);
+        var payment = await FindPaymentForStripeEventAsync(stripeEvent, cancellationToken);
 
         if (payment is null)
         {
             throw new NotFoundException("No matching payment record was found for the Stripe event.");
         }
 
+        ValidateFinancialEvent(payment, stripeEvent);
         var now = DateTime.UtcNow;
-        var nextStatus = ResolveNextStatus(payment, stripeEvent);
+        // Cancellation is a fulfillment decision, not proof that no money arrived.
+        // Read the order for verified success, including a late success after local expiry/failure.
+        var confirmedSuccess = (stripeEvent.EventType is "checkout.session.completed" or "checkout.session.async_payment_succeeded")
+            && IsConfirmedPayment(stripeEvent);
+        var order = confirmedSuccess && payment.Status is not (PaymentStatus.Paid or PaymentStatus.Refunded)
+            ? await _unitOfWork.GetRepository<Order, Guid>().GetByIdAsync(payment.OrderId, cancellationToken)
+            : null;
+        var cancelledOrder = order?.OrderStatus == OrderStatus.Cancelled;
+        var nextStatus = ResolveNextStatus(payment, stripeEvent, cancelledOrder);
+        var manualReview = cancelledOrder && nextStatus == PaymentStatus.Paid;
 
         if (nextStatus is null)
         {
-            await RecordStripeEventAsync(stripeEvent, payment, "Ignored", null, now);
-            await _unitOfWork.SaveChangesAsync();
+            await RecordStripeEventAsync(stripeEvent, payment, "Ignored", null, now, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
             return;
         }
 
@@ -158,14 +197,14 @@ public class PaymentService : IPaymentService
 
         if (nextStatus == PaymentStatus.Paid)
         {
-            await ConfirmOrderIfNeededAsync(payment.OrderId, now);
+            ConfirmOrderIfNeeded(order, now);
         }
 
-        await RecordStripeEventAsync(stripeEvent, payment, "Processed", null, now);
+        await RecordStripeEventAsync(stripeEvent, payment, manualReview ? "ManualReviewRequired" : "Processed", null, now, cancellationToken);
 
         try
         {
-            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateException ex) when (IsDuplicateStripeWebhookEvent(ex))
         {
@@ -173,10 +212,10 @@ public class PaymentService : IPaymentService
         }
     }
 
-    private async Task<Order> GetOwnedOrderAsync(Guid orderId, string userId)
+    private async Task<Order> GetOwnedOrderAsync(Guid orderId, string userId, CancellationToken cancellationToken)
     {
         var specification = new OrderByUserSpecification(orderId, userId);
-        var order = await _unitOfWork.GetRepository<Order, Guid>().GetFirstOrDefaultAsync(specification);
+        var order = await _unitOfWork.GetRepository<Order, Guid>().GetFirstOrDefaultAsync(specification, cancellationToken);
 
         if (order is null)
         {
@@ -186,11 +225,11 @@ public class PaymentService : IPaymentService
         return order;
     }
 
-    private async Task<Order> GetAccessibleOrderAsync(Guid orderId, string userId, bool isAdmin)
+    private async Task<Order> GetAccessibleOrderAsync(Guid orderId, string userId, bool isAdmin, CancellationToken cancellationToken = default)
     {
         if (isAdmin)
         {
-            var order = await _unitOfWork.GetRepository<Order, Guid>().GetByIdAsync(orderId);
+            var order = await _unitOfWork.GetRepository<Order, Guid>().GetByIdAsync(orderId, cancellationToken);
             if (order is null)
             {
                 throw new NotFoundException($"Order with ID {orderId} not found.");
@@ -199,22 +238,24 @@ public class PaymentService : IPaymentService
             return order;
         }
 
-        return await GetOwnedOrderAsync(orderId, userId);
+        return await GetOwnedOrderAsync(orderId, userId, cancellationToken);
     }
 
-    private async Task<Payment?> GetLatestPaymentForOrderAsync(Guid orderId)
+    private async Task<Payment?> GetLatestPaymentForOrderAsync(Guid orderId, CancellationToken cancellationToken)
     {
-        var spec = new PaymentsByOrderSpecification(orderId);
-        var payments = await _unitOfWork.GetRepository<Payment, Guid>().GetAllAsync(spec);
-        return payments.FirstOrDefault();
+        return await _unitOfWork.GetRepository<Payment, Guid>().GetFirstOrDefaultAsync(new LatestPaymentByOrderSpecification(orderId), cancellationToken);
     }
 
     private static Payment BuildNewPayment(Order order, string userId)
     {
         var amountInMinorUnits = ToMinorUnits(order.TotalAmount, order.Currency);
+        if (amountInMinorUnits <= 0)
+            throw new BadRequestException("This checkout requires a positive order total.");
 
         return new Payment
         {
+            Id = Guid.NewGuid(),
+            CreatedAt = DateTime.UtcNow,
             OrderId = order.Id,
             UserId = userId,
             Amount = order.TotalAmount,
@@ -231,7 +272,7 @@ public class PaymentService : IPaymentService
 
     private static bool IsReusableCheckoutSession(Payment payment)
     {
-        return payment.Status is PaymentStatus.Pending or PaymentStatus.Processing
+        return payment.Status == PaymentStatus.Pending
             && !string.IsNullOrWhiteSpace(payment.StripeCheckoutSessionId)
             && !string.IsNullOrWhiteSpace(payment.StripeCheckoutSessionUrl)
             && string.Equals(payment.StripeCheckoutSessionStatus, "open", StringComparison.OrdinalIgnoreCase);
@@ -259,25 +300,40 @@ public class PaymentService : IPaymentService
         => $"PAY-{orderId.ToString("N")[..8].ToUpperInvariant()}-{Guid.NewGuid().ToString("N")[..8].ToUpperInvariant()}";
 
     private static string NormalizeCurrency(string currency)
-        => string.IsNullOrWhiteSpace(currency) ? "USD" : currency.Trim().ToUpperInvariant();
+    {
+        if (!string.Equals(currency?.Trim(), "USD", StringComparison.OrdinalIgnoreCase))
+            throw new BadRequestException("The catalog is priced in USD. Other currencies are not supported.");
+        return "USD";
+    }
 
     private static long ToMinorUnits(decimal amount, string currency)
     {
-        var normalizedCurrency = NormalizeCurrency(currency);
-        var minorUnitFactor = UsesZeroDecimalCurrency(normalizedCurrency) ? 1m : 100m;
-        return Convert.ToInt64(decimal.Round(amount * minorUnitFactor, 0, MidpointRounding.AwayFromZero));
+        NormalizeCurrency(currency);
+        if (amount < 0 || decimal.Round(amount, 2) != amount)
+            throw new BadRequestException("USD amounts must be nonnegative and have at most two decimal places.");
+        try { return checked((long)(amount * 100m)); }
+        catch (OverflowException) { throw new BadRequestException("The order amount is too large."); }
     }
 
-    private static bool UsesZeroDecimalCurrency(string currency)
+    private static void ValidateFinancialEvent(Payment payment, StripeWebhookEventDTO e)
     {
-        return currency is "BIF" or "CLP" or "DJF" or "GNF" or "ISK" or "JPY" or "KMF" or "KRW" or "PYG" or "RWF" or "UGX" or "VND" or "VUV" or "XAF" or "XOF" or "XPF";
+        if (!Guid.TryParse(e.ClientReferenceId, out var paymentId) || paymentId != payment.Id
+            || !Guid.TryParse(e.OrderId, out var orderId) || orderId != payment.OrderId
+            || !Guid.TryParse(e.PaymentId, out var metadataPaymentId) || metadataPaymentId != payment.Id
+            || string.IsNullOrWhiteSpace(e.CheckoutSessionId)
+            || !string.Equals(payment.StripeCheckoutSessionId, e.CheckoutSessionId, StringComparison.Ordinal)
+            || (!string.IsNullOrEmpty(payment.StripePaymentIntentId)
+                && !string.Equals(payment.StripePaymentIntentId, e.PaymentIntentId, StringComparison.Ordinal))
+            || e.AmountTotal != payment.AmountInMinorUnits
+            || !string.Equals(e.Currency, payment.Currency, StringComparison.OrdinalIgnoreCase))
+            throw new BadRequestException("Stripe event does not match the persisted payment expectation.");
     }
 
-    private async Task<Payment?> FindPaymentForStripeEventAsync(StripeWebhookEventDTO stripeEvent)
+    private async Task<Payment?> FindPaymentForStripeEventAsync(StripeWebhookEventDTO stripeEvent, CancellationToken cancellationToken)
     {
         if (Guid.TryParse(stripeEvent.ClientReferenceId, out var paymentId))
         {
-            var byId = await _unitOfWork.GetRepository<Payment, Guid>().GetByIdAsync(paymentId);
+            var byId = await _unitOfWork.GetRepository<Payment, Guid>().GetByIdAsync(paymentId, cancellationToken);
             if (byId is not null)
             {
                 return byId;
@@ -287,7 +343,7 @@ public class PaymentService : IPaymentService
         if (!string.IsNullOrWhiteSpace(stripeEvent.CheckoutSessionId))
         {
             var spec = new PaymentByCheckoutSessionSpecification(stripeEvent.CheckoutSessionId);
-            var bySession = await _unitOfWork.GetRepository<Payment, Guid>().GetFirstOrDefaultAsync(spec);
+            var bySession = await _unitOfWork.GetRepository<Payment, Guid>().GetFirstOrDefaultAsync(spec, cancellationToken);
             if (bySession is not null)
             {
                 return bySession;
@@ -297,7 +353,7 @@ public class PaymentService : IPaymentService
         if (!string.IsNullOrWhiteSpace(stripeEvent.PaymentIntentId))
         {
             var spec = new PaymentByPaymentIntentSpecification(stripeEvent.PaymentIntentId);
-            var byIntent = await _unitOfWork.GetRepository<Payment, Guid>().GetFirstOrDefaultAsync(spec);
+            var byIntent = await _unitOfWork.GetRepository<Payment, Guid>().GetFirstOrDefaultAsync(spec, cancellationToken);
             if (byIntent is not null)
             {
                 return byIntent;
@@ -307,19 +363,26 @@ public class PaymentService : IPaymentService
         return null;
     }
 
-    private static PaymentStatus? ResolveNextStatus(Payment payment, StripeWebhookEventDTO stripeEvent)
+    private static PaymentStatus? ResolveNextStatus(Payment payment, StripeWebhookEventDTO stripeEvent, bool cancelledOrder)
     {
-        if (payment.Status == PaymentStatus.Paid)
+        if (payment.Status is PaymentStatus.Paid or PaymentStatus.Refunded)
         {
             return null;
         }
 
+        if (cancelledOrder && (payment.Status is PaymentStatus.Failed or PaymentStatus.Expired)
+            && (stripeEvent.EventType is "checkout.session.completed" or "checkout.session.async_payment_succeeded")
+            && IsConfirmedPayment(stripeEvent))
+            return PaymentStatus.Paid;
+
         return stripeEvent.EventType switch
         {
-            "checkout.session.completed" when IsConfirmedPayment(stripeEvent) => PaymentStatus.Paid,
-            "checkout.session.completed" => PaymentStatus.Processing,
-            "checkout.session.async_payment_succeeded" => PaymentStatus.Paid,
-            "checkout.session.async_payment_failed" => PaymentStatus.Failed,
+            "checkout.session.completed" when payment.Status is PaymentStatus.Pending or PaymentStatus.Processing
+                && IsConfirmedPayment(stripeEvent) => PaymentStatus.Paid,
+            "checkout.session.completed" when payment.Status == PaymentStatus.Pending => PaymentStatus.Processing,
+            "checkout.session.async_payment_succeeded" when payment.Status is PaymentStatus.Pending or PaymentStatus.Processing
+                && IsConfirmedPayment(stripeEvent) => PaymentStatus.Paid,
+            "checkout.session.async_payment_failed" when payment.Status is PaymentStatus.Pending or PaymentStatus.Processing => PaymentStatus.Failed,
             "checkout.session.expired" when payment.Status is PaymentStatus.Pending or PaymentStatus.Processing => PaymentStatus.Expired,
             _ => null
         };
@@ -327,8 +390,7 @@ public class PaymentService : IPaymentService
 
     private static bool IsConfirmedPayment(StripeWebhookEventDTO stripeEvent)
     {
-        return string.Equals(stripeEvent.PaymentStatus, "paid", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(stripeEvent.CheckoutSessionStatus, "complete", StringComparison.OrdinalIgnoreCase);
+        return string.Equals(stripeEvent.PaymentStatus, "paid", StringComparison.OrdinalIgnoreCase);
     }
 
     private void ApplyPaymentUpdate(Payment payment, StripeWebhookEventDTO stripeEvent, PaymentStatus nextStatus, DateTime now)
@@ -358,20 +420,14 @@ public class PaymentService : IPaymentService
         _unitOfWork.GetRepository<Payment, Guid>().Update(payment);
     }
 
-    private async Task ConfirmOrderIfNeededAsync(Guid orderId, DateTime now)
+    private void ConfirmOrderIfNeeded(Order? order, DateTime now)
     {
-        var order = await _unitOfWork.GetRepository<Order, Guid>().GetByIdAsync(orderId);
         if (order is null)
         {
             return;
         }
 
-        if (order.OrderStatus == OrderStatus.Confirmed)
-        {
-            return;
-        }
-
-        if (order.OrderStatus is OrderStatus.Cancelled or OrderStatus.Refunded)
+        if (order.OrderStatus != OrderStatus.Pending)
         {
             return;
         }
@@ -387,10 +443,10 @@ public class PaymentService : IPaymentService
         _unitOfWork.GetRepository<Order, Guid>().Update(order);
     }
 
-    private async Task<bool> EventAlreadyProcessedAsync(string eventId)
+    private async Task<bool> EventAlreadyProcessedAsync(string eventId, CancellationToken cancellationToken)
     {
         var spec = new StripeWebhookEventByEventIdSpecification(eventId);
-        return await _unitOfWork.GetRepository<StripeWebhookEvent, Guid>().ExistsAsync(spec);
+        return await _unitOfWork.GetRepository<StripeWebhookEvent, Guid>().ExistsAsync(spec, cancellationToken);
     }
 
     private async Task RecordStripeEventAsync(
@@ -398,7 +454,7 @@ public class PaymentService : IPaymentService
         Payment payment,
         string processingResult,
         string? errorMessage,
-        DateTime now)
+        DateTime now, CancellationToken cancellationToken)
     {
         var webhookEvent = new StripeWebhookEvent
         {
@@ -413,15 +469,12 @@ public class PaymentService : IPaymentService
             ProcessedAt = now
         };
 
-        await _unitOfWork.GetRepository<StripeWebhookEvent, Guid>().AddAsync(webhookEvent);
+        await _unitOfWork.GetRepository<StripeWebhookEvent, Guid>().AddAsync(webhookEvent, cancellationToken);
     }
 
     private static bool IsDuplicateStripeWebhookEvent(DbUpdateException exception)
     {
         var message = exception.InnerException?.Message ?? exception.Message;
-        return message.Contains("IX_StripeWebhookEvents_EventId", StringComparison.OrdinalIgnoreCase)
-            || message.Contains("duplicate key", StringComparison.OrdinalIgnoreCase)
-            || message.Contains("2601", StringComparison.OrdinalIgnoreCase)
-            || message.Contains("2627", StringComparison.OrdinalIgnoreCase);
+        return message.Contains("IX_StripeWebhookEvents_EventId", StringComparison.OrdinalIgnoreCase);
     }
 }

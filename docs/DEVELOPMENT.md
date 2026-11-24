@@ -1,194 +1,39 @@
-# Development Guide
+# Development guide
 
-## Prerequisites
+## Safe start
 
-- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
-- [SQL Server 2022](https://www.microsoft.com/sql-server) (or Docker)
-- [Docker](https://docs.docker.com/get-docker/) (optional, for containerized setup)
-- IDE: [JetBrains Rider](https://www.jetbrains.com/rider/) or [Visual Studio 2022](https://visualstudio.microsoft.com/)
+Use .NET 9 SDK. Restore with `dotnet restore` and build with `dotnet build ECommerce.sln`.
 
-## Local Setup (without Docker)
+The owner generates and reviews migrations locally, uploads them herself and manages database updates. On 24 November she clarified that this does not prohibit startup application of existing migrations and approved restoring the original behavior: startup calls Database.Migrate() when AUTO_MIGRATE=true OR the environment is Development. Development therefore auto-applies pending migrations even when AUTO_MIGRATE=false. Startup does not scaffold migration files. No application startup, migration execution, EnsureCreated fallback or database mutation was performed here. Existing migration files and snapshot remain untouched. Review the CategorySubscription model/snapshot mismatch before starting against SQL: EF Core may reject pending model changes until the owner provides a reviewed migration.
 
-### 1. Clone & Restore
+Put local connection strings, JWT signing material, SMTP and Stripe test keys in untracked development configuration or environment variables. The checked-in appsettings file is a sample, not working credentials. Never commit private configuration.
 
-```bash
-git clone https://github.com/ShroukOuda/ECommerce.git
-cd ECommerce
-dotnet restore
-```
+After the owner prepares an isolated database, run `dotnet run --project src/ECommerce.API`. Use the listening URL printed by ASP.NET, not a hardcoded documentation port. Swagger is available only in Development. `/api/v1/health` is liveness only, not database readiness.
 
-### 2. Configure Database
+## Seeding
 
-Update the connection string in `src/ECommerce.API/appsettings.Development.json`:
+`DataInitialization:Enabled` defaults to false. It calls runtime `IDataSeeder`, not HasData, when explicitly enabled. It can create users and business records. Do not enable it against development or production data as part of this remediation. Tests explicitly enable it only after replacing SQL Server with a unique in-memory store.
 
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost;Database=ECommerceDb;Trusted_Connection=true;TrustServerCertificate=true;"
-  }
-}
-```
+## Architecture
 
-### 3. Apply Migrations
+Domain contains entities/enums/repository contracts; Application contains DTOs, validators, services, mappings and specifications; Infrastructure implements persistence/providers; API owns authenticated HTTP boundaries. Registered async DTO validators run before controller actions, and services retain defensive business checks.
+
+For tests see [TESTING.md](TESTING.md). For unresolved release gates see [PHASE0-REMEDIATION.md](PHASE0-REMEDIATION.md). For test payments see [PAYMENT-GUIDE.md](PAYMENT-GUIDE.md).
+
+## Owner-only CategorySubscription migration review
+
+The only entity/configuration schema delta in this branch is the CategorySubscription inverse navigation correction. In the checked-in snapshot/initial migration, CategorySubscriptions has CategoryId and nullable shadow CategoryId1, including IX_CategorySubscriptions_CategoryId1 and FK_CategorySubscriptions_Categories_CategoryId1. The corrected mapping uses CategoryId for Category.CategorySubscriptions. Do not assume CategoryId1 is empty or blindly drop it. Review actual migration history, both columns and their associations, back up data, then inspect the scaffolded Up/Down before applying or uploading it. A generated migration may contain unrelated drift; do not accept that without review.
+
+Suggested migration name: FixCategorySubscriptionRelationship. From the repository root, only the owner runs the following on her device after that review:
 
 ```bash
-dotnet ef database update \
-  --project src/ECommerce.Infrastructure \
-  --startup-project src/ECommerce.API
+dotnet ef migrations add FixCategorySubscriptionRelationship --project src/ECommerce.Infrastructure --startup-project src/ECommerce.API
 ```
 
-### 4. Run the API
+After reviewing the generated migration and selecting the intended private connection/environment, the owner may update her intended database:
 
 ```bash
-dotnet run --project src/ECommerce.API
+dotnet ef database update --project src/ECommerce.Infrastructure --startup-project src/ECommerce.API
 ```
 
-The API will be available at `https://localhost:5001/swagger`.
-
-## Local Setup (with Docker)
-
-```bash
-docker compose -f docker/docker-compose.yml up --build
-```
-
-API available at `http://localhost:8080/swagger`. See [docs/DOCKER.md](DOCKER.md) for full Docker documentation.
-
-## Running Migrations
-
-### Create a new migration
-
-```bash
-dotnet ef migrations add <MigrationName> \
-  --project src/ECommerce.Infrastructure \
-  --startup-project src/ECommerce.API \
-  --output-dir Persistence/Migrations
-```
-
-### Apply migrations
-
-```bash
-dotnet ef database update \
-  --project src/ECommerce.Infrastructure \
-  --startup-project src/ECommerce.API
-```
-
-### Remove last migration (if not applied)
-
-```bash
-dotnet ef migrations remove \
-  --project src/ECommerce.Infrastructure \
-  --startup-project src/ECommerce.API
-```
-
-### Generate SQL script
-
-```bash
-dotnet ef migrations script \
-  --project src/ECommerce.Infrastructure \
-  --startup-project src/ECommerce.API \
-  -o migration.sql
-```
-
-## Seeding Data
-
-Seed data is applied automatically via EF Core's `HasData()` in `OnModelCreating`. The migration includes:
-
-| Entity | Records | Description |
-|--------|---------|-------------|
-| Roles | 3 | Admin, Staff, Customer |
-| Users | 200 | With hashed passwords (`Password@123`) |
-| Addresses | 400+ | 1-3 per user |
-| Brands | 30 | With logos |
-| Categories | 108 | 4-level hierarchy |
-| Products | 80 | Electronics catalog |
-| Product Images | 240 | 3 per product |
-| Product Options & Variants | 500+ | With cartesian combinations |
-| Coupons | 20 | 10 active, 10 expired |
-| Orders | 500 | With items, options, status history |
-| Payments | 500 | One per order |
-| Shipping | 375 | For shipped/delivered orders |
-| Reviews | 1000+ | With helpful votes |
-| Wishlists | 300 | Across 150 users |
-| Carts | 50 | Active carts with items |
-| Returns | 50 | With return items |
-| Inventory History | 295 | Stock tracking records |
-| Coupon Usage | 166 | For orders using coupons |
-
-## Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `ASPNETCORE_ENVIRONMENT` | Runtime environment | `Development` |
-| `ConnectionStrings__DefaultConnection` | Database connection string | *(appsettings)* |
-| `AUTO_MIGRATE` | Auto-run migrations on startup | `false` |
-| `Stripe__SecretKey` | Stripe secret key | *(empty)* |
-| `Stripe__WebhookSecret` | Stripe webhook signing secret | *(empty)* |
-| `Stripe__Currency` | Checkout currency | `usd` |
-| `Stripe__ClientUrl` | Angular client base URL | `http://localhost:4200` |
-
-## Stripe Local Testing
-
-1. Create a Stripe test-mode account and copy the test secret key and webhook secret.
-2. Start the API and forward webhooks with the Stripe CLI:
-
-```bash
-stripe listen --forward-to https://localhost:5001/api/v1/payments/webhook
-```
-
-3. Use the returned webhook signing secret as `Stripe__WebhookSecret`.
-4. Create a checkout session from the authenticated API and complete payment in the Stripe test checkout page.
-
-## Debugging in Rider/VS
-
-### Rider
-1. Open `ECommerce.sln`
-2. Set `ECommerce.API` as the startup project
-3. Press **Shift+F10** to run or **Shift+F9** to debug
-
-### Visual Studio
-1. Open `ECommerce.sln`
-2. Right-click `ECommerce.API` → Set as Startup Project
-3. Press **F5** to debug
-
-## Code Style & Conventions
-
-- **Architecture**: Clean Architecture (Core → Application → Infrastructure → API)
-- **Naming**: PascalCase for public members, camelCase for private fields with `_` prefix
-- **DTOs**: Separate Add/Update/Get DTOs per entity
-- **Validation**: FluentValidation validators in `Application/Validators/`
-- **Mapping**: AutoMapper profiles in `Application/Mapping/`
-- **Repository Pattern**: Generic repository with specification pattern
-- **Unit of Work**: Aggregates all repositories for transactional operations
-- **Enums**: Stored as strings via `HasConversion<string>()`
-
-## Adding New Features (Checklist)
-
-1. **Core Layer**
-   - [ ] Create entity in `Core/Entities/`
-   - [ ] Add enums to `Core/Enums/` if needed
-   - [ ] Create repository interface in `Core/Interfaces/Repositories/`
-   - [ ] Add entity configuration in `Infrastructure/Persistence/Configuration/`
-
-2. **Infrastructure Layer**
-   - [ ] Implement repository in `Infrastructure/Repositories/`
-   - [ ] Register repository in `IUnitOfWork`
-   - [ ] Add `DbSet` to `AppDbContext`
-   - [ ] Create migration
-
-3. **Application Layer**
-   - [ ] Create DTOs in `Application/DTO/`
-   - [ ] Create mapping profile in `Application/Mapping/`
-   - [ ] Create validators in `Application/Validators/`
-   - [ ] Create service interface in `Application/Interfaces/`
-   - [ ] Implement service in `Application/Services/`
-   - [ ] Register service in `ApplicationRegistration.cs`
-
-4. **API Layer**
-   - [ ] Create controller inheriting from `BaseController`
-   - [ ] Add CRUD endpoints
-
-5. **Tests**
-   - [ ] Add unit tests for the service
-   - [ ] Add validator tests
-   - [ ] Add integration tests for endpoints
-   - [ ] Verify architecture tests still pass
+These commands are documentation only and were not executed here. Do not use production/dev business data for the still-unapproved parallel SQL tests. Startup auto-apply does not repair a missing migration for a model/snapshot mismatch.

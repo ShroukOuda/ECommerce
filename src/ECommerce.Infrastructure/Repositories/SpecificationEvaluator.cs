@@ -11,7 +11,7 @@ public class SpecificationEvaluator
         where TEntity : BaseEntity<TKey>
         where TKey : IEquatable<TKey>
     {
-        var query = inputQuery;
+        var query = specification.IsNoTrackingEnabled ? inputQuery.AsNoTracking() : inputQuery;
         if (specification.Criteria is not null)
         {
             query = query.Where(specification.Criteria);

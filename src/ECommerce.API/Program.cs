@@ -25,7 +25,7 @@ public class Program
         builder.Services.AddHttpContextAccessor();
         
         // Configure controllers and JSON options
-        builder.Services.AddControllers()
+        builder.Services.AddControllers(options => options.Filters.Add<ECommerce.API.Filters.ValidateRequestFilter>())
             .AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
@@ -93,7 +93,7 @@ public class Program
 
            
         
-        // Auto-migrate on startup when enabled
+        // Apply existing migrations on startup using the original owner-approved behavior.
         if (builder.Configuration.GetValue<bool>("AUTO_MIGRATE", false) ||
             app.Environment.IsDevelopment())
         {
@@ -102,6 +102,7 @@ public class Program
             db.Database.Migrate();
         }
 
+        if (builder.Configuration.GetValue<bool>("DataInitialization:Enabled", false))
         using (var scope = app.Services.CreateScope())
         {
             var seeder = scope.ServiceProvider.GetRequiredService<IDataSeeder>();
@@ -139,6 +140,7 @@ public class Program
         app.UseAuthorization();
 
 
+        app.MapGet("/api/v1/health", () => Results.Ok(new { status = "Healthy" })).AllowAnonymous();
         app.MapControllers();
 
         app.Run();

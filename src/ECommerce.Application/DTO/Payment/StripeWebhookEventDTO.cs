@@ -8,6 +8,8 @@ public class StripeWebhookEventDTO
     public string? PaymentIntentId { get; set; }
     public string? PaymentStatus { get; set; }
     public string? CheckoutSessionStatus { get; set; }
+    public string? PaymentId { get; set; }
+    public string? OrderId { get; set; }
     public string? ClientReferenceId { get; set; }
     public long? AmountTotal { get; set; }
     public string? Currency { get; set; }

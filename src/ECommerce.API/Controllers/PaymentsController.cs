@@ -21,23 +21,23 @@ public class PaymentsController : BaseController
     private bool IsAdmin => User.IsInRole("Admin");
 
     [HttpPost("checkout-session")]
-    public async Task<IActionResult> CreateCheckoutSession([FromBody] CreateCheckoutSessionDTO dto)
+    public async Task<IActionResult> CreateCheckoutSession([FromBody] CreateCheckoutSessionDTO dto, CancellationToken cancellationToken)
     {
-        var checkoutSession = await _paymentService.CreateCheckoutSessionAsync(dto.OrderId, CurrentUserId);
+        var checkoutSession = await _paymentService.CreateCheckoutSessionAsync(dto.OrderId, CurrentUserId, cancellationToken);
         return Created(checkoutSession, "Checkout session created successfully.");
     }
 
     [HttpGet("order/{orderId:guid}")]
-    public async Task<IActionResult> GetByOrder(Guid orderId)
+    public async Task<IActionResult> GetByOrder(Guid orderId, CancellationToken cancellationToken)
     {
-        var payments = await _paymentService.GetPaymentsByOrderIdAsync(orderId, CurrentUserId, IsAdmin);
+        var payments = await _paymentService.GetPaymentsByOrderIdAsync(orderId, CurrentUserId, IsAdmin, cancellationToken);
         return Ok(payments);
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<IActionResult> GetById(Guid id)
+    public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
     {
-        var payment = await _paymentService.GetPaymentByIdAsync(id, CurrentUserId, IsAdmin);
+        var payment = await _paymentService.GetPaymentByIdAsync(id, CurrentUserId, IsAdmin, cancellationToken);
         return Success(
             payment,
             "Payment retrieved successfully.");
@@ -45,17 +45,18 @@ public class PaymentsController : BaseController
 
     [HttpPost("webhook")]
     [AllowAnonymous]
-    public async Task<IActionResult> Webhook()
+    [Microsoft.AspNetCore.RateLimiting.DisableRateLimiting]
+    public async Task<IActionResult> Webhook(CancellationToken cancellationToken)
     {
         Request.EnableBuffering();
 
         using var reader = new StreamReader(Request.Body, leaveOpen: true);
-        var payload = await reader.ReadToEndAsync();
+        var payload = await reader.ReadToEndAsync(cancellationToken);
         Request.Body.Position = 0;
 
         var signature = Request.Headers["Stripe-Signature"].ToString();
 
-        await _paymentService.HandleStripeWebhookAsync(payload, signature);
+        await _paymentService.HandleStripeWebhookAsync(payload, signature, cancellationToken);
 
         return Ok(new { success = true });
     }

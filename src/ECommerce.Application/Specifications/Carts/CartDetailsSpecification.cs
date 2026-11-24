@@ -9,7 +9,7 @@ public class CartDetailsSpecification : BaseSpecification<Cart, Guid>
         : base(c => c.Id == cartId)
     {
         AddInclude(c => c.CartItems);
-        AsNoTracking();
+        // Used by claim/checkout mutations; retain one tracked cart graph.
     }
 
     

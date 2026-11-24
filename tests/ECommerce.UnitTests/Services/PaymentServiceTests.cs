@@ -16,7 +16,7 @@ using ECommerce.Application.Interfaces;
 
 namespace ECommerce.UnitTests.Services;
 
-public class PaymentServiceTests
+public partial class PaymentServiceTests
 {
     private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
     private readonly Mock<IMapper> _mapperMock = new();
@@ -47,9 +47,9 @@ public class PaymentServiceTests
         var payments = new List<Payment> { new() { Id = TestGuid.FromInt(1), OrderId = order.Id, UserId = order.UserId } };
         var paymentDtos = new List<GetPaymentDTO> { new() { Id = TestGuid.FromInt(1), OrderId = order.Id, UserId = order.UserId } };
 
-        _orderRepositoryMock.Setup(r => r.GetFirstOrDefaultAsync(It.IsAny<ECommerce.Domain.Specifications.Base.BaseSpecification<Order, Guid>>()))
+        _orderRepositoryMock.Setup(r => r.GetFirstOrDefaultAsync(It.IsAny<ECommerce.Domain.Specifications.Base.BaseSpecification<Order, Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(order);
-        _paymentRepositoryMock.Setup(r => r.GetAllAsync(It.IsAny<ECommerce.Domain.Specifications.Base.BaseSpecification<Payment, Guid>>()))
+        _paymentRepositoryMock.Setup(r => r.GetAllAsync(It.IsAny<ECommerce.Domain.Specifications.Base.BaseSpecification<Payment, Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(payments);
         _mapperMock.Setup(m => m.Map<IEnumerable<GetPaymentDTO>>(payments)).Returns(paymentDtos);
 
@@ -64,7 +64,7 @@ public class PaymentServiceTests
         var payment = new Payment { Id = TestGuid.FromInt(1), Amount = 99.99m, UserId = "user-123" };
         var paymentDto = new GetPaymentDTO { Id = TestGuid.FromInt(1), Amount = 99.99m, UserId = "user-123" };
 
-        _paymentRepositoryMock.Setup(r => r.GetByIdAsync(payment.Id)).ReturnsAsync(payment);
+        _paymentRepositoryMock.Setup(r => r.GetByIdAsync(payment.Id, It.IsAny<CancellationToken>())).ReturnsAsync(payment);
         _mapperMock.Setup(m => m.Map<GetPaymentDTO>(payment)).Returns(paymentDto);
 
         var result = await _paymentService.GetPaymentByIdAsync(payment.Id, payment.UserId, false);
@@ -76,7 +76,7 @@ public class PaymentServiceTests
     [Fact]
     public async Task GetPaymentByIdAsync_WhenNotFound_ShouldThrowKeyNotFoundException()
     {
-        _paymentRepositoryMock.Setup(r => r.GetByIdAsync(TestGuid.FromInt(999))).ReturnsAsync((Payment?)null);
+        _paymentRepositoryMock.Setup(r => r.GetByIdAsync(TestGuid.FromInt(999), It.IsAny<CancellationToken>())).ReturnsAsync((Payment?)null);
 
         var act = () => _paymentService.GetPaymentByIdAsync(TestGuid.FromInt(999), "user-123", false);
 
@@ -87,7 +87,7 @@ public class PaymentServiceTests
     public async Task GetPaymentByIdAsync_WhenAccessingAnotherUsersPayment_ShouldThrowUnauthorizedAccessException()
     {
         var payment = new Payment { Id = TestGuid.FromInt(1), UserId = "other-user" };
-        _paymentRepositoryMock.Setup(r => r.GetByIdAsync(payment.Id)).ReturnsAsync(payment);
+        _paymentRepositoryMock.Setup(r => r.GetByIdAsync(payment.Id, It.IsAny<CancellationToken>())).ReturnsAsync(payment);
 
         var act = () => _paymentService.GetPaymentByIdAsync(payment.Id, "user-123", false);
 
@@ -123,11 +123,11 @@ public class PaymentServiceTests
 
         _validatorMock.Setup(v => v.ValidateAsync(It.IsAny<CreateCheckoutSessionDTO>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
-        _orderRepositoryMock.Setup(r => r.GetFirstOrDefaultAsync(It.IsAny<ECommerce.Domain.Specifications.Base.BaseSpecification<Order, Guid>>()))
+        _orderRepositoryMock.Setup(r => r.GetFirstOrDefaultAsync(It.IsAny<ECommerce.Domain.Specifications.Base.BaseSpecification<Order, Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(order);
-        _paymentRepositoryMock.Setup(r => r.GetAllAsync(It.IsAny<ECommerce.Domain.Specifications.Base.BaseSpecification<Payment, Guid>>()))
+        _paymentRepositoryMock.Setup(r => r.GetAllAsync(It.IsAny<ECommerce.Domain.Specifications.Base.BaseSpecification<Payment, Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Payment>());
-        _paymentRepositoryMock.Setup(r => r.AddAsync(It.IsAny<Payment>())).Returns(Task.CompletedTask);
+        _paymentRepositoryMock.Setup(r => r.AddAsync(It.IsAny<Payment>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _paymentGatewayMock.Setup(g => g.CreateCheckoutSessionAsync(It.IsAny<Payment>(), order, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new CreateCheckoutSessionResponseDTO
             {
@@ -147,7 +147,7 @@ public class PaymentServiceTests
         var result = await _paymentService.CreateCheckoutSessionAsync(order.Id, order.UserId);
 
         result.CheckoutSessionId.Should().Be("cs_test_123");
-        _paymentRepositoryMock.Verify(r => r.AddAsync(It.IsAny<Payment>()), Times.Once);
+        _paymentRepositoryMock.Verify(r => r.AddAsync(It.IsAny<Payment>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

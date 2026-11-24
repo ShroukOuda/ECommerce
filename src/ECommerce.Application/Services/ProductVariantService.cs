@@ -38,8 +38,8 @@ public class ProductVariantService : IProductVariantService
 
     public async Task<GetProductVariantDTO> AddVariantAsync(AddProductVariantDTO dto)
     {
-        var result = await _addValidator.ValidateAsync(dto);
-        if (!result.IsValid) throw new ValidationException(result.Errors);
+        var validationResult = await _addValidator.ValidateAsync(dto);
+        if (!validationResult.IsValid) throw new ValidationException(validationResult.Errors);
 
         var variant = _mapper.Map<ProductVariant>(dto);
         await _unitOfWork.GetRepository<ProductVariant, Guid>().AddAsync(variant);
@@ -64,14 +64,18 @@ public class ProductVariantService : IProductVariantService
     public async Task<GetProductVariantDTO> UpdateVariantAsync(Guid id, UpdateProductVariantDTO dto)
     {
         
-        var result = await _updateValidator.ValidateAsync(dto);
-        if (!result.IsValid) throw new ValidationException(result.Errors);
+        var validationResult = await _updateValidator.ValidateAsync(dto);
+        if (!validationResult.IsValid) throw new ValidationException(validationResult.Errors);
 
         var spec = new ProductVariantSpecification(id);
-        bool exists = await _unitOfWork.GetRepository<ProductVariant, Guid>().ExistsAsync(spec);
-        if (!exists) throw new KeyNotFoundException($"Product variant with ID {id} not found.");
+        var variant = await _unitOfWork.GetRepository<ProductVariant, Guid>().GetFirstOrDefaultAsync(spec);
+        if (variant is null) throw new KeyNotFoundException($"Product variant with ID {id} not found.");
         
-        var variant = _mapper.Map<ProductVariant>(dto);
+        var originalId = variant.Id;
+        var originalCreatedAt = variant.CreatedAt;
+        _mapper.Map(dto, variant);
+        variant.Id = originalId;
+        variant.CreatedAt = originalCreatedAt;
         _unitOfWork.GetRepository<ProductVariant, Guid>().Update(variant);
         await _unitOfWork.SaveChangesAsync();
         return _mapper.Map<GetProductVariantDTO>(variant);

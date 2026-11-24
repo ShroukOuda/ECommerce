@@ -9,8 +9,7 @@ public class SessionByRefreshTokenSpecification : BaseSpecification<UserSession,
         : base(s => s.RefreshToken == refreshToken)
     {
         AddInclude(s => s.User);
-        AsNoTracking();
+        // Used by mutation workflows; keep this graph tracked.
     }
 }
-
 

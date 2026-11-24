@@ -23,7 +23,7 @@ public class CategorySubscriptionConfiguration
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(x => x.Category)
-            .WithMany()
+            .WithMany(c => c.CategorySubscriptions)
             .HasForeignKey(x => x.CategoryId)
             .OnDelete(DeleteBehavior.Cascade);
     }

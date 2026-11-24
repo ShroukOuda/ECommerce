@@ -1,3 +1,10 @@
+using ECommerce.Domain.Entities.Orders;
+using ECommerce.Domain.Entities.Payments;
+using ECommerce.Domain.Enums.Order;
+using ECommerce.Domain.Enums.Payment;
+using ECommerce.Infrastructure.Persistence.Context;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
@@ -68,5 +75,37 @@ public class AdminOrdersControllerTests : IClassFixture<CustomWebApplicationFact
     {
         var response = await _client.GetAsync("/api/v1/admin/orders");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Theory]
+    [InlineData(OrderStatus.Pending)]
+    [InlineData(OrderStatus.Confirmed)]
+    [InlineData(OrderStatus.Processing)]
+    [InlineData(OrderStatus.OnHold)]
+    public async Task AdminCancellationOfPaidOrder_Returns409AndPersistsNoChanges(OrderStatus status)
+    {
+        using var factory = new CustomWebApplicationFactory();
+        using var client = factory.CreateClient();
+        var orderId = Guid.NewGuid();
+        var paymentId = Guid.NewGuid();
+        // Factory uses a unique InMemory store, no external DB or schema creation.
+        using (var scope = factory.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            context.Set<Order>().Add(new() { Id = orderId, UserId = "test-user", OrderStatus = status });
+            context.Set<Payment>().Add(new() { Id = paymentId, OrderId = orderId, UserId = "test-user", Status = PaymentStatus.Paid });
+            await context.SaveChangesAsync();
+        }
+        for (var attempt = 0; attempt < 2; attempt++)
+        {
+            var response = await client.PutAsJsonAsync($"/api/v1/admin/orders/{orderId}/status", new { orderStatus = "Cancelled" });
+            response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+            (await response.Content.ReadAsStringAsync()).Should().Contain("manual review");
+        }
+        using var check = factory.Services.CreateScope();
+        var reloaded = check.ServiceProvider.GetRequiredService<AppDbContext>();
+        (await reloaded.Set<Order>().SingleAsync(o => o.Id == orderId)).OrderStatus.Should().Be(status);
+        (await reloaded.Set<Payment>().SingleAsync(p => p.Id == paymentId)).Status.Should().Be(PaymentStatus.Paid);
+        (await reloaded.Set<OrderStatusHistory>().CountAsync(h => h.OrderId == orderId)).Should().Be(0);
     }
 }

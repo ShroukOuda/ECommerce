@@ -44,8 +44,7 @@ public class CategoryService : ICategoryService
     public async Task<GetCategoryDTO> AddCategoryAsync(AddCategoryDTO categoryDTO)
     {
         var validationResult = await _addCategoryDtoValidator.ValidateAsync(categoryDTO);
-        if (!validationResult.IsValid)
-            throw new ValidationException(validationResult.Errors);
+        if (!validationResult.IsValid) throw new ValidationException(validationResult.Errors);
         var category = _mapper.Map<Category>(categoryDTO);
         await _unitOfWork.GetRepository<Category, Guid>().AddAsync(category);
         await _unitOfWork.SaveChangesAsync();
@@ -56,14 +55,17 @@ public class CategoryService : ICategoryService
     {
         
         var validationResult = await _updateCategoryDtoValidator.ValidateAsync(categoryDTO);
-        if (!validationResult.IsValid)
-            throw new ValidationException(validationResult.Errors);
+        if (!validationResult.IsValid) throw new ValidationException(validationResult.Errors);
         
         var spec = new CategorySpecification(id);
-        bool exist = await _unitOfWork.GetRepository<Category, Guid>().ExistsAsync(spec);
-        if (!exist)
+        var category = await _unitOfWork.GetRepository<Category, Guid>().GetFirstOrDefaultAsync(spec);
+        if (category is null)
             throw new KeyNotFoundException($"Category with ID {id} not found.");
-        var category = _mapper.Map<Category>(categoryDTO);
+        var originalId = category.Id;
+        var originalCreatedAt = category.CreatedAt;
+        _mapper.Map(categoryDTO, category);
+        category.Id = originalId;
+        category.CreatedAt = originalCreatedAt;
         _unitOfWork.GetRepository<Category, Guid>().Update(category);
         await _unitOfWork.SaveChangesAsync();
         return _mapper.Map<GetCategoryDTO>(category);

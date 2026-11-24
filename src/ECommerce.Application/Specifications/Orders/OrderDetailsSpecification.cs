@@ -14,7 +14,7 @@ public class OrderDetailsSpecification : BaseSpecification<Order, Guid>
         AddInclude(o => o.Payments);
         AddInclude(o => o.Shippings);
         AddInclude(o => o.OrderStatusHistories);
-        AsNoTracking();
+        // Used by mutation workflows; keep this graph tracked.
     }
 
     

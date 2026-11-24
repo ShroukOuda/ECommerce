@@ -171,6 +171,12 @@ public class ProductServiceTests
     [Fact]
     public async Task AddProductAsync_WithValidData_ShouldAddProduct()
     {
+        var categoryRepository = new Mock<IGenericRepository<ECommerce.Domain.Entities.Categories.Category, Guid>>();
+        categoryRepository.Setup(r => r.ExistsAsync(It.IsAny<ECommerce.Domain.Specifications.Base.BaseSpecification<ECommerce.Domain.Entities.Categories.Category, Guid>>())).ReturnsAsync(true);
+        var brandRepository = new Mock<IGenericRepository<ECommerce.Domain.Entities.Brands.Brand, Guid>>();
+        brandRepository.Setup(r => r.ExistsAsync(It.IsAny<ECommerce.Domain.Specifications.Base.BaseSpecification<ECommerce.Domain.Entities.Brands.Brand, Guid>>())).ReturnsAsync(true);
+        _unitOfWorkMock.Setup(u => u.GetRepository<ECommerce.Domain.Entities.Categories.Category, Guid>()).Returns(categoryRepository.Object);
+        _unitOfWorkMock.Setup(u => u.GetRepository<ECommerce.Domain.Entities.Brands.Brand, Guid>()).Returns(brandRepository.Object);
         var dto = new AddProductDTO
         {
             Name = "New Laptop"
@@ -253,9 +259,9 @@ public class ProductServiceTests
             .ReturnsAsync(new ValidationResult());
 
         repositoryMock
-            .Setup(r => r.ExistsAsync(
+            .Setup(r => r.GetFirstOrDefaultAsync(
                 It.IsAny<ProductSpecification>()))
-            .ReturnsAsync(true);
+            .ReturnsAsync(product);
 
         _mapperMock
             .Setup(m => m.Map<Product>(dto))

@@ -39,10 +39,8 @@ public class BrandService : IBrandService
 
     public async Task<GetBrandDTO> AddBrandAsync(AddBrandDTO dto)
     {
-        var result = await _addValidator.ValidateAsync(dto);
-
-        if (!result.IsValid)
-            throw new ValidationException(result.Errors);
+        var validationResult = await _addValidator.ValidateAsync(dto);
+        if (!validationResult.IsValid) throw new ValidationException(validationResult.Errors);
 
         var slug = dto.Name.Trim()
             .ToLowerInvariant()
@@ -68,14 +66,18 @@ public class BrandService : IBrandService
     public async Task<GetBrandDTO> UpdateBrandAsync(Guid id, UpdateBrandDTO dto)
     {
 
-        var result = await _updateValidator.ValidateAsync(dto);
-        if (!result.IsValid) throw new ValidationException(result.Errors);
+        var validationResult = await _updateValidator.ValidateAsync(dto);
+        if (!validationResult.IsValid) throw new ValidationException(validationResult.Errors);
 
         var spec = new BrandSpecification(id);
-        var existingBrand = await _unitOfWork.GetRepository<Brand, Guid>().ExistsAsync(spec);
-        if (!existingBrand) throw new KeyNotFoundException($"Brand with ID {id} not found.");
+        var brand = await _unitOfWork.GetRepository<Brand, Guid>().GetFirstOrDefaultAsync(spec);
+        if (brand is null) throw new KeyNotFoundException($"Brand with ID {id} not found.");
         
-        var brand = _mapper.Map<Brand>(dto);
+        var originalId = brand.Id;
+        var originalCreatedAt = brand.CreatedAt;
+        _mapper.Map(dto, brand);
+        brand.Id = originalId;
+        brand.CreatedAt = originalCreatedAt;
         brand.Slug = dto.Name.ToLower().Replace(" ", "-");
         _unitOfWork.GetRepository<Brand, Guid>().Update(brand);
         await _unitOfWork.SaveChangesAsync();

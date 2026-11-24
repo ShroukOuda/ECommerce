@@ -117,4 +117,35 @@ public class GenericRepository<TEntity, TKey> : IGenericRepository<TEntity, TKey
     }
    
   
+    public async Task<IReadOnlyList<TEntity>> GetAllAsync(BaseSpecification<TEntity, TKey> specification, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return await SpecificationEvaluator.GetQuery(_dbSet, specification).ToListAsync(cancellationToken);
+    }
+
+    public async Task<TEntity?> GetByIdAsync(TKey id, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return await _dbSet.FindAsync(new object[] { id }, cancellationToken);
+    }
+
+    public async Task<TEntity?> GetFirstOrDefaultAsync(BaseSpecification<TEntity, TKey> specification, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return await SpecificationEvaluator.GetQuery(_dbSet, specification).FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<bool> ExistsAsync(BaseSpecification<TEntity, TKey> specification, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return await SpecificationEvaluator.GetQuery(_dbSet, specification).AnyAsync(cancellationToken);
+    }
+
+    public async Task AddAsync(TEntity entity, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        entity.CreatedAt = DateTime.UtcNow;
+        entity.UpdatedAt = DateTime.UtcNow;
+        await _dbSet.AddAsync(entity, cancellationToken);
+    }
 }

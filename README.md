@@ -2,13 +2,18 @@
 
 > An e-commerce marketplace backend built with ASP.NET Core 9 and Clean Architecture. Supports product catalogs with variants and options, shopping carts, orders, coupons, reviews, wishlists, and a stock/subscription-based notification system, with JWT auth, refresh-token rotation, and role-based access for customers and admins. Built with EF Core, SQL Server, AutoMapper, and FluentValidation, with unit, integration, and architecture-enforcement test suites, and a Docker Compose setup for local development
 
+## Review status
+
+Phase 0 remediation is review-ready, not approved for live payments or deployment. See [the resolution matrix](docs/PHASE0-REMEDIATION.md) for remaining SQL concurrency, reconciliation, inventory policy and owner-managed schema gates. The owner generates migrations locally. Per her clarification, startup again applies existing pending migrations when AUTO_MIGRATE=true or the environment is Development. No API/Docker startup or database update was executed during this remediation. Existing migration files and snapshot are unchanged.
+
 ## Quick Start
 
 ```bash
 git clone https://github.com/ShroukOuda/ECommerce.git
 cd ECommerce
 docker compose -f docker/docker-compose.yml up --build
-# API available at http://localhost:8080/swagger
+# Liveness: http://localhost:8080/api/v1/health
+# Base compose uses Production, Swagger is disabled. Database preparation is owner-managed.
 ```
 
 ## Tech Stack
@@ -41,6 +46,9 @@ docs/                        # Full documentation
 
 | Topic | Link |
 |-------|------|
+| Phase 0 remediation | [docs/PHASE0-REMEDIATION.md](docs/PHASE0-REMEDIATION.md) |
+| Payment setup | [docs/PAYMENT-GUIDE.md](docs/PAYMENT-GUIDE.md) |
+| Payments API | [docs/api/PAYMENTS.md](docs/api/PAYMENTS.md) |
 | API Overview | [docs/api/README.md](docs/api/README.md) |
 | Authentication | [docs/api/AUTHENTICATION.md](docs/api/AUTHENTICATION.md) |
 | Products | [docs/api/PRODUCTS.md](docs/api/PRODUCTS.md) |
@@ -67,4 +75,4 @@ See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for local setup, migrations, debu
 
 ## License
 
-This project is licensed under the MIT License.
+The prior README claimed MIT, but no license file is present. License terms await owner confirmation; this remediation does not add legal terms.

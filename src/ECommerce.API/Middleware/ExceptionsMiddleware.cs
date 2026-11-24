@@ -12,15 +12,16 @@ public class ExceptionsMiddleware
     private readonly IHostEnvironment _environment;
     private readonly IMemoryCache _memoryCache;
     private readonly TimeSpan _rateLimitWindow = TimeSpan.FromSeconds(30);
-    private const int _maxRequests = 8;
+    private readonly int _maxRequests;
     public ExceptionsMiddleware(
         RequestDelegate next, 
         IHostEnvironment environment, 
-        IMemoryCache memoryCache)
+        IMemoryCache memoryCache, IConfiguration configuration)
     {
         _next = next;
         _environment = environment;
         _memoryCache = memoryCache;
+        _maxRequests = Math.Max(1, configuration.GetValue<int?>("RateLimiting:MaxRequests") ?? 8);
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -50,6 +51,10 @@ public class ExceptionsMiddleware
             string notFoundJson = JsonSerializer.Serialize(notFoundResponse);
             await context.Response.WriteAsync(notFoundJson);
         }
+        catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+        {
+            context.Response.StatusCode = 499;
+        }
         catch (Exception e)
         {
             var statusCode = GetStatusCode(e);
@@ -57,7 +62,7 @@ public class ExceptionsMiddleware
             context.Response.ContentType = "application/json";
             ApiExceptions response = _environment.IsDevelopment() ?
                 new ApiExceptions(statusCode, e.Message, e.StackTrace)
-                : new ApiExceptions(statusCode, e.Message);
+                : new ApiExceptions(statusCode, statusCode >= 500 ? "An unexpected error occurred." : e.Message);
             string json = JsonSerializer.Serialize(response);
             await context.Response.WriteAsync(json);
         }
@@ -67,6 +72,9 @@ public class ExceptionsMiddleware
     {
         return exception switch
         {
+            BusinessRuleException => (int)HttpStatusCode.BadRequest,
+            ConflictException => (int)HttpStatusCode.Conflict,
+            ArgumentException => (int)HttpStatusCode.BadRequest,
             ValidationException => (int)HttpStatusCode.BadRequest,
             BadRequestException => (int)HttpStatusCode.BadRequest,
             NotFoundException => (int)HttpStatusCode.NotFound,
@@ -78,6 +86,9 @@ public class ExceptionsMiddleware
 
     private bool IsRequestAllowed(HttpContext context)
     {
+        // Stripe authenticates its own delivery with a signed payload. Shared-IP UI quotas must not drop webhooks.
+        if (context.Request.Path.Equals("/api/v1/payments/webhook", StringComparison.OrdinalIgnoreCase)
+            || context.Request.Path.Equals("/api/v1/health", StringComparison.OrdinalIgnoreCase)) return true;
         string ip = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
         string cacheKey = $"RateLimit: {ip}";
         DateTime dateNow = DateTime.Now;

@@ -209,20 +209,9 @@ See [AUTHENTICATION.md](AUTHENTICATION.md) for complete authentication guide.
 
 ---
 
-## ⚡ Rate Limiting
+## Rate limiting
 
-| User Type | Limit | Window |
-|-----------|-------|--------|
-| **Public** | 20 requests | 1 minute |
-| **Authenticated** | 100 requests | 1 minute |
-| **Admin** | 200 requests | 1 minute |
-
-Rate limit headers:
-```http
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 95
-X-RateLimit-Reset: 1675941600
-```
+Default middleware quota is eight requests per thirty seconds per IP, configurable with RateLimiting:MaxRequests. It is not role-based and does not emit the previously documented X-RateLimit headers. Signed Stripe webhook delivery and liveness bypass the shared-IP UI quota. This is basic local protection, not distributed abuse prevention.
 
 ---
 
@@ -238,10 +227,9 @@ X-RateLimit-Reset: 1675941600
 | `403` | Forbidden | Insufficient permissions |
 | `404` | Not Found | Resource not found |
 | `409` | Conflict | Duplicate resource |
-| `422` | Unprocessable Entity | Business logic error |
+| `409` | Conflict | Processing/reconciliation conflict |
 | `429` | Too Many Requests | Rate limit exceeded |
 | `500` | Internal Server Error | Server error |
-
 
 
 

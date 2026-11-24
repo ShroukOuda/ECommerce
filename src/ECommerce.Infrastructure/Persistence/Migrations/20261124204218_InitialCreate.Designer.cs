@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ECommerce.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20261124125547_FixCategorySubscriptionRelationship")]
-    partial class FixCategorySubscriptionRelationship
+    [Migration("20261124204218_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -209,7 +209,7 @@ namespace ECommerce.Infrastructure.Persistence.Migrations
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("VariantId")
+                    b.Property<Guid?>("VariantId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
@@ -538,7 +538,7 @@ namespace ECommerce.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("ProductId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("ProductVariantId")
+                    b.Property<Guid?>("ProductVariantId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("QuantityChange")
@@ -937,7 +937,7 @@ namespace ECommerce.Infrastructure.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<Guid>("ProductVariantId")
+                    b.Property<Guid?>("ProductVariantId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Quantity")
@@ -1406,15 +1406,15 @@ namespace ECommerce.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("IsMain")
-                        .IsUnique()
-                        .HasDatabaseName("UQ_Product_MainImage")
-                        .HasFilter("IsMain = 1");
-
                     b.HasIndex("ProductId")
                         .HasDatabaseName("IX_ProductImages_ProductId");
 
                     b.HasIndex("ProductVariantId");
+
+                    b.HasIndex(new[] { "ProductId" }, "UQ_Product_MainImage")
+                        .IsUnique()
+                        .HasDatabaseName("UQ_Product_MainImage")
+                        .HasFilter("IsMain = 1");
 
                     b.ToTable("ProductImages", t =>
                         {
@@ -2462,8 +2462,7 @@ namespace ECommerce.Infrastructure.Persistence.Migrations
                     b.HasOne("ECommerce.Domain.Entities.Products.ProductVariant", "ProductVariant")
                         .WithMany("CartItems")
                         .HasForeignKey("VariantId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("Cart");
 
@@ -2674,8 +2673,7 @@ namespace ECommerce.Infrastructure.Persistence.Migrations
                     b.HasOne("ECommerce.Domain.Entities.Products.ProductVariant", "ProductVariant")
                         .WithMany("OrderItems")
                         .HasForeignKey("ProductVariantId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("Order");
 

@@ -456,7 +456,6 @@ namespace ECommerce.Infrastructure.Persistence.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     CategoryId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    CategoryId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -478,11 +477,6 @@ namespace ECommerce.Infrastructure.Persistence.Migrations
                         principalTable: "Categories",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_CategorySubscriptions_Categories_CategoryId1",
-                        column: x => x.CategoryId1,
-                        principalTable: "Categories",
-                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -984,7 +978,7 @@ namespace ECommerce.Infrastructure.Persistence.Migrations
                     Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     CartId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ProductId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    VariantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    VariantId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -1025,7 +1019,7 @@ namespace ECommerce.Infrastructure.Persistence.Migrations
                     ReferencedType = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     Notes = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     ProductId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ProductVariantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ProductVariantId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -1067,7 +1061,7 @@ namespace ECommerce.Infrastructure.Persistence.Migrations
                     TotalPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     OrderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ProductId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ProductVariantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ProductVariantId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -1464,11 +1458,6 @@ namespace ECommerce.Infrastructure.Persistence.Migrations
                 column: "CategoryId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CategorySubscriptions_CategoryId1",
-                table: "CategorySubscriptions",
-                column: "CategoryId1");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_CategorySubscriptions_UserId_CategoryId",
                 table: "CategorySubscriptions",
                 columns: new[] { "UserId", "CategoryId" },
@@ -1620,7 +1609,7 @@ namespace ECommerce.Infrastructure.Persistence.Migrations
             migrationBuilder.CreateIndex(
                 name: "UQ_Product_MainImage",
                 table: "ProductImages",
-                column: "IsMain",
+                column: "ProductId",
                 unique: true,
                 filter: "IsMain = 1");
 

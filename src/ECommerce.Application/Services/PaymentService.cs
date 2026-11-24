@@ -179,17 +179,16 @@ public class PaymentService : IPaymentService
         // Read the order for verified success, including a late success after local expiry/failure.
         var confirmedSuccess = (stripeEvent.EventType is "checkout.session.completed" or "checkout.session.async_payment_succeeded")
             && IsConfirmedPayment(stripeEvent);
-        var order = confirmedSuccess && payment.Status != PaymentStatus.Refunded
+        var order = confirmedSuccess && payment.Status is not (PaymentStatus.Paid or PaymentStatus.Refunded)
             ? await _unitOfWork.GetRepository<Order, Guid>().GetByIdAsync(payment.OrderId, cancellationToken)
             : null;
         var cancelledOrder = order?.OrderStatus == OrderStatus.Cancelled;
         var nextStatus = ResolveNextStatus(payment, stripeEvent, cancelledOrder);
-        var manualReview = cancelledOrder && confirmedSuccess
-            && (nextStatus == PaymentStatus.Paid || payment.Status == PaymentStatus.Paid);
+        var manualReview = cancelledOrder && nextStatus == PaymentStatus.Paid;
 
         if (nextStatus is null)
         {
-            await RecordStripeEventAsync(stripeEvent, payment, manualReview ? "ManualReviewRequired" : "Ignored", null, now, cancellationToken);
+            await RecordStripeEventAsync(stripeEvent, payment, "Ignored", null, now, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return;
         }

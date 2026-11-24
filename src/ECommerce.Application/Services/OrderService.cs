@@ -175,56 +175,38 @@ public class OrderService : IOrderService
                     $"Product {cartItem.ProductId} is not available.");
             }
 
-            var variant = await variantRepository
-                .GetFirstOrDefaultAsync(
-                    new ProductVariantSpecification(
-                        cartItem.VariantId));
-
-            if (variant is null ||
-                variant.ProductId != product.Id ||
-                variant.Status != ProductVariantStatus.Active)
+            ProductVariant? variant = null;
+            if (cartItem.VariantId.HasValue)
             {
-                throw new ArgumentException(
-                    $"Product variant {cartItem.VariantId} is not available for product {product.Id}.");
+                variant = await variantRepository.GetFirstOrDefaultAsync(new ProductVariantSpecification(cartItem.VariantId.Value));
+                if (variant is null || variant.ProductId != product.Id || variant.Status != ProductVariantStatus.Active)
+                    throw new ArgumentException("Choose an active variant belonging to this product.");
             }
+            else if (await variantRepository.ExistsAsync(new ProductVariantsByProductSpecification(product.Id)))
+                throw new BadRequestException("This product has variants. Choose a variant.");
 
-            if (variant.StockQuantity < cartItem.Quantity)
-            {
-                throw new ArgumentException(
-                    $"Insufficient stock for product variant {variant.Id}: requested {cartItem.Quantity}, available {variant.StockQuantity}.");
-            }
-
-            decimal unitPrice =
-                (product.IsOnSale
-                    ? product.SalePrice
-                    : product.BasePrice)
-                + variant.PriceAdjustment;
-
+            var available = variant?.StockQuantity ?? product.StockQuantity;
+            if (available < cartItem.Quantity)
+                throw new ArgumentException("Insufficient stock for the selected product or variant.");
+            var unitPrice = (product.IsOnSale ? product.SalePrice : product.BasePrice) + (variant?.PriceAdjustment ?? 0m);
             order.OrderItems.Add(new OrderItem
             {
-                ProductId = cartItem.ProductId,
-
-                ProductVariantId = cartItem.VariantId,
-
-                ProductName = product.Name,
-
-                VariantName = variant.VariantName,
-
-                VariantAttributes = variant.Attributes,
-
-                Quantity = cartItem.Quantity,
-
-                UnitPrice = unitPrice,
-
-                TotalPrice = unitPrice * cartItem.Quantity
+                ProductId = product.Id, ProductVariantId = variant?.Id, ProductName = product.Name,
+                VariantName = variant?.VariantName ?? string.Empty, VariantAttributes = variant?.Attributes,
+                Quantity = cartItem.Quantity, UnitPrice = unitPrice, TotalPrice = unitPrice * cartItem.Quantity
             });
-
-            // Stock is reserved at placement; cancelling a
-            // pending order restocks symmetrically.
-            variant.StockQuantity -= cartItem.Quantity;
-            if (variant.StockQuantity == 0)
-                variant.StockStatus = StockStatus.OutOfStock;
-            variantRepository.Update(variant);
+            if (variant is not null)
+            {
+                variant.StockQuantity -= cartItem.Quantity;
+                if (variant.StockQuantity == 0) variant.StockStatus = StockStatus.OutOfStock;
+                variantRepository.Update(variant);
+            }
+            else
+            {
+                product.StockQuantity -= cartItem.Quantity;
+                if (product.StockQuantity == 0) product.StockStatus = StockStatus.OutOfStock;
+                _unitOfWork.GetRepository<Product, Guid>().Update(product);
+            }
         }
 
         order.SubTotal =
@@ -370,22 +352,23 @@ public class OrderService : IOrderService
 
         foreach (var item in order.OrderItems)
         {
-            var variant = await variantRepository
-                .GetFirstOrDefaultAsync(
-                    new ProductVariantSpecification(
-                        item.ProductVariantId));
-
-            if (variant is null)
-                continue;
-
-            variant.StockQuantity += item.Quantity;
-            if (variant.StockStatus == StockStatus.OutOfStock &&
-                variant.StockQuantity > 0)
+            if (item.ProductVariantId.HasValue)
             {
-                variant.StockStatus = StockStatus.InStock;
+                var variant = await variantRepository.GetFirstOrDefaultAsync(new ProductVariantSpecification(item.ProductVariantId.Value));
+                if (variant is null) throw new NotFoundException("Reserved product variant no longer exists.");
+                variant.StockQuantity = checked(variant.StockQuantity + item.Quantity);
+                if (variant.StockQuantity > 0) variant.StockStatus = StockStatus.InStock;
+                variantRepository.Update(variant);
             }
-
-            variantRepository.Update(variant);
+            else
+            {
+                var repo = _unitOfWork.GetRepository<Product, Guid>();
+                var product = await repo.GetByIdAsync(item.ProductId);
+                if (product is null) throw new NotFoundException("Reserved product no longer exists.");
+                product.StockQuantity = checked(product.StockQuantity + item.Quantity);
+                if (product.StockQuantity > 0) product.StockStatus = StockStatus.InStock;
+                repo.Update(product);
+            }
         }
     }
 

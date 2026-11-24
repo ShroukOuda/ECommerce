@@ -37,7 +37,7 @@ public class CatalogSeedModelTests
         withVariants.Should().Be(8); // Four real simple products, no hidden Standard rows.
         var imageGroups = (await db.ProductImages.ToListAsync()).GroupBy(x => x.ProductId);
         imageGroups.Should().OnlyContain(g => g.Count(x => x.IsMain) == 1);
-        (await db.ProductImages.Select(x => x.ImageUrl).ToListAsync()).Should().OnlyContain(x => x.StartsWith("/images/seed/"));
+        (await db.ProductImages.Select(x => x.ImageUrl).ToListAsync()).Should().OnlyContain(x => x.StartsWith("/Images/seed/"));
     }
 
     [Fact]

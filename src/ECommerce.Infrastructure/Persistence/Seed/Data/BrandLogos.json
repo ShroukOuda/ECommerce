@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "a49e7b91-37d1-58b7-a683-01621bd0b0d7",
+    "BrandId": "11111111-1111-1111-1111-111111111111",
+    "ImageUrl": "/images/seed/demo-brand.svg",
+    "AltText": "Apple demo placeholder, not an official logo",
+    "SubType": "Icon",
+    "IsMain": true
+  },
+  {
+    "Id": "91bd0dad-54ae-5af8-9cdc-1a68e60df7ba",
+    "BrandId": "22222222-2222-2222-2222-222222222222",
+    "ImageUrl": "/images/seed/demo-brand.svg",
+    "AltText": "Samsung demo placeholder, not an official logo",
+    "SubType": "Icon",
+    "IsMain": true
+  },
+  {
+    "Id": "fc9c7933-3015-5c3e-a3f5-31da5112fe90",
+    "BrandId": "33333333-3333-3333-3333-333333333333",
+    "ImageUrl": "/images/seed/demo-brand.svg",
+    "AltText": "Microsoft demo placeholder, not an official logo",
+    "SubType": "Icon",
+    "IsMain": true
+  },
+  {
+    "Id": "a9ec2571-61da-524d-96ff-fca484279bed",
+    "BrandId": "44444444-4444-4444-4444-444444444444",
+    "ImageUrl": "/images/seed/demo-brand.svg",
+    "AltText": "Lenovo demo placeholder, not an official logo",
+    "SubType": "Icon",
+    "IsMain": true
+  },
+  {
+    "Id": "91e9b14a-2426-5358-a7c6-9d9c9892884f",
+    "BrandId": "55555555-5555-5555-5555-555555555555",
+    "ImageUrl": "/images/seed/demo-brand.svg",
+    "AltText": "Asus demo placeholder, not an official logo",
+    "SubType": "Icon",
+    "IsMain": true
+  }
+]

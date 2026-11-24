@@ -60,6 +60,7 @@ public static class InfrastructureRegistration
 
         //stripe settings
         services.Configure<StripeSettings>(configuration.GetSection(StripeSettings.SectionName));
+        services.AddScoped<ICheckoutCurrencyProvider, CheckoutCurrencyProvider>();
 
         //app settings
         services.Configure<AppSettings>(configuration.GetSection(AppSettings.SectionName));

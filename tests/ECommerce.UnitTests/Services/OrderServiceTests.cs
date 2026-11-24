@@ -1,4 +1,5 @@
 using AutoMapper;
+using ECommerce.Application.Interfaces.Services;
 using ECommerce.Application.DTO.Coupon;
 using ECommerce.Application.DTO.Order;
 using ECommerce.Application.DTO.Return;
@@ -32,6 +33,7 @@ public class OrderServiceTests
     private readonly Mock<IValidator<CreateOrderDTO>> _createValidatorMock;
     private readonly Mock<ICouponService> _couponServiceMock;
     private readonly IOrderService _orderService;
+    private readonly Mock<ICheckoutCurrencyProvider> _currencyProviderMock;
 
     public OrderServiceTests()
     {
@@ -39,11 +41,14 @@ public class OrderServiceTests
         _mapperMock = new Mock<IMapper>();
         _createValidatorMock = new Mock<IValidator<CreateOrderDTO>>();
         _couponServiceMock = new Mock<ICouponService>();
+        _currencyProviderMock = new Mock<ICheckoutCurrencyProvider>();
+        _currencyProviderMock.SetupGet(x => x.Currency).Returns("USD");
         _orderService = new OrderService(
             _unitOfWorkMock.Object,
             _mapperMock.Object,
             _createValidatorMock.Object,
-            _couponServiceMock.Object);
+            _couponServiceMock.Object,
+            _currencyProviderMock.Object);
 
         _unitOfWorkMock.Setup(u => u.GetRepository<ECommerce.Domain.Entities.Users.Address, Guid>().GetByIdAsync(It.IsAny<Guid>()))
             .ReturnsAsync((Guid id) => new ECommerce.Domain.Entities.Users.Address { Id = id, UserId = "user1" });
@@ -153,10 +158,15 @@ public class OrderServiceTests
         await act.Should().ThrowAsync<KeyNotFoundException>();
     }
 
-    [Fact]
-    public async Task CreateOrderAsync_WithValidData_ShouldCreatePricedOrderFromCartAndConsumeIt()
+    [Theory]
+    [InlineData("EUR", "USD")]
+    [InlineData("", "EGP")]
+    [InlineData("USD", "EUR")]
+    public async Task CreateOrderAsync_WithValidData_ShouldCreatePricedOrderFromCartAndConsumeIt(string clientCurrency, string serverCurrency)
     {
         var dto = DefaultCreateDto();
+        dto.Currency = clientCurrency;
+        _currencyProviderMock.SetupGet(x => x.Currency).Returns(serverCurrency);
         var cart = DefaultCart();
         var variant = DefaultVariant();
 
@@ -181,6 +191,8 @@ public class OrderServiceTests
         result.Should().NotBeNull();
         captured.Should().NotBeNull();
         captured!.UserId.Should().Be("user1");
+        captured.Currency.Should().Be(serverCurrency);
+        _currencyProviderMock.VerifyGet(x => x.Currency, Times.Once);
         captured.OrderStatus.Should().Be(OrderStatus.Pending);
         captured.OrderNumber.Should().StartWith("ORD-");
         var line = captured.OrderItems.Should().ContainSingle().Subject;

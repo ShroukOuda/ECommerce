@@ -82,3 +82,7 @@ stripe listen --events checkout.session.completed,checkout.session.async_payment
 - https://docs.stripe.com/testing
 - https://docs.stripe.com/keys
 - https://docs.stripe.com/global
+
+## تحديث Docker بطلبك، 24 نوفمبر 2026
+
+ملفات Docker ودليله رجعوا لنسختك الأصلية قبل إصلاحاتنا. الـCompose الأساسي رجع Development، والـhealth check القديم /health مش مطابق لمسار API الحالي /api/v1/health. إعدادات Stripe وربطها بمتغيرات البيئة لم تتغير. أي وصف سابق إن Docker اتصلح أو إنه Production افتراضيًا بقى تاريخي. التشغيل بالكونتينر غير متحقق منه. ما تستخدميش أوامر حذف volumes في الدليل القديم لو عليها بيانات مهمة؛ بتمسح بيانات SQL. Program.cs والـseed الافتراضي والـmigration اللي رفعتيها ما اتغيروش.

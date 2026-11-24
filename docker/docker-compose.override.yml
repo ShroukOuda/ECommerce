@@ -1,11 +1,8 @@
 services:
   ecommerce-api:
-    build:
-      target: development
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
       AUTO_MIGRATE: "true"
-      DataInitialization__Enabled: "false"
       Logging__LogLevel__Default: "Debug"
       Logging__LogLevel__Microsoft.AspNetCore: "Warning"
       Logging__LogLevel__Microsoft.EntityFrameworkCore: "Information"
@@ -15,10 +12,10 @@ services:
       - "5001:5001"  # Optional: HTTPS port for local development
     volumes:
       # Mount source code for development (hot reload)
-      - ../src/ECommerce.API:/src/ECommerce.API:ro
-      - ../src/ECommerce.Application:/src/ECommerce.Application:ro
-      - ../src/ECommerce.Domain:/src/ECommerce.Domain:ro
-      - ../src/ECommerce.Infrastructure:/src/ECommerce.Infrastructure:ro
+      - ./src/ECommerce.API:/src/ECommerce.API:ro
+      - ./src/ECommerce.Application:/src/ECommerce.Application:ro
+      - ./src/ECommerce.Domain:/src/ECommerce.Domain:ro
+      - ./src/ECommerce.Infrastructure:/src/ECommerce.Infrastructure:ro
     command: ["dotnet", "watch", "run", "--project", "/src/ECommerce.API/ECommerce.API.csproj"]
 
   sqlserver:

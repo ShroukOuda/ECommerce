@@ -29,6 +29,7 @@ services:
       ASPNETCORE_ENVIRONMENT: "Production"
       ASPNETCORE_URLS: "http://+:8080"
       ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=ECommerceDB;User=sa;Password=Docker123#;TrustServerCertificate=true;Connect Timeout=60;"
+      AUTO_MIGRATE: "true"
       DataInitialization__Enabled: "false"
       Stripe__SecretKey: "${STRIPE_SECRET_KEY:-}"
       Stripe__WebhookSecret: "${STRIPE_WEBHOOK_SECRET:-}"

@@ -472,7 +472,13 @@ public class OrderService : IOrderService
         if (newStatus == OrderStatus.Confirmed && !order.Payments.Any(p => p.Status == ECommerce.Domain.Enums.Payment.PaymentStatus.Paid))
             throw new BadRequestException("An order cannot be confirmed before successful payment.");
         if (newStatus == OrderStatus.Cancelled)
+        {
+            // Ordinary admin cancellation must not release reserved stock while money is still Paid.
+            // Manual review/refund is a separate operational decision, not a status override here.
+            if (order.Payments.Any(p => p.Status == ECommerce.Domain.Enums.Payment.PaymentStatus.Paid))
+                throw new ConflictException("A paid order requires manual review before cancellation. No cancellation or refund has been performed.");
             await RestockOrderAsync(order);
+        }
 
         order.OrderStatus = newStatus;
 

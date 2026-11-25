@@ -121,6 +121,37 @@ public class ShippingServiceTests
         history.CreatedBy.Should().Be("admin-1");
     }
 
+    [Fact]
+    public async Task CreateShippingAsync_WhenConcurrentCreateHitsUniqueIndex_ThrowsConflict()
+    {
+        var dto = ValidCreateDto();
+        SetupOrder(ProcessingPaidOrder());
+        _unitOfWorkMock.Setup(u => u.GetRepository<Shipping, Guid>().AddAsync(It.IsAny<Shipping>()))
+            .Returns(Task.CompletedTask);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync())
+            .ThrowsAsync(new Microsoft.EntityFrameworkCore.DbUpdateException("x",
+                new Exception("Cannot insert duplicate key row ... IX_Shippings_OrderId")));
+
+        var act = () => _shippingService.CreateShippingAsync(dto, "admin-1");
+
+        await act.Should().ThrowAsync<ECommerce.Domain.Exceptions.ConflictException>();
+    }
+
+    [Fact]
+    public async Task CreateShippingAsync_WhenOtherDbUpdateFails_DoesNotMapToConflict()
+    {
+        var dto = ValidCreateDto();
+        SetupOrder(ProcessingPaidOrder());
+        _unitOfWorkMock.Setup(u => u.GetRepository<Shipping, Guid>().AddAsync(It.IsAny<Shipping>()))
+            .Returns(Task.CompletedTask);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync())
+            .ThrowsAsync(new Microsoft.EntityFrameworkCore.DbUpdateException("x", new Exception("deadlock victim")));
+
+        var act = () => _shippingService.CreateShippingAsync(dto, "admin-1");
+
+        await act.Should().ThrowAsync<Microsoft.EntityFrameworkCore.DbUpdateException>();
+    }
+
     [Theory]
     [InlineData(OrderStatus.Pending)]
     [InlineData(OrderStatus.Confirmed)]

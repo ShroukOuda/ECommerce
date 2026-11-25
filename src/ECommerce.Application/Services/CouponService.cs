@@ -155,16 +155,42 @@ public class CouponService : ICouponService
 
         var cart = await GetCartAsync(dto.CartId);
 
+        var subtotal = CalculateSubtotal(cart);
+
         await ValidateCouponAsync(
             coupon,
             cart,
-            userId);
-
-        var subtotal = CalculateSubtotal(cart);
+            userId,
+            subtotal);
 
         var discount = CalculateDiscount(
             coupon,
             subtotal);
+
+        return new CouponResultDTO
+        {
+            Code = coupon.Code,
+            Subtotal = subtotal,
+            DiscountAmount = discount,
+            TotalAfterDiscount = subtotal - discount
+        };
+    }
+
+    // Same checks and discount as ValidateCouponAsync, but measured
+    // against a caller-supplied subtotal (the order's own subtotal at
+    // checkout) instead of the cart's stored price snapshot.
+    public async Task<CouponResultDTO> ValidateCouponForSubtotalAsync(
+        string userId,
+        Guid cartId,
+        string code,
+        decimal subtotal)
+    {
+        var coupon = await GetCouponEntityByCodeAsync(code);
+        var cart = await GetCartAsync(cartId);
+
+        await ValidateCouponAsync(coupon, cart, userId, subtotal);
+
+        var discount = CalculateDiscount(coupon, subtotal);
 
         return new CouponResultDTO
         {
@@ -187,12 +213,13 @@ public class CouponService : ICouponService
 
         var cart = await GetCartAsync(dto.CartId);
 
+        var subtotal = CalculateSubtotal(cart);
+
         await ValidateCouponAsync(
             coupon,
             cart,
-            userId);
-
-        var subtotal = CalculateSubtotal(cart);
+            userId,
+            subtotal);
 
         var discount = CalculateDiscount(
             coupon,
@@ -266,7 +293,8 @@ public class CouponService : ICouponService
     private async Task ValidateCouponAsync(
         Coupon coupon,
         Cart cart,
-        string userId)
+        string userId,
+        decimal subtotal)
     {
         if (cart.UserId != userId)
             throw new UnauthorizedAccessException(
@@ -296,8 +324,6 @@ public class CouponService : ICouponService
             throw new BusinessRuleException(
                 "This coupon has reached its usage limit.");
         }
-
-        var subtotal = CalculateSubtotal(cart);
 
         if (subtotal < coupon.MinPurchaseAmount)
         {
@@ -334,7 +360,7 @@ public class CouponService : ICouponService
     // CALCULATE DISCOUNT
     // ==========================================
 
-    private static decimal CalculateDiscount(
+    public static decimal CalculateDiscount(
         Coupon coupon,
         decimal subtotal)
     {

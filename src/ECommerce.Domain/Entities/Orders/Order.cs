@@ -9,6 +9,9 @@ public class Order : BaseEntity<Guid>
     public decimal SubTotal { get; set; }
     public decimal TaxAmount { get; set; }
     public decimal ShippingCost { get; set; }
+    // Coupon applied at checkout. Kept on the order even if the usage is released on cancel.
+    public decimal DiscountAmount { get; set; }
+    public string? CouponCode { get; set; }
     public string Currency { get; set; } = "USD";
     public string OrderNumber { get; set; } = string.Empty;
     public OrderStatus OrderStatus { get; set; } = OrderStatus.Pending;

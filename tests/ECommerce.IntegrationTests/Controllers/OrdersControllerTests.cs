@@ -86,10 +86,13 @@ public class OrdersControllerTests : IClassFixture<CustomWebApplicationFactory>
         }
 
 
+        // Legacy fields from older clients are ignored; only cartId (and optional address IDs) are read.
         var orderResponse = await _client.PostAsJsonAsync("/api/v1/orders", new
         {
             cartId,
-            currency = "USD"
+            currency = "USD",
+            orderType = "Standard",
+            items = Array.Empty<object>()
         });
 
         var orderBody = await orderResponse.Content.ReadAsStringAsync();

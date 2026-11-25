@@ -115,7 +115,9 @@ public class OrderServiceTests
 
     internal static CreateOrderDTO DefaultCreateDto() => new()
     {
-        CartId = TestGuid.FromInt(100)
+        CartId = TestGuid.FromInt(100),
+        ShippingAddressId = TestGuid.FromInt(50),
+        BillingAddressId = TestGuid.FromInt(50)
     };
 
     private void SetupValidCreate(Order? captured)

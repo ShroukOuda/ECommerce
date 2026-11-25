@@ -116,7 +116,6 @@ public class OrderServiceTests
     internal static CreateOrderDTO DefaultCreateDto() => new()
     {
         CartId = TestGuid.FromInt(100),
-        Currency = "USD",
         ShippingAddressId = TestGuid.FromInt(50),
         BillingAddressId = TestGuid.FromInt(50)
     };
@@ -159,13 +158,12 @@ public class OrderServiceTests
     }
 
     [Theory]
-    [InlineData("EUR", "USD")]
-    [InlineData("", "EGP")]
-    [InlineData("USD", "EUR")]
-    public async Task CreateOrderAsync_WithValidData_ShouldCreatePricedOrderFromCartAndConsumeIt(string clientCurrency, string serverCurrency)
+    [InlineData("USD")]
+    [InlineData("EGP")]
+    [InlineData("EUR")]
+    public async Task CreateOrderAsync_WithValidData_ShouldCreatePricedOrderFromCartAndConsumeIt(string serverCurrency)
     {
         var dto = DefaultCreateDto();
-        dto.Currency = clientCurrency;
         _currencyProviderMock.SetupGet(x => x.Currency).Returns(serverCurrency);
         var cart = DefaultCart();
         var variant = DefaultVariant();
@@ -623,10 +621,10 @@ public class OrderServiceTests
     [Fact]
     public async Task CreateOrderAsync_WithInvalidData_ShouldThrowValidationException()
     {
-        var dto = new CreateOrderDTO { Currency = "" };
+        var dto = new CreateOrderDTO();
 
         _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ValidationResult(new[] { new ValidationFailure("Currency", "required") }));
+            .ReturnsAsync(new ValidationResult(new[] { new ValidationFailure("CartId", "required") }));
 
         var act = () => _orderService.CreateOrderAsync("user1", dto);
 

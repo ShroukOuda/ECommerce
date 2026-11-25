@@ -18,4 +18,5 @@ public class Shipping : BaseEntity<Guid>
     //Navigation Properties
     public  Order Order { get; set; } = null!;
     public  Address Address { get; set; } = null!;
+    public  ICollection<ShippingStatusHistory> StatusHistories { get; set; } = new List<ShippingStatusHistory>();
 }

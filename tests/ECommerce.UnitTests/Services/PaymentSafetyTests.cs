@@ -35,6 +35,7 @@ public partial class PaymentServiceTests
         payment.Status.Should().Be(PaymentStatus.Processing);
         order.OrderStatus.Should().Be(OrderStatus.Pending);
         order.OrderStatusHistories.Should().BeEmpty();
+        payment.StatusHistories.Should().ContainSingle().Which.PaymentStatus.Should().Be(PaymentStatus.Processing);
     }
 
     [Theory]
@@ -47,7 +48,10 @@ public partial class PaymentServiceTests
         await _paymentService.HandleStripeWebhookAsync("payload", "signature");
         payment.Status.Should().Be(PaymentStatus.Paid);
         order.OrderStatus.Should().Be(OrderStatus.Confirmed);
-        order.OrderStatusHistories.Should().ContainSingle();
+        var orderHistory = order.OrderStatusHistories.Should().ContainSingle().Subject;
+        orderHistory.Source.Should().Be("Stripe");
+        payment.StatusHistories.Should().ContainSingle().Which.PaymentStatus.Should().Be(PaymentStatus.Paid);
+        payment.StatusHistories.Single().Source.Should().Be("Stripe");
     }
 
     [Theory]

@@ -1,7 +1,12 @@
 namespace ECommerce.Application.DTO.Order;
 
-public class CreateOrderDTO : OrderBaseDTO
+/// <summary>
+/// Checkout request. Items, quantities, prices and currency come from the server-side cart and settings.
+/// Legacy request fields (currency, orderType, items) are ignored by JSON binding if an old client still sends them.
+/// </summary>
+public class CreateOrderDTO
 {
     public Guid CartId { get; set; }
-    public List<CreateOrderItemDTO> Items { get; set; } = new();
+    public Guid? ShippingAddressId { get; set; }
+    public Guid? BillingAddressId { get; set; }
 }

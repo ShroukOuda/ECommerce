@@ -28,5 +28,6 @@ public interface IOrderService
 
     Task<GetAdminOrderDTO> UpdateOrderStatusAsync(
         Guid orderId,
-        UpdateOrderStatusDTO dto);
+        UpdateOrderStatusDTO dto,
+        string? changedBy = null);
 }

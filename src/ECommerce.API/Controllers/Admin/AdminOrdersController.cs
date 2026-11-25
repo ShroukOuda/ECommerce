@@ -46,7 +46,8 @@ public class AdminOrdersController : BaseController
         var order =
             await _orderService.UpdateOrderStatusAsync(
                 id,
-                dto);
+                dto,
+                User.FindFirstValue(ClaimTypes.NameIdentifier));
 
         return Success(
             order,

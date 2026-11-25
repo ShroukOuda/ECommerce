@@ -67,6 +67,7 @@ public class AppDbContext : IdentityDbContext<User>
     //Payment
     public  DbSet<Payment> Payments { get; set; }
     public  DbSet<StripeWebhookEvent> StripeWebhookEvents { get; set; }
+    public  DbSet<PaymentStatusHistory> PaymentStatusHistories { get; set; }
     
     //Return
     public  DbSet<ReturnRequest> ReturnRequests { get; set; }
@@ -75,6 +76,7 @@ public class AppDbContext : IdentityDbContext<User>
     
     //Shipping
     public  DbSet<Shipping> Shippings { get; set; }
+    public  DbSet<ShippingStatusHistory> ShippingStatusHistories { get; set; }
     
     //User
     public  DbSet<UserSession> UserSessions { get; set; }

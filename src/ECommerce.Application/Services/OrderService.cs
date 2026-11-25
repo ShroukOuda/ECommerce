@@ -126,13 +126,6 @@ public class OrderService : IOrderService
                 "Cannot checkout an empty cart.");
         }
 
-        foreach (var addressId in new[] { dto.ShippingAddressId, dto.BillingAddressId }.Where(id => id.HasValue).Distinct())
-        {
-            var address = await _unitOfWork.GetRepository<ECommerce.Domain.Entities.Users.Address, Guid>().GetByIdAsync(addressId!.Value);
-            if (address is null || address.UserId != userId)
-                throw new NotFoundException("The selected address was not found for this customer.");
-        }
-
         var order = new Order
         {
             // Generated here so the coupon usage can reference
@@ -149,11 +142,7 @@ public class OrderService : IOrderService
 
             OrderStatus = OrderStatus.Pending,
 
-            Currency = currency,
-
-            ShippingAddressId = dto.ShippingAddressId,
-
-            BillingAddressId = dto.BillingAddressId
+            Currency = currency
         };
 
         var variantRepository =

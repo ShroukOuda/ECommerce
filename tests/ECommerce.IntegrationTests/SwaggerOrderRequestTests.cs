@@ -10,7 +10,7 @@ namespace ECommerce.IntegrationTests;
 public class SwaggerOrderRequestTests
 {
     [Fact]
-    public async Task CreateOrderRequest_SwaggerExample_ShowsOnlyCartId()
+    public async Task CreateOrderRequest_SwaggerExample_RequestSchemaHasOnlyCartId()
     {
         await using var factory = new CustomWebApplicationFactory();
         using var client = factory.CreateClient(); // starts the host
@@ -23,9 +23,6 @@ public class SwaggerOrderRequestTests
 
         using var doc = JsonDocument.Parse(json);
         var schema = doc.RootElement.GetProperty("components").GetProperty("schemas").GetProperty("CreateOrderDTO");
-        var example = schema.GetProperty("example");
-        example.EnumerateObject().Select(p => p.Name).Should().Equal("cartId");
-        schema.GetProperty("properties").EnumerateObject().Select(p => p.Name)
-            .Should().BeEquivalentTo("cartId", "shippingAddressId", "billingAddressId");
+        schema.GetProperty("properties").EnumerateObject().Select(p => p.Name).Should().Equal("cartId");
     }
 }

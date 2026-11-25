@@ -12,6 +12,13 @@ public class OrderStatusHistoryConfiguration : IEntityTypeConfiguration<OrderSta
         builder.Property(osh => osh.OrderStatus)
             .HasConversion<string>();
 
+        builder.Property(osh => osh.Source)
+            .IsRequired()
+            .HasMaxLength(50);
+
+        builder.Property(osh => osh.Reason)
+            .HasMaxLength(500);
+
         builder.HasOne(osh => osh.Order)
             .WithMany(o => o.OrderStatusHistories)
             .HasForeignKey(osh => osh.OrderId)

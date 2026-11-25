@@ -234,14 +234,15 @@ public class OrderService : IOrderService
                     "The cart has a discount that cannot be verified. Re-apply the coupon before checkout.");
             }
 
+            // Eligibility and discount are both measured on the
+            // order's own subtotal (catalog prices at order time),
+            // never on the cart's stored price snapshot.
             var couponResult =
-                await _couponService.ValidateCouponAsync(
+                await _couponService.ValidateCouponForSubtotalAsync(
                     userId,
-                    new ValidateCouponDTO
-                    {
-                        CartId = cart.Id,
-                        Code = cart.CouponCode
-                    });
+                    cart.Id,
+                    cart.CouponCode,
+                    order.SubTotal);
 
             var coupon = await _unitOfWork
                 .GetRepository<Coupon, Guid>()

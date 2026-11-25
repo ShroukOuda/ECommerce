@@ -14,8 +14,12 @@ public class ShippingConfiguration : IEntityTypeConfiguration<Domain.Entities.Sh
         builder.Property(s => s.Method)
             .HasConversion<string>();
 
+        // Bounded so the filtered unique index below can use it in its
+        // predicate against a normal-width column. The longest
+        // ShippingStatus name is OutForDelivery (14 characters).
         builder.Property(s => s.Status)
-            .HasConversion<string>();
+            .HasConversion<string>()
+            .HasMaxLength(20);
 
         builder.Property(s => s.Cost)
             .HasColumnType("decimal(18,2)");

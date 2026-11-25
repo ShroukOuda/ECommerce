@@ -161,4 +161,32 @@ public class CouponServiceTests
 
         await act.Should().ThrowAsync<KeyNotFoundException>();
     }
+
+    [Fact]
+    public async Task ValidateCouponForSubtotalAsync_UsesSuppliedSubtotalNotCartSnapshot()
+    {
+        var cartId = TestGuid.FromInt(3);
+        var cart = new ECommerce.Domain.Entities.Carts.Cart
+        {
+            Id = cartId, UserId = "user1",
+            CartItems = { new ECommerce.Domain.Entities.Carts.CartItem { Price = 10m, Quantity = 1 } } // snapshot 10, below min
+        };
+        var coupon = new Coupon
+        {
+            Id = TestGuid.FromInt(4), Code = "TEN", Status = ECommerce.Domain.Enums.Coupon.CouponStatus.Active,
+            ValidFrom = DateTime.UtcNow.AddDays(-1), ValidUntil = DateTime.UtcNow.AddDays(1),
+            MinPurchaseAmount = 100m,
+            DiscountType = ECommerce.Domain.Enums.Coupon.DiscountType.Percentage, DiscountValue = 10m
+        };
+        _unitOfWorkMock.Setup(u => u.GetRepository<Coupon, Guid>().GetFirstOrDefaultAsync(It.IsAny<CouponByCodeSpecification>())).ReturnsAsync(coupon);
+        _unitOfWorkMock.Setup(u => u.GetRepository<ECommerce.Domain.Entities.Carts.Cart, Guid>()
+            .GetFirstOrDefaultAsync(It.IsAny<ECommerce.Application.Specifications.Carts.CartDetailsSpecification>())).ReturnsAsync(cart);
+        _unitOfWorkMock.Setup(u => u.GetRepository<CouponUsage, Guid>().CountAsync(It.IsAny<CouponUsageByUserSpecification>())).ReturnsAsync(0);
+
+        var ok = await _couponService.ValidateCouponForSubtotalAsync("user1", cartId, "TEN", 200m);
+        ok.DiscountAmount.Should().Be(20m); // on the supplied 200, though the cart snapshot is 10
+
+        var act = () => _couponService.ValidateCouponForSubtotalAsync("user1", cartId, "TEN", 50m);
+        await act.Should().ThrowAsync<ECommerce.Domain.Exceptions.BusinessRuleException>(); // minimum not met on supplied subtotal
+    }
 }

@@ -8,6 +8,9 @@ using ECommerce.Application.Specifications.Carts;
 using ECommerce.Application.Specifications.Products;
 using ECommerce.Domain.Enums.Cart;
 using ECommerce.Domain.Enums.Product;
+using ECommerce.Domain.Enums.Coupon;
+using ECommerce.Domain.Entities.Coupons;
+using ECommerce.Application.Specifications.Coupons;
 
 namespace ECommerce.Application.Services;
 
@@ -43,7 +46,7 @@ public class CartService : ICartService
         var validationResult = await _addItemValidator.ValidateAsync(dto);
         if (!validationResult.IsValid) throw new ValidationException(validationResult.Errors);
 
-        await GetAccessibleCartAsync(dto.CartId, userId, guestToken);
+        var cart = await GetAccessibleCartAsync(dto.CartId, userId, guestToken);
         // Trusted server-side price snapshot: cart subtotals and
         // coupon math build on this, so it must come from the
         // catalog (effective product price + variant adjustment),
@@ -73,6 +76,7 @@ public class CartService : ICartService
 
         await _unitOfWork.GetRepository<CartItem, Guid>().AddAsync(item);
         await _unitOfWork.SaveChangesAsync();
+        await RefreshCartCouponAsync(cart);
         return _mapper.Map<GetCartItemDTO>(item);
     }
 
@@ -80,28 +84,30 @@ public class CartService : ICartService
     {
         var item = await _unitOfWork.GetRepository<CartItem, Guid>().GetByIdAsync(id);
         if (item is null) throw new KeyNotFoundException($"Cart item with ID {id} not found.");
-        await GetAccessibleCartAsync(item.CartId, userId, guestToken);
+        var cart = await GetAccessibleCartAsync(item.CartId, userId, guestToken);
         if (dto.Quantity <= 0) throw new BadRequestException("Quantity must be positive.");
         item.Quantity = dto.Quantity;
         _unitOfWork.GetRepository<CartItem, Guid>().Update(item);
         await _unitOfWork.SaveChangesAsync();
+        await RefreshCartCouponAsync(cart);
         return _mapper.Map<GetCartItemDTO>(item);
     }
 
     public async Task RemoveCartItemAsync(Guid cartId, Guid cartItemId, string? userId = null, string? guestToken = null)
     {
-        await GetAccessibleCartAsync(cartId, userId, guestToken);
+        var cart = await GetAccessibleCartAsync(cartId, userId, guestToken);
         var spec = new CartItemSpecification(cartId, cartItemId);
         bool exist = await _unitOfWork.GetRepository<CartItem, Guid>().ExistsAsync(spec);
         if (!exist) throw new KeyNotFoundException($"Cart item with ID {cartItemId} not found.");
         var stub = new CartItem { Id = cartItemId };
         _unitOfWork.GetRepository<CartItem, Guid>().Delete(stub);
         await _unitOfWork.SaveChangesAsync();
+        await RefreshCartCouponAsync(cart);
     }
 
     public async Task ClearCartAsync(Guid cartId, string? userId = null, string? guestToken = null)
     {
-        await GetAccessibleCartAsync(cartId, userId, guestToken);
+        var cart = await GetAccessibleCartAsync(cartId, userId, guestToken);
         var spec = new CartItemsByCartSpecification(cartId);
         var items = await _unitOfWork.GetRepository<CartItem, Guid>().GetAllAsync(spec);
 
@@ -109,7 +115,34 @@ public class CartService : ICartService
         {
             _unitOfWork.GetRepository<CartItem, Guid>().DeleteRange(items);
             await _unitOfWork.SaveChangesAsync();
+            await RefreshCartCouponAsync(cart);
         }
+    }
+
+    // Keeps the stored coupon discount in step with the cart's items so
+    // the cart view never shows a discount computed for old quantities.
+    private async Task RefreshCartCouponAsync(Cart cart)
+    {
+        if (string.IsNullOrWhiteSpace(cart.CouponCode) && cart.DiscountAmount == 0m) return;
+
+        var items = await _unitOfWork.GetRepository<CartItem, Guid>()
+            .GetAllAsync(new CartItemsByCartSpecification(cart.Id));
+        var subtotal = items.Sum(i => i.Price * i.Quantity);
+
+        var discount = 0m;
+        if (!string.IsNullOrWhiteSpace(cart.CouponCode) && subtotal > 0m)
+        {
+            var coupon = await _unitOfWork.GetRepository<Coupon, Guid>()
+                .GetFirstOrDefaultAsync(new CouponByCodeSpecification(cart.CouponCode));
+            if (coupon is not null && coupon.Status == CouponStatus.Active && subtotal >= coupon.MinPurchaseAmount)
+                discount = CouponService.CalculateDiscount(coupon, subtotal);
+        }
+
+        // A coupon that no longer applies is removed rather than left stale.
+        if (discount == 0m) cart.CouponCode = null;
+        cart.DiscountAmount = discount;
+        _unitOfWork.GetRepository<Cart, Guid>().Update(cart);
+        await _unitOfWork.SaveChangesAsync();
     }
 
     private async Task<Cart> GetAccessibleCartAsync(Guid id, string? userId, string? guestToken)

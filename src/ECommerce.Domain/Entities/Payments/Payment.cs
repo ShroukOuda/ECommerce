@@ -27,4 +27,5 @@ public class Payment : BaseEntity<Guid>
     //Navigation Properties
     public  Order Order { get; set; } = null!;
     public  User User { get; set; } = null!;
+    public  ICollection<PaymentStatusHistory> StatusHistories { get; set; } = new List<PaymentStatusHistory>();
 }

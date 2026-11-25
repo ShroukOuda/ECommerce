@@ -113,7 +113,9 @@ public class OrderServiceTests
     internal static Coupon DefaultCoupon() => new()
     {
         Id = TestGuid.FromInt(20),
-        Code = "SAVE10"
+        Code = "SAVE10",
+        DiscountType = ECommerce.Domain.Enums.Coupon.DiscountType.Fixed,
+        DiscountValue = 20m
     };
 
     internal static CreateOrderDTO DefaultCreateDto() => new()
@@ -266,7 +268,7 @@ public class OrderServiceTests
         _unitOfWorkMock.Setup(u => u.GetRepository<Coupon, Guid>()
                 .GetFirstOrDefaultAsync(It.IsAny<CouponByCodeSpecification>()))
             .ReturnsAsync(coupon);
-        _couponServiceMock.Setup(c => c.ValidateCouponAsync("user1", It.IsAny<ValidateCouponDTO>()))
+        _couponServiceMock.Setup(c => c.ValidateCouponForSubtotalAsync("user1", It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<decimal>()))
             .ReturnsAsync(new CouponResultDTO { Code = "SAVE10", DiscountAmount = 20m });
         _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
@@ -297,6 +299,82 @@ public class OrderServiceTests
     }
 
     [Fact]
+    public async Task CreateOrderAsync_WhenCartSnapshotDiscountIsStale_ShouldRecomputeOnOrderSubtotal()
+    {
+        var dto = DefaultCreateDto();
+        var cart = DefaultCart();
+        cart.DiscountAmount = 999m;
+        cart.CouponCode = "SAVE10";
+        var coupon = DefaultCoupon();
+        coupon.DiscountType = ECommerce.Domain.Enums.Coupon.DiscountType.Percentage;
+        coupon.DiscountValue = 10m;
+
+        _unitOfWorkMock.Setup(u => u.GetRepository<Cart, Guid>()
+                .GetFirstOrDefaultAsync(It.IsAny<CartDetailsSpecification>()))
+            .ReturnsAsync(cart);
+        _unitOfWorkMock.Setup(u => u.GetRepository<Coupon, Guid>()
+                .GetFirstOrDefaultAsync(It.IsAny<CouponByCodeSpecification>()))
+            .ReturnsAsync(coupon);
+        _couponServiceMock.Setup(c => c.ValidateCouponForSubtotalAsync("user1", It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<decimal>()))
+            .ReturnsAsync((string u, Guid c, string code, decimal sub) => new CouponResultDTO { Code = "SAVE10", Subtotal = sub, DiscountAmount = sub * 0.1m });
+        _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ValidationResult());
+        _mapperMock.Setup(m => m.Map<GetOrderDTO>(It.IsAny<Order>())).Returns(new GetOrderDTO());
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+
+        Order? captured = null;
+        _unitOfWorkMock.Setup(u => u.GetRepository<Order, Guid>().AddAsync(It.IsAny<Order>()))
+            .Callback<Order>(o => captured = o)
+            .Returns(Task.CompletedTask);
+        CouponUsage? usage = null;
+        _unitOfWorkMock.Setup(u => u.GetRepository<CouponUsage, Guid>().AddAsync(It.IsAny<CouponUsage>()))
+            .Callback<CouponUsage>(u => usage = u)
+            .Returns(Task.CompletedTask);
+
+        await _orderService.CreateOrderAsync("user1", dto);
+
+        captured!.DiscountAmount.Should().Be(20m);
+        captured.TotalAmount.Should().Be(180m);
+        usage!.DiscountAmount.Should().Be(20m);
+    }
+
+    [Fact]
+    public async Task CreateOrderAsync_WhenOrderSubtotalBelowCouponMinimum_ShouldRejectCheckout()
+    {
+        var dto = DefaultCreateDto();
+        var cart = DefaultCart();
+        cart.DiscountAmount = 20m;
+        cart.CouponCode = "SAVE10";
+        var coupon = DefaultCoupon();
+
+        _unitOfWorkMock.Setup(u => u.GetRepository<Cart, Guid>()
+                .GetFirstOrDefaultAsync(It.IsAny<CartDetailsSpecification>()))
+            .ReturnsAsync(cart);
+        _unitOfWorkMock.Setup(u => u.GetRepository<Coupon, Guid>()
+                .GetFirstOrDefaultAsync(It.IsAny<CouponByCodeSpecification>()))
+            .ReturnsAsync(coupon);
+        _couponServiceMock.Setup(c => c.ValidateCouponForSubtotalAsync("user1", It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<decimal>()))
+            .ThrowsAsync(new ECommerce.Domain.Exceptions.BusinessRuleException("Minimum purchase amount is 500."));
+        _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ValidationResult());
+        _mapperMock.Setup(m => m.Map<GetOrderDTO>(It.IsAny<Order>())).Returns(new GetOrderDTO());
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+
+        Order? captured = null;
+        _unitOfWorkMock.Setup(u => u.GetRepository<Order, Guid>().AddAsync(It.IsAny<Order>()))
+            .Callback<Order>(o => captured = o)
+            .Returns(Task.CompletedTask);
+        CouponUsage? usage = null;
+        _unitOfWorkMock.Setup(u => u.GetRepository<CouponUsage, Guid>().AddAsync(It.IsAny<CouponUsage>()))
+            .Callback<CouponUsage>(u => usage = u)
+            .Returns(Task.CompletedTask);
+
+        var act = () => _orderService.CreateOrderAsync("user1", dto);
+
+        await act.Should().ThrowAsync<ECommerce.Domain.Exceptions.BusinessRuleException>();
+    }
+
+    [Fact]
     public async Task CreateOrderAsync_WhenDiscountExceedsSubTotal_ShouldClampTotalAtZero()
     {
         var dto = DefaultCreateDto();
@@ -307,7 +385,12 @@ public class OrderServiceTests
         _unitOfWorkMock.Setup(u => u.GetRepository<Cart, Guid>()
                 .GetFirstOrDefaultAsync(It.IsAny<CartDetailsSpecification>()))
             .ReturnsAsync(cart);
-        _couponServiceMock.Setup(c => c.ValidateCouponAsync("user1", It.IsAny<ValidateCouponDTO>()))
+        var bigCoupon = DefaultCoupon();
+        bigCoupon.DiscountValue = 999m;
+        _unitOfWorkMock.Setup(u => u.GetRepository<Coupon, Guid>()
+                .GetFirstOrDefaultAsync(It.IsAny<CouponByCodeSpecification>()))
+            .ReturnsAsync(bigCoupon);
+        _couponServiceMock.Setup(c => c.ValidateCouponForSubtotalAsync("user1", It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<decimal>()))
             .ReturnsAsync(new CouponResultDTO { Code = "SAVE10", DiscountAmount = 999m });
         _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
@@ -361,7 +444,7 @@ public class OrderServiceTests
         _unitOfWorkMock.Setup(u => u.GetRepository<Cart, Guid>()
                 .GetFirstOrDefaultAsync(It.IsAny<CartDetailsSpecification>()))
             .ReturnsAsync(cart);
-        _couponServiceMock.Setup(c => c.ValidateCouponAsync("user1", It.IsAny<ValidateCouponDTO>()))
+        _couponServiceMock.Setup(c => c.ValidateCouponForSubtotalAsync("user1", It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<decimal>()))
             .ReturnsAsync(new CouponResultDTO { Code = "GONE", DiscountAmount = 20m });
         _unitOfWorkMock.Setup(u => u.GetRepository<Coupon, Guid>()
                 .GetFirstOrDefaultAsync(It.IsAny<CouponByCodeSpecification>()))
@@ -386,7 +469,7 @@ public class OrderServiceTests
         _unitOfWorkMock.Setup(u => u.GetRepository<Cart, Guid>()
                 .GetFirstOrDefaultAsync(It.IsAny<CartDetailsSpecification>()))
             .ReturnsAsync(cart);
-        _couponServiceMock.Setup(c => c.ValidateCouponAsync("user1", It.IsAny<ValidateCouponDTO>()))
+        _couponServiceMock.Setup(c => c.ValidateCouponForSubtotalAsync("user1", It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<decimal>()))
             .ThrowsAsync(new InvalidOperationException("This coupon has expired."));
         _createValidatorMock.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());

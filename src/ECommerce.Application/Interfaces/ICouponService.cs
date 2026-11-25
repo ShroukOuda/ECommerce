@@ -11,5 +11,6 @@ public interface ICouponService
     Task<GetCouponDTO> UpdateCouponAsync(Guid id, UpdateCouponDTO dto);
     Task DeleteCouponAsync(Guid id);
     Task<CouponResultDTO> ValidateCouponAsync(string userId, ValidateCouponDTO dto);
+    Task<CouponResultDTO> ValidateCouponForSubtotalAsync(string userId, Guid cartId, string code, decimal subtotal);
     Task<CouponResultDTO> ApplyCouponAsync(string userId, ApplyCouponDTO dto);
 }

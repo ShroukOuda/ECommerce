@@ -14,9 +14,12 @@ public class OrderMapping : Profile
                 .Select(x => x.Status.ToString())
                 .FirstOrDefault()))
             .ForMember(d => d.PaymentStatus, o => o.MapFrom(s => s.Payments
-                .OrderByDescending(x => x.CreatedAt)
-                .Select(x => x.Status.ToString())
-                .FirstOrDefault()))
+                .Any(x => x.Status == ECommerce.Domain.Enums.Payment.PaymentStatus.Paid)
+                    ? ECommerce.Domain.Enums.Payment.PaymentStatus.Paid.ToString()
+                    : s.Payments
+                        .OrderByDescending(x => x.CreatedAt)
+                        .Select(x => x.Status.ToString())
+                        .FirstOrDefault()))
             .ForMember(d => d.Items, o => o.MapFrom(s => s.OrderItems))
             .ForMember(d => d.StatusHistory, o => o.MapFrom(s => s.OrderStatusHistories));
         
@@ -27,9 +30,12 @@ public class OrderMapping : Profile
                 .Select(x => x.Status.ToString())
                 .FirstOrDefault()))
             .ForMember(d => d.PaymentStatus, o => o.MapFrom(s => s.Payments
-                .OrderByDescending(x => x.CreatedAt)
-                .Select(x => x.Status.ToString())
-                .FirstOrDefault()))
+                .Any(x => x.Status == ECommerce.Domain.Enums.Payment.PaymentStatus.Paid)
+                    ? ECommerce.Domain.Enums.Payment.PaymentStatus.Paid.ToString()
+                    : s.Payments
+                        .OrderByDescending(x => x.CreatedAt)
+                        .Select(x => x.Status.ToString())
+                        .FirstOrDefault()))
             .ForMember(d => d.OrderItems, o => o.MapFrom(s => s.OrderItems))
             .ForMember(d => d.StatusHistory, o => o.MapFrom(s => s.OrderStatusHistories));
 

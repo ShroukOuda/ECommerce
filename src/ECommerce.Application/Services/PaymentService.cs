@@ -253,7 +253,7 @@ public class PaymentService : IPaymentService
         if (amountInMinorUnits <= 0)
             throw new BadRequestException("This checkout requires a positive order total.");
 
-        return new Payment
+        var payment = new Payment
         {
             Id = Guid.NewGuid(),
             CreatedAt = DateTime.UtcNow,
@@ -269,6 +269,14 @@ public class PaymentService : IPaymentService
             PaidAt = null,
             StripeCheckoutSessionStatus = "open"
         };
+        payment.StatusHistories.Add(new PaymentStatusHistory
+        {
+            PaymentStatus = PaymentStatus.Pending,
+            Source = "Customer",
+            CreatedBy = userId,
+            Reason = "Checkout started"
+        });
+        return payment;
     }
 
     private static bool IsReusableCheckoutSession(Payment payment)
@@ -385,6 +393,14 @@ public class PaymentService : IPaymentService
     private void ApplyPaymentUpdate(Payment payment, StripeWebhookEventDTO stripeEvent, PaymentStatus nextStatus, DateTime now)
     {
         payment.Status = nextStatus;
+        payment.StatusHistories.Add(new PaymentStatusHistory
+        {
+            PaymentStatus = nextStatus,
+            Source = "Stripe",
+            Reason = stripeEvent.EventType,
+            CreatedAt = now,
+            UpdatedAt = now
+        });
         payment.PaymentGateway = StripeProviderName;
         payment.StripeCheckoutSessionId = stripeEvent.CheckoutSessionId ?? payment.StripeCheckoutSessionId;
         payment.StripePaymentIntentId = stripeEvent.PaymentIntentId ?? payment.StripePaymentIntentId;
@@ -425,6 +441,8 @@ public class PaymentService : IPaymentService
         order.OrderStatusHistories.Add(new OrderStatusHistory
         {
             OrderStatus = OrderStatus.Confirmed,
+            Source = "Stripe",
+            Reason = "Payment confirmed",
             CreatedAt = now,
             UpdatedAt = now
         });

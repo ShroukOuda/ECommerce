@@ -8,6 +8,7 @@ public class PaymentsByOrderSpecification : BaseSpecification<Payment, Guid>
     public PaymentsByOrderSpecification(Guid orderId)
         : base(p => p.OrderId == orderId)
     {
+        AddInclude(p => p.StatusHistories);
         AddOrderByDescending(p => p.UpdatedAt);
         AsNoTracking();
     }

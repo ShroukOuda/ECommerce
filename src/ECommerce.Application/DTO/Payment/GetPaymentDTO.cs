@@ -19,4 +19,5 @@ public class GetPaymentDTO
     public DateTime? PaidAt { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public List<GetPaymentStatusHistoryDTO> StatusHistory { get; set; } = new();
 }

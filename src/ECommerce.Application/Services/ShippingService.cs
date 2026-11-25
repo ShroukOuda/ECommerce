@@ -93,7 +93,15 @@ public class ShippingService : IShippingService
         shipping.StatusHistories.Add(NewHistory(ShippingStatus.Pending, changedBy, "Shipment created"));
 
         await _unitOfWork.GetRepository<Shipping, Guid>().AddAsync(shipping);
-        await _unitOfWork.SaveChangesAsync();
+        try
+        {
+            await _unitOfWork.SaveChangesAsync();
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateException ex)
+            when (IsActiveShipmentUniqueViolation(ex))
+        {
+            throw new ConflictException("This order already has a shipment. The whole order ships together.");
+        }
         return _mapper.Map<GetShippingDTO>(shipping);
     }
 
@@ -167,6 +175,21 @@ public class ShippingService : IShippingService
         _unitOfWork.GetRepository<Shipping, Guid>().Update(shipping);
         await _unitOfWork.SaveChangesAsync();
         return _mapper.Map<GetShippingDTO>(shipping);
+    }
+
+    // Only the filtered unique index on Shippings.OrderId counts as a
+    // concurrent-create conflict. SQL Server reports unique index
+    // violations as error 2601 and constraint violations as 2627, and
+    // names the index in the message. Any other DbUpdateException is
+    // rethrown untouched.
+    private static bool IsActiveShipmentUniqueViolation(Microsoft.EntityFrameworkCore.DbUpdateException ex)
+    {
+        var inner = ex.InnerException;
+        if (inner is null) return false;
+        var number = inner.GetType().GetProperty("Number")?.GetValue(inner) as int?;
+        var uniqueError = number is 2601 or 2627
+            || inner.Message.Contains("duplicate key", StringComparison.OrdinalIgnoreCase);
+        return uniqueError && inner.Message.Contains("IX_Shippings_OrderId", StringComparison.OrdinalIgnoreCase);
     }
 
     private static ShippingStatusHistory NewHistory(ShippingStatus status, string? changedBy, string? reason) => new()

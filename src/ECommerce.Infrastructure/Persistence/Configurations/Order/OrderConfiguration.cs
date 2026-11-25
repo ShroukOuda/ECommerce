@@ -26,6 +26,12 @@ public class OrderConfigurations : IEntityTypeConfiguration<Domain.Entities.Orde
         builder.Property(o => o.TotalAmount)
             .HasColumnType("decimal(18,2)");
 
+        builder.Property(o => o.DiscountAmount)
+            .HasColumnType("decimal(18,2)");
+
+        builder.Property(o => o.CouponCode)
+            .HasMaxLength(50);
+
         builder.Property(o => o.Currency)
             .HasMaxLength(10);
 

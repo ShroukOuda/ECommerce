@@ -61,7 +61,8 @@ public class AdminShippingsController : BaseController
     {
         var shipping =
             await _shippingService.CreateShippingAsync(
-                dto);
+                dto,
+                User.FindFirstValue(ClaimTypes.NameIdentifier));
 
         return Created(
             shipping,
@@ -77,7 +78,8 @@ public class AdminShippingsController : BaseController
         var shipping =
             await _shippingService.UpdateShippingAsync(
                 id,
-                dto);
+                dto,
+                User.FindFirstValue(ClaimTypes.NameIdentifier));
 
         return Success(
             shipping,

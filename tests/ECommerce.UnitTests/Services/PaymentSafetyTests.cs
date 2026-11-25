@@ -104,9 +104,11 @@ public partial class PaymentServiceTests
     [Fact]
     public async Task DuplicateEvent_IsAcknowledgedWithoutWriting()
     {
-        ArrangeWebhook("checkout.session.completed");
+        var (payment, order, _) = ArrangeWebhook("checkout.session.completed");
         _stripeEventRepositoryMock.Setup(x => x.ExistsAsync(It.IsAny<StripeWebhookEventByEventIdSpecification>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
         await _paymentService.HandleStripeWebhookAsync("payload", "signature");
+        payment.StatusHistories.Should().BeEmpty();
+        order.OrderStatusHistories.Should().BeEmpty();
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 

@@ -12,4 +12,5 @@ public class GetShippingDTO
     public DateTime? ShippedDate { get; set; }
     public DateTime? DeliveredDate { get; set; }
     public Guid OrderId { get; set; }
+    public List<GetShippingStatusHistoryDTO> StatusHistory { get; set; } = new();
 }

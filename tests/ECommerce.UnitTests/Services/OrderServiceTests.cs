@@ -67,6 +67,9 @@ public class OrderServiceTests
         _unitOfWorkMock.Setup(u => u.GetRepository<Coupon, Guid>()
                 .GetFirstOrDefaultAsync(It.IsAny<CouponByCodeSpecification>()))
             .ReturnsAsync(DefaultCoupon());
+        _unitOfWorkMock.Setup(u => u.GetRepository<CouponUsage, Guid>()
+                .GetAllAsync(It.IsAny<CouponUsagesByOrderSpecification>()))
+            .ReturnsAsync(new List<CouponUsage>());
     }
 
     internal static Cart DefaultCart() => new()
@@ -288,6 +291,9 @@ public class OrderServiceTests
         usage.UserId.Should().Be("user1");
         usage.DiscountAmount.Should().Be(20m);
         coupon.UsedCount.Should().Be(1);
+        captured.DiscountAmount.Should().Be(20m);
+        captured.CouponCode.Should().Be(coupon.Code);
+        captured.OrderStatusHistories.Should().ContainSingle().Which.Source.Should().Be("Customer");
     }
 
     [Fact]
@@ -737,19 +743,74 @@ public class OrderServiceTests
     [Fact]
     public async Task UpdateOrderStatusAsync_WhenOrderExists_ShouldUpdateStatusAndAddHistory()
     {
-        var dto = new UpdateOrderStatusDTO { OrderStatus = "Shipped" };
+        var dto = new UpdateOrderStatusDTO { OrderStatus = "OnHold", Reason = "Customer asked to wait" };
         var order = new Order { Id = TestGuid.FromInt(1), OrderStatus = OrderStatus.Processing };
 
         _unitOfWorkMock.Setup(u => u.GetRepository<Order, Guid>().GetFirstOrDefaultAsync(It.IsAny<OrderDetailsSpecification>()))
             .ReturnsAsync(order);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
-        await _orderService.UpdateOrderStatusAsync(TestGuid.FromInt(1), dto);
+        await _orderService.UpdateOrderStatusAsync(TestGuid.FromInt(1), dto, "admin-1");
 
-        order.OrderStatus.Should().Be(OrderStatus.Shipped);
-        order.OrderStatusHistories.Should().ContainSingle()
-            .Which.OrderStatus.Should().Be(OrderStatus.Shipped);
+        order.OrderStatus.Should().Be(OrderStatus.OnHold);
+        var history = order.OrderStatusHistories.Should().ContainSingle().Subject;
+        history.OrderStatus.Should().Be(OrderStatus.OnHold);
+        history.Source.Should().Be("Admin");
+        history.CreatedBy.Should().Be("admin-1");
+        history.Reason.Should().Be("Customer asked to wait");
         _unitOfWorkMock.Verify(u => u.GetRepository<Order, Guid>().Update(order), Times.Once);
+    }
+
+    [Theory]
+    [InlineData("Shipped")]
+    [InlineData("OutForDelivery")]
+    [InlineData("Delivered")]
+    [InlineData("PartiallyShipped")]
+    [InlineData("Refunded")]
+    public async Task UpdateOrderStatusAsync_ShippingOrMoneyStatusesCannotBeTypedOnTheOrder(string status)
+    {
+        var order = new Order { Id = TestGuid.FromInt(1), OrderStatus = OrderStatus.Processing };
+        _unitOfWorkMock.Setup(u => u.GetRepository<Order, Guid>().GetFirstOrDefaultAsync(It.IsAny<OrderDetailsSpecification>()))
+            .ReturnsAsync(order);
+
+        var act = () => _orderService.UpdateOrderStatusAsync(TestGuid.FromInt(1), new UpdateOrderStatusDTO { OrderStatus = status });
+
+        await act.Should().ThrowAsync<ECommerce.Domain.Exceptions.BadRequestException>();
+        order.OrderStatusHistories.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task UpdateOrderStatusAsync_Cancel_WhenShipmentExists_IsRejected()
+    {
+        var order = new Order { Id = TestGuid.FromInt(1), OrderStatus = OrderStatus.Processing };
+        order.Shippings.Add(new ECommerce.Domain.Entities.Shippings.Shipping { Status = ECommerce.Domain.Enums.Shipping.ShippingStatus.InTransit });
+        _unitOfWorkMock.Setup(u => u.GetRepository<Order, Guid>().GetFirstOrDefaultAsync(It.IsAny<OrderDetailsSpecification>()))
+            .ReturnsAsync(order);
+
+        var act = () => _orderService.UpdateOrderStatusAsync(TestGuid.FromInt(1), new UpdateOrderStatusDTO { OrderStatus = "Cancelled" });
+
+        await act.Should().ThrowAsync<ECommerce.Domain.Exceptions.ConflictException>();
+    }
+
+    [Fact]
+    public async Task CancelOrderAsync_ReleasesCouponUsageAndCount()
+    {
+        var order = new Order { Id = TestGuid.FromInt(1), UserId = "user1", OrderStatus = OrderStatus.Pending };
+        var coupon = DefaultCoupon();
+        coupon.UsedCount = 3;
+        var usage = new CouponUsage { CouponId = coupon.Id, OrderId = order.Id, UserId = "user1", DiscountAmount = 5m };
+        _unitOfWorkMock.Setup(u => u.GetRepository<Order, Guid>().GetFirstOrDefaultAsync(It.IsAny<OrderByUserSpecification>()))
+            .ReturnsAsync(order);
+        _unitOfWorkMock.Setup(u => u.GetRepository<CouponUsage, Guid>().GetAllAsync(It.IsAny<CouponUsagesByOrderSpecification>()))
+            .ReturnsAsync(new List<CouponUsage> { usage });
+        _unitOfWorkMock.Setup(u => u.GetRepository<Coupon, Guid>().GetByIdAsync(coupon.Id)).ReturnsAsync(coupon);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+
+        await _orderService.CancelOrderAsync(order.Id, "user1");
+
+        coupon.UsedCount.Should().Be(2);
+        _unitOfWorkMock.Verify(u => u.GetRepository<CouponUsage, Guid>().DeleteRange(It.Is<IEnumerable<CouponUsage>>(x => x.Contains(usage))), Times.Once);
+        order.OrderStatusHistories.Should().ContainSingle().Which.Source.Should().Be("Customer");
     }
 
     [Fact]

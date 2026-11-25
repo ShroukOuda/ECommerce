@@ -147,7 +147,9 @@ public partial class PaymentServiceTests
         var result = await _paymentService.CreateCheckoutSessionAsync(order.Id, order.UserId);
 
         result.CheckoutSessionId.Should().Be("cs_test_123");
-        _paymentRepositoryMock.Verify(r => r.AddAsync(It.IsAny<Payment>(), It.IsAny<CancellationToken>()), Times.Once);
+        _paymentRepositoryMock.Verify(r => r.AddAsync(It.Is<Payment>(p => p.StatusHistories.Count == 1
+            && p.StatusHistories.Single().PaymentStatus == PaymentStatus.Pending
+            && p.StatusHistories.Single().CreatedBy == order.UserId), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

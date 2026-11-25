@@ -24,6 +24,16 @@ public class GetAdminOrderDTO
 
     public decimal TotalAmount { get; set; }
 
+    public decimal DiscountAmount { get; set; }
+
+    public string? CouponCode { get; set; }
+
+    // Computed from the order's shipment (null until a shipment exists). Never stored on the order.
+    public string? ShippingStatus { get; set; }
+
+    // Computed from the order's latest payment (null until a payment attempt exists).
+    public string? PaymentStatus { get; set; }
+
     public Guid? ShippingAddressId { get; set; }
 
     public Guid? BillingAddressId { get; set; }

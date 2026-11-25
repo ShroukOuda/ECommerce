@@ -27,9 +27,11 @@ public interface IShippingService
         Guid orderId);
 
     Task<GetShippingDTO> CreateShippingAsync(
-        CreateShippingDTO dto);
+        CreateShippingDTO dto,
+        string? changedBy = null);
 
     Task<GetShippingDTO> UpdateShippingAsync(
         Guid shippingId,
-        UpdateShippingDTO dto);
+        UpdateShippingDTO dto,
+        string? changedBy = null);
 }

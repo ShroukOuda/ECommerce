@@ -1,3 +1,5 @@
+using ECommerce.Application.Specifications.Coupons;
+using ECommerce.Domain.Entities.Coupons;
 using AutoMapper;
 using ECommerce.Application.DTO.Cart;
 using ECommerce.Application.Interfaces;
@@ -193,6 +195,49 @@ public class CartServiceTests
 
         item.Quantity.Should().Be(5);
         _unitOfWorkMock.Verify(u => u.GetRepository<CartItem, Guid>().Update(item), Times.Once);
+    }
+
+    [Fact]
+    public async Task UpdateCartItemAsync_WhenCouponApplied_ShouldRefreshCartDiscount()
+    {
+        var cartId = TestGuid.FromInt(7);
+        var cart = new Cart { Id = cartId, UserId = "user1", ExpiresAt = DateTime.UtcNow.AddDays(1), CouponCode = "TEN", DiscountAmount = 10m };
+        var item = new CartItem { Id = TestGuid.FromInt(1), CartId = cartId, Quantity = 1, Price = 100m };
+        var coupon = new Coupon
+        {
+            Code = "TEN", Status = ECommerce.Domain.Enums.Coupon.CouponStatus.Active,
+            DiscountType = ECommerce.Domain.Enums.Coupon.DiscountType.Percentage, DiscountValue = 10m
+        };
+        _unitOfWorkMock.Setup(u => u.GetRepository<Cart, Guid>().GetFirstOrDefaultAsync(It.IsAny<CartDetailsSpecification>()))
+            .ReturnsAsync(cart);
+        _unitOfWorkMock.Setup(u => u.GetRepository<CartItem, Guid>().GetByIdAsync(TestGuid.FromInt(1))).ReturnsAsync(item);
+        _unitOfWorkMock.Setup(u => u.GetRepository<CartItem, Guid>().GetAllAsync(It.IsAny<CartItemsByCartSpecification>()))
+            .ReturnsAsync(new List<CartItem> { item });
+        _unitOfWorkMock.Setup(u => u.GetRepository<Coupon, Guid>().GetFirstOrDefaultAsync(It.IsAny<CouponByCodeSpecification>()))
+            .ReturnsAsync(coupon);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+
+        await _cartService.UpdateCartItemAsync(TestGuid.FromInt(1), new UpdateCartItemDTO { Quantity = 3 }, "user1");
+
+        cart.DiscountAmount.Should().Be(30m); // 10% of 3 x 100, not the stale 10
+        cart.CouponCode.Should().Be("TEN");
+    }
+
+    [Fact]
+    public async Task RemoveCartItemAsync_WhenCartBecomesEmpty_ShouldClearCoupon()
+    {
+        var cart = new Cart { Id = TestGuid.FromInt(7), UserId = "user1", ExpiresAt = DateTime.UtcNow.AddDays(1), CouponCode = "TEN", DiscountAmount = 10m };
+        _unitOfWorkMock.Setup(u => u.GetRepository<Cart, Guid>().GetFirstOrDefaultAsync(It.IsAny<CartDetailsSpecification>()))
+            .ReturnsAsync(cart);
+        _unitOfWorkMock.Setup(u => u.GetRepository<CartItem, Guid>().ExistsAsync(It.IsAny<CartItemSpecification>())).ReturnsAsync(true);
+        _unitOfWorkMock.Setup(u => u.GetRepository<CartItem, Guid>().GetAllAsync(It.IsAny<CartItemsByCartSpecification>()))
+            .ReturnsAsync(new List<CartItem>());
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+
+        await _cartService.RemoveCartItemAsync(TestGuid.FromInt(7), TestGuid.FromInt(1), "user1");
+
+        cart.DiscountAmount.Should().Be(0m);
+        cart.CouponCode.Should().BeNull();
     }
 
     [Fact]

@@ -20,6 +20,13 @@ public class ShippingConfiguration : IEntityTypeConfiguration<Domain.Entities.Sh
         builder.Property(s => s.Cost)
             .HasColumnType("decimal(18,2)");
 
+        // One active (non-Failed) shipment per order; the whole order
+        // ships together. Enforced by the database so concurrent
+        // creates cannot both succeed.
+        builder.HasIndex(s => s.OrderId)
+            .IsUnique()
+            .HasFilter("[Status] <> 'Failed'");
+
         builder.HasOne(s => s.Order)
             .WithMany(o => o.Shippings)
             .HasForeignKey(s => s.OrderId)

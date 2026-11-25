@@ -61,7 +61,6 @@ public class Program
                 Description = "Paste the guestToken returned by POST /api/v1/cart/session, without Bearer. Used only for cart requests; claim also requires JWT. Do not share or persist this token."
             });
             options.OperationFilter<ECommerce.API.Swagger.GuestCartTokenOperationFilter>();
-            options.SchemaFilter<ECommerce.API.Swagger.CreateOrderRequestExampleFilter>();
 
             options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
             {

@@ -263,6 +263,8 @@ public class OrderService : IOrderService
                 .GetRepository<Coupon, Guid>()
                 .Update(coupon);
 
+            order.CouponCode = coupon.Code;
+
             await _unitOfWork
                 .GetRepository<CouponUsage, Guid>()
                 .AddAsync(new CouponUsage
@@ -273,6 +275,8 @@ public class OrderService : IOrderService
                     DiscountAmount = discount
                 });
         }
+
+        order.DiscountAmount = discount;
 
         order.TotalAmount = Math.Max(
                 0m,
@@ -288,7 +292,10 @@ public class OrderService : IOrderService
         order.OrderStatusHistories.Add(
             new OrderStatusHistory
             {
-                OrderStatus = OrderStatus.Pending
+                OrderStatus = OrderStatus.Pending,
+                Source = "Customer",
+                CreatedBy = userId,
+                Reason = "Order placed"
             });
 
         await _unitOfWork
@@ -331,16 +338,42 @@ public class OrderService : IOrderService
         order.OrderStatusHistories.Add(
             new OrderStatusHistory
             {
-                OrderStatus = OrderStatus.Cancelled
+                OrderStatus = OrderStatus.Cancelled,
+                Source = "Customer",
+                CreatedBy = userId,
+                Reason = "Cancelled by customer"
             });
 
         await RestockOrderAsync(order);
+        await ReleaseCouponAsync(order);
 
         _unitOfWork
             .GetRepository<Order, Guid>()
             .Update(order);
 
         await _unitOfWork.SaveChangesAsync();
+    }
+
+    // A cancelled order never consumed its coupon: give the use back so the
+    // coupon limit and the customer's per-user limit are not lost by mistake.
+    // The order keeps CouponCode/DiscountAmount as a record of what was applied.
+    private async Task ReleaseCouponAsync(Order order)
+    {
+        var usageRepository = _unitOfWork.GetRepository<CouponUsage, Guid>();
+        var usages = await usageRepository.GetAllAsync(new CouponUsagesByOrderSpecification(order.Id));
+        if (usages.Count == 0) return;
+
+        var couponRepository = _unitOfWork.GetRepository<Coupon, Guid>();
+        foreach (var usage in usages)
+        {
+            var coupon = await couponRepository.GetByIdAsync(usage.CouponId);
+            if (coupon is not null)
+            {
+                coupon.UsedCount = Math.Max(0, coupon.UsedCount - 1);
+                couponRepository.Update(coupon);
+            }
+        }
+        usageRepository.DeleteRange(usages);
     }
 
     // Restores the variant stock reserved at placement. Only
@@ -411,7 +444,8 @@ public class OrderService : IOrderService
     public async Task<GetAdminOrderDTO>
         UpdateOrderStatusAsync(
             Guid orderId,
-            UpdateOrderStatusDTO dto)
+            UpdateOrderStatusDTO dto,
+            string? changedBy = null)
     {
         var specification =
             new OrderDetailsSpecification(orderId);
@@ -441,15 +475,16 @@ public class OrderService : IOrderService
             return _mapper.Map<GetAdminOrderDTO>(order);
         }
 
+        // Admin owns only the fulfillment decision. Shipment progress and delivery
+        // belong to the shipment; Delivered is set by the shipment, not typed here.
+        // Orders already stored in an old shipping-style status can still be closed as Delivered.
         var allowed = order.OrderStatus switch
         {
             OrderStatus.Pending => newStatus is OrderStatus.Confirmed or OrderStatus.Cancelled or OrderStatus.OnHold,
             OrderStatus.Confirmed => newStatus is OrderStatus.Processing or OrderStatus.OnHold or OrderStatus.Cancelled,
-            OrderStatus.Processing => newStatus is OrderStatus.ReadyForShipping or OrderStatus.Shipped or OrderStatus.OnHold or OrderStatus.Cancelled,
-            OrderStatus.ReadyForShipping => newStatus is OrderStatus.Shipped or OrderStatus.PartiallyShipped,
-            OrderStatus.PartiallyShipped => newStatus == OrderStatus.Shipped,
-            OrderStatus.Shipped => newStatus is OrderStatus.OutForDelivery or OrderStatus.Delivered,
-            OrderStatus.OutForDelivery => newStatus == OrderStatus.Delivered,
+            OrderStatus.Processing => newStatus is OrderStatus.OnHold or OrderStatus.Cancelled,
+            OrderStatus.ReadyForShipping or OrderStatus.PartiallyShipped or OrderStatus.Shipped or OrderStatus.OutForDelivery
+                => newStatus == OrderStatus.Delivered && order.Shippings.Count == 0,
             OrderStatus.OnHold => newStatus is OrderStatus.Pending or OrderStatus.Cancelled
                 || (newStatus == OrderStatus.Processing && order.Payments.Any(p => p.Status == ECommerce.Domain.Enums.Payment.PaymentStatus.Paid)),
             _ => false
@@ -458,6 +493,9 @@ public class OrderService : IOrderService
             throw new BadRequestException("This order status transition is not allowed.");
         if (newStatus == OrderStatus.Confirmed && !order.Payments.Any(p => p.Status == ECommerce.Domain.Enums.Payment.PaymentStatus.Paid))
             throw new BadRequestException("An order cannot be confirmed before successful payment.");
+        if (newStatus is OrderStatus.Cancelled or OrderStatus.OnHold
+            && order.Shippings.Any(sh => sh.Status != ECommerce.Domain.Enums.Shipping.ShippingStatus.Failed))
+            throw new ConflictException("This order already has a shipment. Resolve the shipment first.");
         if (newStatus == OrderStatus.Cancelled)
         {
             // Ordinary admin cancellation must not release reserved stock while money is still Paid.
@@ -465,14 +503,21 @@ public class OrderService : IOrderService
             if (order.Payments.Any(p => p.Status == ECommerce.Domain.Enums.Payment.PaymentStatus.Paid))
                 throw new ConflictException("A paid order requires manual review before cancellation. No cancellation or refund has been performed.");
             await RestockOrderAsync(order);
+            await ReleaseCouponAsync(order);
         }
+
+        if (dto.Reason is { Length: > 500 })
+            throw new BadRequestException("Reason cannot be longer than 500 characters.");
 
         order.OrderStatus = newStatus;
 
         order.OrderStatusHistories.Add(
             new OrderStatusHistory
             {
-                OrderStatus = newStatus
+                OrderStatus = newStatus,
+                Source = "Admin",
+                CreatedBy = changedBy,
+                Reason = string.IsNullOrWhiteSpace(dto.Reason) ? null : dto.Reason.Trim()
             });
 
         _unitOfWork
